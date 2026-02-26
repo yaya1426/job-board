@@ -11,7 +11,7 @@ export function proxy(request: NextRequest) {
 
   // Rule: Check if admin.wazifa.app then enter the dashboard
   const isAdminHost = host.includes("admin.wazifa.app");
-  if (isAdminHost) {
+  if (isAdminHost && !pathname.includes("/dashboard")) {
     console.log("[IsAdminHost] Redirecting to dashboard");
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
