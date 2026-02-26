@@ -10,14 +10,14 @@ export function proxy(request: NextRequest) {
   console.log("Pathname:", pathname);
 
   // Rule: Check if admin.wazifa.app then enter the dashboard
-  const isAdminHost = host.includes("admin.wazifa.app");
+  const isAdminHost = host === "admin.wazifa.app";
   if (isAdminHost && !pathname.includes("/dashboard")) {
     console.log("[IsAdminHost] Redirecting to dashboard");
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   // Rule: Check if wazifa.app and trying to access /dashboard, then redirect to home
-  const isMainDomain = host.includes("wazifa.app");
+  const isMainDomain = host === "wazifa.app";
   if (isMainDomain && pathname.includes("/dashboard")) {
     console.log("[IsMainDomain] Redirecting to home");
     return NextResponse.redirect(new URL("/", request.url));
