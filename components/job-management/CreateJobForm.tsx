@@ -5,7 +5,7 @@ import { Button } from "../ui/button";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-function CreateNewJobForm() {
+function CreateJobForm() {
   const navigate = useRouter();
   const [form, setForm] = useState({
     title: "",
@@ -124,4 +124,4 @@ function CreateNewJobForm() {
   );
 }
 
-export default CreateNewJobForm;
+export default CreateJobForm;

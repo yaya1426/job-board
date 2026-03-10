@@ -1,5 +1,5 @@
 import AdminPageHeader from "@/components/common/AdminPageHeader";
-import CreateNewJobForm from "@/components/job-management/CreateNewJobForm";
+import CreateJobForm from "@/components/job-management/CreateJobForm";
 
 function NewJobPage() {
   return (
@@ -11,7 +11,7 @@ function NewJobPage() {
         actionButtonVariant="outline"
         actionButtonText="← BACK"
       />
-      <CreateNewJobForm />
+      <CreateJobForm />
     </>
   );
 }
