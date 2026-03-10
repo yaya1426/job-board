@@ -1,6 +1,6 @@
 "use client";
 
-import { PageHeader } from "../common/PageHeader";
+import ClientPageHeader from "../common/ClientPageHeader";
 import { JobsData } from "@/data";
 import FilterSidebar from "./FilterSidebar";
 import JobCards from "./JobCards";
@@ -10,7 +10,7 @@ function JobsListingWrapper() {
   return (
     <JobsProvider>
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <PageHeader
+        <ClientPageHeader
           title="ALL POSITIONS"
           subtitle={`${JobsData.length} OPEN ROLES`}
         />

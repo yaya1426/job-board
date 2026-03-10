@@ -3,7 +3,7 @@ type Props = {
   subtitle: string;
 };
 
-function PageHeader({ title, subtitle }: Props) {
+function ClientPageHeader({ title, subtitle }: Props) {
   return (
     <div>
       <h1 className="text-5xl font-heading font-bold mb-2">{title}</h1>
@@ -12,4 +12,4 @@ function PageHeader({ title, subtitle }: Props) {
   );
 }
 
-export { PageHeader };
+export default ClientPageHeader;

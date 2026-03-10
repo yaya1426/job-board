@@ -1,13 +1,33 @@
-import { Button } from "@/components/ui/button";
-
+import { CandidateData } from "@/data/CandidateData";
+import { JobsData } from "@/data/JobsData";
+import DashboardStats from "@/components/dashboard/DashboardStats";
+import RecentApplications from "@/components/dashboard/RecentApplications";
 
 function DashboardPage() {
-    return (
-        <div className="flex flex-col items-center justify-center h-screen">
-            <h1 className="text-4xl font-bold">Admin Dashboard</h1>
-            <Button variant="accent">Jobs</Button>
-        </div>
-    );
+  const interviews = CandidateData.filter(
+    (c) => c.status === "INTERVIEW",
+  ).length;
+  
+  const avgScore = (
+    CandidateData.reduce((s, c) => s + c.aiScore, 0) / CandidateData.length
+  ).toFixed(1);
+
+  return (
+    <>
+      <h1 className="text-4xl font-heading font-bold">OVERVIEW</h1>
+      <p className="font-mono text-sm text-muted-foreground mt-1">
+        ADMIN DASHBOARD
+      </p>
+
+      <DashboardStats
+        activeJobs={JobsData.length}
+        totalCandidates={CandidateData.length}
+        avgScore={avgScore}
+        interviews={interviews}
+      />
+      <RecentApplications candidates={CandidateData} />
+    </>
+  );
 }
 
 export default DashboardPage;

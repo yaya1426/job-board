@@ -1,15 +1,20 @@
-import Link from "next/link";
+import { JobsData } from "@/data/JobsData";
+import AdminPageHeader from "@/components/common/AdminPageHeader";
+import JobManagementTable from "@/components/job-management/JobManagementTable";
 
 function JobsManagementPage() {
-    return (
-        <div>
-            <h1>Jobs Management</h1>
-            <Link className="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600" href="/dashboard/jobs/new">New Job</Link>
-            <Link className="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600" href="/dashboard/jobs/1">Job 1</Link>
-            <Link className="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600" href="/dashboard/jobs/2">Job 2</Link>
-            <Link className="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600" href="/dashboard/jobs/3">Job 3</Link>
-        </div>
-    )
+  return (
+    <>
+      <AdminPageHeader
+        title="JOB POSTS"
+        subtitle={`${JobsData.length} ACTIVE LISTINGS`}
+        actionButtonLink="/dashboard/jobs/new"
+        actionButtonVariant="accent"
+        actionButtonText="+ CREATE JOB"
+      />
+      <JobManagementTable jobs={JobsData} />
+    </>
+  );
 }
 
 export default JobsManagementPage;
