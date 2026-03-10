@@ -1,15 +1,16 @@
-import { CandidateData } from "@/data/CandidateData";
+import { ApplicationsData } from "@/data/ApplicationsData";
 import { JobsData } from "@/data/JobsData";
 import DashboardStats from "@/components/dashboard/DashboardStats";
 import RecentApplications from "@/components/dashboard/RecentApplications";
 
 function DashboardPage() {
-  const interviews = CandidateData.filter(
+  const interviews = ApplicationsData.filter(
     (c) => c.status === "INTERVIEW",
   ).length;
-  
+
   const avgScore = (
-    CandidateData.reduce((s, c) => s + c.aiScore, 0) / CandidateData.length
+    ApplicationsData.reduce((s, c) => s + c.aiScore, 0) /
+    ApplicationsData.length
   ).toFixed(1);
 
   return (
@@ -21,11 +22,11 @@ function DashboardPage() {
 
       <DashboardStats
         activeJobs={JobsData.length}
-        totalCandidates={CandidateData.length}
+        totalCandidates={ApplicationsData.length}
         avgScore={avgScore}
         interviews={interviews}
       />
-      <RecentApplications candidates={CandidateData} />
+      <RecentApplications applications={ApplicationsData} />
     </>
   );
 }

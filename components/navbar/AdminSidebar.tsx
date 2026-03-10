@@ -1,12 +1,13 @@
-'use client';
-import { Briefcase, Users, LayoutGrid } from 'lucide-react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+"use client";
+import { Briefcase, Users, LayoutGrid, FileText } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const adminLinks = [
-  { to: '/dashboard', label: 'OVERVIEW', icon: LayoutGrid },
-  { to: '/dashboard/jobs', label: 'JOB POSTS', icon: Briefcase },
-  { to: '/dashboard/applications', label: 'APPLICATIONS', icon: Users },
+  { to: "/dashboard", label: "OVERVIEW", icon: LayoutGrid },
+  { to: "/dashboard/jobs", label: "JOB POSTS", icon: Briefcase },
+  { to: "/dashboard/applications", label: "APPLICATIONS", icon: FileText },
+  { to: "/dashboard/users", label: "USERS", icon: Users },
 ];
 
 const AdminSidebar = () => {
@@ -18,7 +19,9 @@ const AdminSidebar = () => {
         <Link href="/admin" className="font-heading text-xl font-bold">
           WAZIFA<span className="text-accent">_</span>
         </Link>
-        <p className="font-mono text-xs text-muted-foreground mt-1">ADMIN PANEL</p>
+        <p className="font-mono text-xs text-muted-foreground mt-1">
+          ADMIN PANEL
+        </p>
       </div>
       <nav className="py-4">
         {adminLinks.map((link) => {
@@ -29,8 +32,8 @@ const AdminSidebar = () => {
               href={link.to}
               className={`flex items-center gap-3 px-6 py-4 font-heading text-sm font-bold transition-none border-l-4 ${
                 isActive
-                  ? 'border-accent bg-accent/10 text-accent'
-                  : 'border-transparent hover:border-accent hover:bg-accent/5'
+                  ? "border-accent bg-accent/10 text-accent"
+                  : "border-transparent hover:border-accent hover:bg-accent/5"
               }`}
             >
               <link.icon size={18} />
