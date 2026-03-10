@@ -1,14 +1,20 @@
-import Link from "next/link";
+import AdminPageHeader from "@/components/common/AdminPageHeader";
+import { ApplicationsData } from "@/data/ApplicationsData";
+import ApplicationsListingWrapper from "@/components/applications/ApplicationsListingWrapper";
 
-function ApplicationsPage() {
-    return (
-        <div>
-            <h1>Applications</h1>
-            <Link className="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600" href="/dashboard/applications/1">Application 1</Link>
-            <Link className="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600" href="/dashboard/applications/2">Application 2</Link>
-            <Link className="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600" href="/dashboard/applications/3">Application 3</Link>
-        </div>
-    )
+function ApplicationsManagementPage() {
+  return (
+    <>
+      <AdminPageHeader
+        title="APPLICATIONS"
+        subtitle={`${ApplicationsData.length} ACTIVE APPLICATIONS`}
+        actionButtonLink="/dashboard/users"
+        actionButtonVariant="outline"
+        actionButtonText="VIEW ALL USERS →"
+      />
+      <ApplicationsListingWrapper />
+    </>
+  );
 }
 
-export default ApplicationsPage;
+export default ApplicationsManagementPage;
