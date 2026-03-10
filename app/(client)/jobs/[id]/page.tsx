@@ -1,17 +1,33 @@
+import { JobsData } from "@/data/JobsData";
+import JobNotFound from "@/components/jobs/JobNotFound";
+import Link from "next/link";
+import JobDescription from "@/components/jobs/JobDescription";
+import JobApplyForm from "@/components/jobs/JobApplyForm";
+
 type Props = {
   params: Promise<{ id: string }>;
 };
 
 async function JobDetailsPage({ params }: Props) {
   const { id } = await params;
-  console.log(id);
+  const job = JobsData.find((job) => job.id === id);
+
+  if (!job) {
+    return <JobNotFound />;
+  }
+
   return (
-    <div className="flex flex-col items-center justify-center h-screen">
-      <h1 className="text-4xl font-bold">Job Details</h1>
-      <div className="flex flex-col items-center justify-center border-2 border-gray-300 rounded-md p-4">
-        <h2 className="text-2xl font-bold">Frontend Engineer</h2>
-        <p className="text-gray-500">Remote Position</p>
-        <p>We are looking for a Frontend Engineer with 3 years of experience in React, Next.js, and Tailwind CSS.</p>
+    <div className="max-w-7xl mx-auto px-6 py-8">
+      <Link
+        href="/jobs"
+        className="font-mono text-sm text-muted-foreground hover:text-accent transition-none"
+      >
+        ← ALL POSITIONS
+      </Link>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 mt-6">
+        <JobDescription job={job} />
+        <JobApplyForm />
       </div>
     </div>
   );
