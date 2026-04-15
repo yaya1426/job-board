@@ -1,63 +1,53 @@
 "use client";
 import { Input } from "../ui/input";
+import { TextArea } from "../ui/textarea";
 import { BrutalSelect } from "../BrutalUI";
 import { Button } from "../ui/button";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  handleCreateJob,
+  CreateJobState,
+} from "@/app/actions/jobs/jobs.action";
+import { useActionState } from "react";
 
 function CreateJobForm() {
   const navigate = useRouter();
-  const [form, setForm] = useState({
-    title: "",
-    company: "",
-    location: "",
-    type: "FULL-TIME",
-    salary: "",
-    description: "",
-    requirements: "",
-    tags: "",
-  });
 
-  const update = (field: string, value: string) =>
-    setForm((prev) => ({ ...prev, [field]: value }));
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    navigate.push("/dashboard/jobs");
-  };
+  const [state, formAction, isPending] = useActionState<
+    CreateJobState,
+    FormData
+  >(handleCreateJob, undefined);
 
   return (
-    <form onSubmit={handleSubmit} className="mt-8 brutal-border p-6 space-y-6">
+    <form action={formAction} className="mt-8 brutal-border p-6 space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Input
           label="JOB TITLE"
+          name="title"
           placeholder="e.g. SENIOR FRONTEND ENGINEER"
-          value={form.title}
-          onChange={(e) => update("title", e.target.value)}
-          required
+          error={state?.errors?.title?.[0]}
         />
         <Input
           label="COMPANY"
+          name="company"
           placeholder="e.g. NEXUS LABS"
-          value={form.company}
-          onChange={(e) => update("company", e.target.value)}
-          required
+          error={state?.errors?.company?.[0]}
         />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Input
           label="LOCATION"
+          name="location"
           placeholder="e.g. REMOTE"
-          value={form.location}
-          onChange={(e) => update("location", e.target.value)}
-          required
+          error={state?.errors?.location?.[0]}
         />
         <BrutalSelect
           label="TYPE"
-          value={form.type}
-          onChange={(e) => update("type", e.target.value)}
+          name="type"
+          error={state?.errors?.type?.[0]}
           options={[
+            { value: "", label: "SELECT TYPE" },
             { value: "FULL-TIME", label: "FULL-TIME" },
             { value: "PART-TIME", label: "PART-TIME" },
             { value: "CONTRACT", label: "CONTRACT" },
@@ -66,30 +56,27 @@ function CreateJobForm() {
         />
         <Input
           label="SALARY RANGE"
+          name="salary"
           placeholder="e.g. $140K–$180K"
-          value={form.salary}
-          onChange={(e) => update("salary", e.target.value)}
-          required
+          error={state?.errors?.salary?.[0]}
         />
       </div>
 
       <Input
         label="TAGS (COMMA SEPARATED)"
+        name="tags"
         placeholder="e.g. REACT, TYPESCRIPT, WEBGL"
-        value={form.tags}
-        onChange={(e) => update("tags", e.target.value)}
+        error={state?.errors?.tags?.[0]}
       />
 
       <div>
         <label className="font-heading text-xs font-bold uppercase block mb-2">
           DESCRIPTION
         </label>
-        <textarea
-          className="w-full brutal-border bg-background px-4 py-3 font-mono text-sm focus:outline-none focus:shadow-[4px_4px_0px_0px] focus:shadow-accent min-h-[120px] resize-y"
+        <TextArea
+          name="description"
           placeholder="Describe the role, responsibilities, and what makes it exciting..."
-          value={form.description}
-          onChange={(e) => update("description", e.target.value)}
-          required
+          error={state?.errors?.description?.[0]}
         />
       </div>
 
@@ -97,13 +84,12 @@ function CreateJobForm() {
         <label className="font-heading text-xs font-bold uppercase block mb-2">
           REQUIREMENTS (ONE PER LINE)
         </label>
-        <textarea
-          className="w-full brutal-border bg-background px-4 py-3 font-mono text-sm focus:outline-none focus:shadow-[4px_4px_0px_0px] focus:shadow-accent min-h-[100px] resize-y"
+        <TextArea
+          name="requirements"
           placeholder={
             "5+ years React\nTypeScript expert\nSystem design skills"
           }
-          value={form.requirements}
-          onChange={(e) => update("requirements", e.target.value)}
+          error={state?.errors?.requirements?.[0]}
         />
       </div>
 
