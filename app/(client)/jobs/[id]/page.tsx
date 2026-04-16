@@ -1,8 +1,8 @@
-import { JobsData } from "@/data/JobsData";
 import JobNotFound from "@/components/jobs/JobNotFound";
 import Link from "next/link";
 import JobDescription from "@/components/jobs/JobDescription";
 import JobApplyForm from "@/components/jobs/JobApplyForm";
+import { getJob } from "@/services/jobs/jobs.service";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -10,7 +10,13 @@ type Props = {
 
 async function JobDetailsPage({ params }: Props) {
   const { id } = await params;
-  const job = JobsData.find((job) => job.id === id);
+  const result = await getJob(id);
+
+  if (!result.success) {
+    return <JobNotFound />;
+  }
+
+  const { data: job } = result;
 
   if (!job) {
     return <JobNotFound />;
