@@ -9,7 +9,6 @@ type UsersContextType = {
   candidates: Candidate[];
   setCandidates: (candidates: Candidate[]) => void;
   jobs: Job[];
-  setJobs: (jobs: Job[]) => void;
   applications: Application[];
   setApplications: (applications: Application[]) => void;
   filteredCandidates: Candidate[];
@@ -24,7 +23,6 @@ const UsersContext = createContext<UsersContextType>({
   candidates: [],
   setCandidates: () => {},
   jobs: [],
-  setJobs: () => {},
   applications: [],
   setApplications: () => {},
   filteredCandidates: [],

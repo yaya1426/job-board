@@ -3,10 +3,15 @@ import ApplicationsProvider from "@/context/applications/ApplicationsProvider";
 import ApplicationsFilter from "./ApplicationsFilter";
 import ApplicationsStatusSummary from "./ApplicationsStatusSummary";
 import ApplicationsTable from "./ApplicationsTable";
+import { Job } from "@/types/Job";
 
-function ApplicationsListingWrapper() {
+type Props = {
+  jobs: Job[];
+};
+
+function ApplicationsListingWrapper({ jobs }: Props) {
   return (
-    <ApplicationsProvider>
+    <ApplicationsProvider jobs={jobs}>
       <ApplicationsFilter />
       <ApplicationsStatusSummary />
       <ApplicationsTable />

@@ -1,9 +1,13 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { JobsData } from "@/data";
+import { Job } from "@/types/Job";
 
-function FeaturedJobs() {
-  const featuredJobs = JobsData.slice(0, 4);
+type Props = {
+  jobs: Job[];
+};
+
+function FeaturedJobs({ jobs }: Props) {
+  const featuredJobs = jobs.slice(0, 4);
 
   return (
     <section className="max-w-7xl mx-auto px-6 py-16">
