@@ -1,24 +1,30 @@
-import { ApplicationsData } from "@/data/ApplicationsData";
 import DashboardStats from "@/components/dashboard/DashboardStats";
 import RecentApplications from "@/components/dashboard/RecentApplications";
 import { getJobs } from "@/services/jobs/jobs.service";
+import { getApplications } from "@/services/applications/applications.service";
 
 async function DashboardPage() {
-  const result = await getJobs();
+  const jobsResult = await getJobs();
+  const applicationsResult = await getApplications();
 
-  if (!result.success) {
+  if (!jobsResult.success) {
     return <div>Error loading jobs</div>;
   }
 
-  const { data: jobs = [] } = result;
+  if (!applicationsResult.success) {
+    return <div>Error loading applications</div>;
+  }
+
+  const { data: jobs = [] } = jobsResult;
+  const { data: applications = [] } = applicationsResult;
   
-  const interviews = ApplicationsData.filter(
+  const interviews = applications.filter(
     (c) => c.status === "INTERVIEW",
   ).length;
 
   const avgScore = (
-    ApplicationsData.reduce((s, c) => s + c.aiScore, 0) /
-    ApplicationsData.length
+    applications.reduce((s, c) => s + c.aiScore, 0) /
+    applications.length
   ).toFixed(1);
 
   return (
@@ -30,11 +36,11 @@ async function DashboardPage() {
 
       <DashboardStats
         activeJobs={jobs.length}
-        totalCandidates={ApplicationsData.length}
+        totalCandidates={applications.length}
         avgScore={avgScore}
         interviews={interviews}
       />
-      <RecentApplications applications={ApplicationsData} />
+      <RecentApplications applications={applications} />
     </>
   );
 }

@@ -1,27 +1,31 @@
 import { useState } from "react";
 import JobsContext from "./UsersContext";
-import { ApplicationsData } from "@/data/ApplicationsData";
-import { CandidateData } from "@/data/CandidateData";
 import { Application, Job, Candidate } from "@/types";
 
-const UsersProvider = ({ jobs = [], children }: { jobs: Job[], children: React.ReactNode }) => {
+type Props = {
+  jobs: Job[];
+  applications: Application[];
+  candidates: Candidate[];
+  children: React.ReactNode;
+};
+
+const UsersProvider = ({ jobs = [], applications = [], candidates = [], children }: Props) => {
   const [search, setSearch] = useState("");
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
-  const [candidates, setCandidates] = useState<Candidate[]>(CandidateData);
+  const [candidatesState] = useState<Candidate[]>(candidates);
   const [jobState] = useState<Job[]>(jobs);
-  const [applications, setApplications] =
-    useState<Application[]>(ApplicationsData);
-  const filteredCandidates = candidates.filter(
+  const [applicationsState] = useState<Application[]>(applications);
+  const filteredCandidates = candidatesState.filter(
     (u) =>
       u.name.toLowerCase().includes(search.toLowerCase()) ||
       u.email.toLowerCase().includes(search.toLowerCase()),
   );
 
   const avgScore =
-    applications.length > 0
+    applicationsState.length > 0
       ? Math.round(
-          (applications.reduce((s, a) => s + a.aiScore, 0) /
-            applications.length) *
+          (applicationsState.reduce((s, a) => s + a.aiScore, 0) /
+            applicationsState.length) *
             10,
         ) / 10
       : 0;
@@ -34,10 +38,8 @@ const UsersProvider = ({ jobs = [], children }: { jobs: Job[], children: React.R
         expandedUser,
         setExpandedUser,
         candidates,
-        setCandidates,
         jobs: jobState,
-        applications,
-        setApplications,
+        applications: applicationsState,
         filteredCandidates,
         avgScore,
       }}

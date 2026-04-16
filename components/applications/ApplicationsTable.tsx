@@ -4,11 +4,10 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { AiScore } from "../BrutalUI";
 import { useApplications } from "@/context/applications/ApplicationsContext";
-import { CandidateData } from "@/data/CandidateData";
 import { getCandidate } from "@/utils";
 
 function ApplicationsTable() {
-  const { filteredApplications, jobs } = useApplications();
+  const { filteredApplications, jobs, candidates } = useApplications();
   return (
     <div className="mt-6 brutal-border">
       <div className="grid grid-cols-[2fr_2fr_1fr_1fr_1fr_1fr] bg-foreground text-background px-4 py-3">
@@ -32,7 +31,7 @@ function ApplicationsTable() {
         </div>
       ) : (
         filteredApplications.map((app) => {
-          const candidate = getCandidate(app.candidateId, CandidateData);
+          const candidate = getCandidate(app.candidateId, candidates);
           const job = jobs.find((j) => j.id === app.jobId);
           const statusVariant = app.status.toLowerCase() as
             | "submitted"

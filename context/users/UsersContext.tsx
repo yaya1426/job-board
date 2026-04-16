@@ -7,10 +7,8 @@ type UsersContextType = {
   expandedUser: string | null;
   setExpandedUser: (user: string | null) => void;
   candidates: Candidate[];
-  setCandidates: (candidates: Candidate[]) => void;
   jobs: Job[];
   applications: Application[];
-  setApplications: (applications: Application[]) => void;
   filteredCandidates: Candidate[];
   avgScore: number;
 };
@@ -21,10 +19,8 @@ const UsersContext = createContext<UsersContextType>({
   expandedUser: null,
   setExpandedUser: () => {},
   candidates: [],
-  setCandidates: () => {},
   jobs: [],
   applications: [],
-  setApplications: () => {},
   filteredCandidates: [],
   avgScore: 0,
 });
