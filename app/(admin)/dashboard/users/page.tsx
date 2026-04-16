@@ -1,24 +1,43 @@
 import AdminPageHeader from "@/components/common/AdminPageHeader";
-import { CandidateData } from "@/data/CandidateData";
 import UsersListingWrapper from "@/components/users/UsersListingWrapper";
 import { getJobs } from "@/services/jobs/jobs.service";
+import { getApplications } from "@/services/applications/applications.service";
+import { getCandidates } from "@/services/candidates/candidates.service";
 
 async function UsersPage() {
-  const result = await getJobs();
-  if (!result.success) {
+  const jobsResult = await getJobs();
+  const applicationsResult = await getApplications();
+  const candidatesResult = await getCandidates();
+
+  if (!jobsResult.success) {
     return <div>Error loading jobs</div>;
   }
-  const { data: jobs = [] } = result;
+  if (!applicationsResult.success) {
+    return <div>Error loading applications</div>;
+  }
+
+  if (!candidatesResult.success) {
+    return <div>Error loading candidates</div>;
+  }
+
+  const { data: jobs = [] } = jobsResult;
+  const { data: applications = [] } = applicationsResult;
+  const { data: candidates = [] } = candidatesResult;
+
   return (
     <>
       <AdminPageHeader
         title="USERS"
-        subtitle={`${CandidateData.length} ACTIVE USERS`}
+        subtitle={`${candidates.length} ACTIVE USERS`}
         actionButtonLink="/dashboard/users/new"
         actionButtonVariant="accent"
         actionButtonText="+ CREATE USER"
       />
-      <UsersListingWrapper jobs={jobs} />
+      <UsersListingWrapper
+        jobs={jobs}
+        applications={applications}
+        candidates={candidates}
+      />
     </>
   );
 }
