@@ -4,10 +4,9 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { AiScore } from "../BrutalUI";
 import { useApplications } from "@/context/applications/ApplicationsContext";
-import { getCandidate } from "@/utils";
 
 function ApplicationsTable() {
-  const { filteredApplications, jobs, candidates } = useApplications();
+  const { filteredApplications } = useApplications();
   return (
     <div className="mt-6 brutal-border">
       <div className="grid grid-cols-[2fr_2fr_1fr_1fr_1fr_1fr] bg-foreground text-background px-4 py-3">
@@ -31,8 +30,6 @@ function ApplicationsTable() {
         </div>
       ) : (
         filteredApplications.map((app) => {
-          const candidate = getCandidate(app.candidateId, candidates);
-          const job = jobs.find((j) => j.id === app.jobId);
           const statusVariant = app.status.toLowerCase() as
             | "submitted"
             | "review"
@@ -46,18 +43,18 @@ function ApplicationsTable() {
             >
               <div>
                 <p className="font-heading text-sm font-bold">
-                  {candidate?.name || "—"}
+                  {app?.candidateName || "—"}
                 </p>
                 <p className="font-mono text-[10px] text-muted-foreground">
-                  {candidate?.email}
+                  {app?.candidateEmail}
                 </p>
               </div>
               <div>
                 <p className="font-mono text-xs font-bold">
-                  {job?.title || "—"}
+                  {app?.jobTitle || "—"}
                 </p>
                 <p className="font-mono text-[10px] text-muted-foreground">
-                  {job?.company}
+                  {app?.jobCompany || "—"}
                 </p>
               </div>
               <p className="font-mono text-xs">{app.appliedDate}</p>
