@@ -24,7 +24,7 @@ export async function dbConnect(): Promise<Mongoose> {
   if (cached.conn) return cached.conn;
 
   if (!MONGO_URI) {
-    throw new Error("MONGODB_URI is not defined");
+    throw new Error("MONGO_URI is not defined");
   }
 
   if (!cached.promise) {
@@ -33,11 +33,11 @@ export async function dbConnect(): Promise<Mongoose> {
     });
   }
 
-  console.log("Connecting to MongoDB", MONGO_URI);
+  console.log("Connecting to MongoDB");
 
   cached.conn = await cached.promise;
 
-  console.log("Connected to MongoDB", cached.conn);
+  console.log("Connected to MongoDB");
 
   return cached.conn;
 }
