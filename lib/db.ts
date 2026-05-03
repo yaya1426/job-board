@@ -1,43 +1,37 @@
 import mongoose, { Mongoose } from "mongoose";
 
-const MONGO_URI = process.env.MONGO_URI;
+const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI;
 
-interface MongooseCache {
-  conn: Mongoose | null;
-  promise: Promise<Mongoose> | null;
-}
+const globalWithMongoose = globalThis as typeof globalThis & {
+  _mongoose: {
+    conn: Mongoose | null;
+    promise: Promise<Mongoose> | null;
+  };
+};
 
-declare global {
-  var mongooseCache: MongooseCache | undefined;
-}
-
-const cached: MongooseCache = global.mongooseCache ?? {
+const cached = globalWithMongoose._mongoose ?? {
   conn: null,
   promise: null,
 };
 
-if (!global.mongooseCache) {
-  global.mongooseCache = cached;
-}
+globalWithMongoose._mongoose = cached;
 
 export async function dbConnect(): Promise<Mongoose> {
-  if (cached.conn) return cached.conn;
+  if (cached.conn) {
+    return cached.conn;
+  }
 
   if (!MONGO_URI) {
-    throw new Error("MONGO_URI is not defined");
+    throw new Error(
+      "MONGO_URI (or MONGODB_URI) environment variable is not set",
+    );
   }
 
-  if (!cached.promise) {
-    cached.promise = mongoose.connect(MONGO_URI, {
-      bufferCommands: false,
-    });
-  }
-
-  console.log("Connecting to MongoDB");
+  cached.promise ??= mongoose.connect(MONGO_URI, {
+    bufferCommands: false,
+  });
 
   cached.conn = await cached.promise;
-
-  console.log("Connected to MongoDB");
 
   return cached.conn;
 }
