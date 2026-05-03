@@ -1,9 +1,12 @@
-import { JobsData } from "@/data/JobsData";
 import { createJobSchema, CreateJobInput } from "./jobs.validation";
 import { Job } from "@/types/Job";
 import { z } from "zod";
 import { ServiceResult } from "@/types";
-
+import {
+  findAllJobs,
+  findJobById,
+  saveNewJob,
+} from "@/repositories/jobs.repository";
 
 export async function createJob(
   input: CreateJobInput,
@@ -17,22 +20,25 @@ export async function createJob(
     };
   }
 
-  console.log("Creating job", validated);
-  // TODO: Database will solve this type
-  return { success: true, data: validated.data as Job };
+  const newJob = await saveNewJob(validated.data);
+  return { success: true, data: newJob };
 }
 
 export async function getJobs(): Promise<ServiceResult<Job[]>> {
+  const jobs = await findAllJobs();
 
-  // TODO: Database will solve this
-  return { success: true, data: JobsData };
+  if (!jobs) {
+    return { success: false, errors: { jobs: ["Jobs not found"] } };
+  }
+
+  return { success: true, data: jobs };
 }
 
 export async function getJob(id: string): Promise<ServiceResult<Job>> {
-  // TODO: Database will solve this
-  const job = JobsData.find((job) => job.id === id);
+  const job = await findJobById(id);
+
   if (!job) {
     return { success: false, errors: { id: ["Job not found"] } };
   }
-  return { success: true, data: job };
+  return { success: true, data: job as Job };
 }

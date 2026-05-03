@@ -1,16 +1,49 @@
+"use client";
+
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
+import { useActionState } from "react";
+import {
+  handleApplyToJob,
+  ApplyToJobState,
+} from "@/app/actions/applications/applications.action";
+import { useParams } from "next/navigation";
+import { TextArea } from "../ui/textarea";
 
 function JobApplyForm() {
+  const { id: jobId } = useParams<{ id: string }>();
+
+  const [state, formAction, isPending] = useActionState<
+    ApplyToJobState,
+    FormData
+  >(handleApplyToJob, undefined);
+
   return (
-    <div className="brutal-border lg:border-l-0 p-8">
+    <form action={formAction} className="brutal-border lg:border-l-0 p-8">
       <h3 className="font-heading text-xl font-bold mb-6 border-b-3 border-foreground pb-4">
         APPLY NOW
       </h3>
       <div className="space-y-4">
-        <Input label="FULL NAME" placeholder="YOUR NAME" />
-        <Input label="EMAIL" placeholder="YOUR@EMAIL.COM" type="email" />
-        <Input label="LINKEDIN" placeholder="LINKEDIN.COM/IN/..." />
+        <Input type="hidden" name="jobId" value={jobId} />
+        <Input
+          name="candidateName"
+          label="FULL NAME"
+          placeholder="YOUR NAME"
+          error={state?.errors?.candidateName?.[0]}
+        />
+        <Input
+          name="candidateEmail"
+          label="EMAIL"
+          placeholder="YOUR@EMAIL.COM"
+          error={state?.errors?.candidateEmail?.[0]}
+        />
+        <Input
+          name="candidateLinkedin"
+          label="LINKEDIN"
+          placeholder="LINKEDIN.COM/IN/..."
+          error={state?.errors?.candidateLinkedin?.[0]}
+        />
+        {/* TODO: add resume file upload */}
         <div>
           <label className="font-heading text-xs font-bold uppercase block mb-2">
             RESUME
@@ -26,16 +59,17 @@ function JobApplyForm() {
           <label className="font-heading text-xs font-bold uppercase block mb-2">
             COVER NOTE
           </label>
-          <textarea
-            className="w-full brutal-border bg-background px-4 py-3 font-mono text-sm focus:outline-none focus:shadow-[4px_4px_0px_0px] focus:shadow-accent h-32 resize-none"
+          <TextArea
+            name="candidateCoverLetter"
             placeholder="WHY THIS ROLE?"
+            error={state?.errors?.candidateCoverLetter?.[0]}
           />
         </div>
         <Button variant="accent" className="w-full mt-4">
           SUBMIT APPLICATION →
         </Button>
       </div>
-    </div>
+    </form>
   );
 }
 
