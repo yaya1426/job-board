@@ -2,6 +2,7 @@
 
 import { createJob } from "@/services/jobs/jobs.service";
 import { CreateJobInput } from "@/services/jobs/jobs.validation";
+import { revalidatePath } from "next/cache";
 
 export type CreateJobState = {
   errors?: Record<string, string[]>;
@@ -24,4 +25,6 @@ export async function handleCreateJob(
   if (!result.success) {
     return { errors: result.errors };
   }
+
+  revalidatePath("/dashboard/jobs");
 }
