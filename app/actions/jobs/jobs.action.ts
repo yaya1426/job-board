@@ -26,5 +26,5 @@ export async function handleCreateJob(
     return { errors: result.errors };
   }
 
-  revalidatePath("/dashboard/jobs");
+  revalidatePath("/dashboard/jobs", "layout");
 }
