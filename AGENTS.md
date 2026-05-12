@@ -17,6 +17,23 @@ This project is also the basis of a long-form course. Pedagogical narrative matt
 
 ---
 
+## Detailed Course Docs
+
+Longer day-by-day implementation notes live in `docs/`. Keep `AGENTS.md` compact and operational; use these docs for teaching narrative, commit evidence, and historical detail.
+
+- Day 1 - First Deployment: `docs/day-01-first-deployment.md`
+- Day 2 - Domain, DNS and HTTPS: `docs/day-02-domain-dns-https.md`
+- Day 3 - App Router Fundamentals: `docs/day-03-app-router-fundamentals.md`
+- Day 4 - Route Groups and Admin Setup: `docs/day-04-route-groups-admin-setup.md`
+- Day 5 - Layouts and Shared UI: `docs/day-05-layouts-shared-ui.md`
+- Day 6 - Product UI with Mock Data: `docs/day-06-product-ui-mock-data.md`
+- Day 7 - Staging and Branch Rules: `docs/day-07-staging-branch-rules.md`
+- Day 8 - Backend Setup in Next.js: `docs/day-08-backend-setup.md`
+- Day 9 - Database Setup: `docs/day-09-database-setup.md`
+- Day 10 - Authentication: `docs/day-10-authentication.md`
+
+---
+
 ## 2. Tech Stack (Actual Versions)
 
 From `package.json`:
@@ -50,25 +67,42 @@ app/
     layout.tsx                ← force-dynamic + revalidate=0
     page.tsx                  ← landing
     jobs/
+    login/                    ← login page (Lecture 99) — server component, redirects if already signed in
+    signup/                   ← signup page (Lecture 98) — server component, redirects if already signed in
   actions/                    ← Server Actions (form bindings)
     jobs/jobs.action.ts
     applications/applications.action.ts
-  layout.tsx                  ← root layout
+    auth/auth.action.ts       ← handleSignup (Lecture 98)
+  api/
+    auth/[...nextauth]/route.ts  ← NextAuth catch-all (Lecture 96)
+  layout.tsx                  ← root layout (wraps tree in SessionProvider)
 components/                   ← UI (route-grouped: jobs/, applications/, users/, dashboard/, navbar/, ui/, common/, landing/, job-management/)
+  auth/SignupForm.tsx         ← signup form (plain client handler; auto-`signIn` on success)
+  auth/LoginForm.tsx          ← login form (plain client handler; calls `signIn("credentials")`)
+  auth/AuthArea.tsx           ← navbar widget (useSession + signOut)
+  providers/SessionProvider.tsx    ← client wrapper around next-auth/react SessionProvider
 context/                      ← Client-side React contexts (jobs/, applications/, users/)
 data/                         ← Static mock data (CandidateData.ts is still live; JobsData/ApplicationsData removed since real DB)
 lib/
   db.ts                       ← Mongoose singleton (globalThis cache)
-  models/                     ← Mongoose schemas (Job, Application)
+  auth.ts                     ← NextAuth.js authOptions (JWT strategy)
+  password.ts                 ← bcryptjs wrapper (hashPassword / verifyPassword)
+  models/                     ← Mongoose schemas (Job, Application, User)
   utils.ts                    ← shared utilities (cn helper, etc.)
 repositories/                 ← Mongo access layer (one .repository.ts per entity)
+  jobs.repository.ts
+  applications.repository.ts
+  users.repository.ts
 services/                     ← Business logic (one folder per entity)
   jobs/
     jobs.service.ts
     jobs.validation.ts        ← zod schemas + inferred types
   applications/
+  auth/                       ← signup/login services + validation
   candidates/                 ← Service exists but still returns static CandidateData
-types/                        ← Domain types (Job, Application, Candidate, ServiceResult, StatusFilters)
+docs/                         ← Long-form day-by-day course implementation notes
+types/                        ← Domain types (Job, Application, Candidate, User, Role, ServiceResult, StatusFilters)
+  next-auth.d.ts              ← module augmentation: adds `id` + `role` to Session.user, User, JWT
 utils/                        ← Cross-cutting helpers
 proxy.ts                      ← Next.js 16 proxy (subdomain routing)
 next.config.ts                ← output: "standalone"
@@ -97,6 +131,7 @@ Rules:
 - Services **must not** import `mongoose` or models directly.
 - Repositories own the `_id → id` mapping and any `Date → string` normalization.
 - Validation lives next to its service: `services/<entity>/<entity>.validation.ts` exports a zod schema and an inferred input type.
+- **Configuration files are config-only.** `lib/auth.ts` (NextAuth options) must not import from `repositories/` or `lib/password`. Its `authorize` delegates to a service function (`verifyCredentials`) instead. Same principle as "services don't import mongoose": each layer owns its concern.
 
 ### ServiceResult contract
 
@@ -124,7 +159,9 @@ This shape feeds directly into `useActionState` on the client.
 ### Models (`lib/models/*.model.ts`)
 
 - Use the pattern `mongoose.models.X || mongoose.model("X", schema)` to avoid `OverwriteModelError`.
-- Currently implemented: `JobModel`, `ApplicationModel`. **No `CandidateModel` yet.**
+- Currently implemented: `JobModel`, `ApplicationModel`, `UserModel`. **No `CandidateModel` yet.**
+- `UserModel` holds **identity only** (email, name, role, passwordHash). Profile data (phone, skills, experience, etc.) is intentionally **not** on this model — those belong on a future `CandidateProfile` model.
+- `User.role` is constrained by the `ROLES` const tuple from `types/Roles.ts` (`["CANDIDATE", "ADMIN"]`).
 
 ### Repository mapper
 
@@ -160,9 +197,24 @@ Rationale (must teach this): the candidate/job can change after applying, but th
 
 `findAllJobs` and `findJobById` use `$lookup` against the `applications` collection to compute `applicants: { $size: "$applications" }` at query time. Applicant counts are derived, not stored on the job document.
 
+### Password handling
+
+- All password operations go through `lib/password.ts` (`hashPassword`, `verifyPassword`). Services never call `bcryptjs` directly.
+- `SALT_ROUNDS = 10`.
+- `users.repository.ts` exposes two read methods on purpose:
+  - `findUserByEmail(email)` → `User | null` (no `passwordHash` in the return type — safe for general use).
+  - `findUserByEmailWithPassword(email)` → `(User & { passwordHash }) | null` (auth-only path).
+- A service must never return `passwordHash` to the action/route layer.
+
 ---
 
-## 6. Server Actions
+## 6. Server Actions and Form Patterns
+
+There are **two form patterns** in the app, used for two different reasons:
+
+### Pattern A — Server Action + `useActionState` (CRUD)
+
+Used for: `CreateJobForm`, `JobApplyForm`, etc.
 
 - Server Actions live in `app/actions/<entity>/<entity>.action.ts`.
 - Each action:
@@ -171,6 +223,26 @@ Rationale (must teach this): the candidate/job can change after applying, but th
   3. Returns `{ errors }` on failure (matches `useActionState` shape).
   4. Calls `revalidatePath(path, "layout")` on success to invalidate any cached rendering.
 - Actions remain thin; all business logic stays in the service.
+- Form binds with `action={formAction}` from `useActionState`. Field-level errors come back through `state.errors.<field>?.[0]` and feed `<Input error=… />`.
+
+### Pattern B — Plain client handler (auth flows)
+
+Used for: `LoginForm`, `SignupForm`.
+
+- Authentication is a chained flow (call `signIn` or call action + `signIn`, then navigate). `useActionState`'s `formAction` doesn't expose a promise, which makes chaining awkward.
+- The form's `action` prop binds to a plain async handler in the client component. Inside it:
+  - Read `email`/`password` from `FormData` once and reuse them.
+  - Call the Server Action directly (`await handleSignup(formData)`) or `signIn("credentials", { …, redirect: false })`.
+  - Branch on the result, show inline errors via local `useState`, navigate with `useRouter().push` and `useRouter().refresh()`.
+- Server Actions used by Pattern B (currently just `handleSignup`) drop the `prevState` parameter — they're called as plain async functions.
+- `redirect()` is **not** used inside auth actions. The client orchestrates navigation because auth needs two steps (create + sign in) before navigating.
+
+### Picking between the two
+
+Default to Pattern A. Reach for Pattern B only when:
+
+- Multiple async calls must run in sequence after submission (e.g. `handleSignup` then `signIn`).
+- You need access to the resolved result of each call to decide what to do next (show inline error vs. navigate vs. fall back).
 
 ---
 
@@ -188,6 +260,83 @@ This was non-obvious and broke a prod build, so document explicitly:
 - Reason: this app uses Mongoose. Mongoose calls do **not** count as "dynamic API access," so without these exports Next.js would statically prerender pages at build time and serve stale empty data forever.
 - `cacheComponents: true` is **not** enabled. We intentionally stick with `force-dynamic` because it's simpler to teach and predictable across minor Next versions.
 - `revalidatePath` is still called in actions for belt-and-braces freshness and to bust the client router cache after mutations.
+
+---
+
+## 7b. Authentication (Day 10, complete)
+
+We use **NextAuth.js v4** (stable on Next.js 16) rather than v5 (still beta). Session strategy is **JWT**.
+
+### What's wired
+
+- `next-auth@^4` and `bcryptjs` installed.
+- `.env.local`: `NEXTAUTH_SECRET` (generated), `NEXTAUTH_URL=http://localhost:3000`.
+- `app/api/auth/[...nextauth]/route.ts` mounts the NextAuth handler.
+- `components/providers/SessionProvider.tsx` re-exports `next-auth/react`'s `SessionProvider`; `app/layout.tsx` wraps the tree with it.
+
+### `lib/auth.ts` (configuration only)
+
+- `session.strategy = "jwt"`.
+- `pages.signIn = "/login"`.
+- `providers`: a single `CredentialsProvider` whose `authorize` is a 4-line delegate:
+  ```ts
+  async authorize(credentials) {
+    if (!credentials?.email || !credentials?.password) return null;
+    return verifyCredentials(credentials.email, credentials.password);
+  }
+  ```
+- `callbacks.jwt`: writes `id` + `role` onto the token at sign-in (when `user` is present).
+- `callbacks.session`: copies `id` + `role` from the token onto `session.user` on every read.
+- `lib/auth.ts` **does not** import repositories, `bcryptjs`, or anything domain-specific. That's the rule.
+
+### `services/auth/auth.service.ts`
+
+Two exported functions:
+
+- `signup(input)`: validates with `signupSchema`, enforces password match, checks email uniqueness, hashes with `lib/password.hashPassword`, persists via `saveNewUser`. Returns `ServiceResult<User>`.
+- `verifyCredentials(email, password)`: looks up via `findUserByEmailWithPassword`, calls `verifyPassword`, returns `User | null`. **Does not** return the password hash. Used by `authorize`.
+
+The two functions intentionally return different shapes: `ServiceResult<User>` for form-bound flows (signup), `User | null` for NextAuth's `authorize` contract (login).
+
+### Type augmentation (`types/next-auth.d.ts`)
+
+Adds `id` + `role` to `Session.user`, `User`, and `JWT` via module augmentation. Uses `extends DefaultUser` / `extends DefaultJWT` so we keep the built-in fields (`name`, `email`, `image`, `iat`, `exp`).
+
+Without this, `user.role` and `token.role` red-squiggle in `lib/auth.ts`.
+
+### Signup flow (Lecture 98 + Lecture 100 cleanup)
+
+- `app/(client)/signup/page.tsx` — server component, calls `getServerSession`; redirects to `/` if already signed in.
+- `components/auth/SignupForm.tsx` — **plain client handler** (not `useActionState`):
+  1. Reads `email`/`password` from `FormData` once.
+  2. Calls `handleSignup(formData)` Server Action.
+  3. On success, calls `signIn("credentials", { email, password, redirect: false })` with the same credentials.
+  4. Navigates with `router.push("/") + router.refresh()`.
+- `app/actions/auth/auth.action.ts` exports `handleSignup(formData)` returning `SignupResult = { errors } | undefined`. **No `redirect()` inside.** No `prevState` parameter — it's called as a plain async function.
+- History/narrative: Lecture 98 introduced secure signup with bcrypt. Lecture 100 focused specifically on the successful-signup redirect/entry behavior, then cleaned it up into the current auto-login flow so a new user enters the app immediately instead of being sent back to a separate login step.
+
+### Login flow
+
+- `app/(client)/login/page.tsx` — server component, calls `getServerSession`; redirects to `/` if already signed in.
+- `components/auth/LoginForm.tsx` — plain client handler that calls `signIn("credentials", { …, redirect: false })`, displays inline error on failure, navigates on success with `router.push("/") + router.refresh()`.
+
+### Session in the UI
+
+- `components/auth/AuthArea.tsx` uses `useSession()`:
+  - `status === "loading"` → render a placeholder.
+  - No session → render LOG IN / SIGN UP links.
+  - Session → render `name (role)` + a SIGN OUT button calling `signOut({ callbackUrl: "/" })`.
+- Mounted inside the public navbar.
+
+### Session-derived candidate id
+
+`services/applications/applications.service.ts` no longer hardcodes a candidate id. `applyToJob` calls `getServerSession(authOptions)` and uses `session.user.id`. If there's no session, it returns `ServiceResult` with `errors.auth = ["You must be logged in to apply"]`.
+
+### Not yet implemented (Day 11+)
+
+- **Admin authorization**: the admin subdomain still has no role check. Plan: `proxy.ts` calls `getToken({ req, secret })` on the admin host and bounces non-`ADMIN` users.
+- **Defense-in-depth role checks**: admin server components / actions should additionally re-check `session.user.role === "ADMIN"`.
+- **Candidates migration**: `services/candidates/candidates.service.ts` still returns mock data. To be replaced with `findUsersByRole("CANDIDATE")`.
 
 ---
 
@@ -213,9 +362,14 @@ These are deliberate placeholders. When extending features, **don't quietly remo
 
 | Area | Current state | Planned in |
 |------|---------------|------------|
-| Authentication | None. `services/applications/applications.service.ts` hardcodes `candidateId: "69f21dc7e02f33189d6b08d8"` with a TODO. | Day 10 (NextAuth.js) |
-| Authorization | None — anyone hitting admin subdomain has full access. | Day 11 |
-| Candidates persistence | `services/candidates/candidates.service.ts` still returns the static `CandidateData` array. No `CandidateModel`. | Future |
+| Signup | Implemented end-to-end with bcrypt hashing. Lecture 100 added and cleaned up the success redirect behavior into auto-login, so users enter the app immediately after signup. | ✅ Lectures 96–98, 100 |
+| Login | `CredentialsProvider` with `authorize` delegating to `verifyCredentials` service. JWT sessions, `id` + `role` on `session.user`. Plain client form with `signIn`. | ✅ Lecture 99 |
+| Session-derived candidate id | `applyToJob` reads `getServerSession(authOptions)?.user.id`. Returns `errors.auth` if no session. | ✅ Lecture 99 |
+| NextAuth type augmentation | `types/next-auth.d.ts` adds `id` + `role` to `Session.user`, `User`, `JWT` via `extends DefaultUser` / `extends DefaultJWT`. | ✅ Lecture 99 |
+| Logged-in guards | `/login` and `/signup` server pages call `getServerSession` and `redirect("/")` if a session exists. | ✅ Lecture 99 |
+| Sign out | `AuthArea` calls `signOut({ callbackUrl: "/" })`. | ✅ Lecture 99 |
+| Authorization (admin role gate) | None — anyone hitting admin subdomain has full access. Need `proxy.ts` `getToken` check on admin host + defense-in-depth in server components. | Day 11 |
+| Candidates persistence | `services/candidates/candidates.service.ts` still returns the static `CandidateData` array. No `CandidateModel`. The dashboard "candidates" tab will be replaced by `findUsersByRole("CANDIDATE")`. | Day 11+ |
 | Resume file upload | `candidateResume` field exists on the application schema as a string placeholder. No upload pipeline. | Future (file uploads day) |
 | Application active-job check | Marked TODO in `applyToJob`. | Future |
 | Duplicate-application check | Marked TODO in `applyToJob`. | Future |
@@ -252,6 +406,19 @@ These are deliberate placeholders. When extending features, **don't quietly remo
 - Path alias `@/` maps to project root.
 - Use `import type { X } from "..."` for type-only imports where it avoids bringing runtime code along.
 
+### Auth & session conventions
+
+- **NextAuth options live in `lib/auth.ts` and contain configuration only.** No `repositories/` or `lib/password` imports — the `authorize` callback delegates to a service function.
+- **Two form patterns**, picked by use case (full details in §6):
+  - Server Action + `useActionState` for CRUD (`CreateJobForm`, `JobApplyForm`).
+  - Plain client handler + `signIn`/`signOut` + `useRouter` for auth (`LoginForm`, `SignupForm`).
+- **Reading the session**:
+  - Server: `await getServerSession(authOptions)` — no fetch, just cookie + crypto.
+  - Client: `useSession()` — fetches `/api/auth/session` once and shares it through `SessionProvider`.
+  - Both return the same `{ user: { id, name, email, role }, expires }` shape thanks to the augmentation in `types/next-auth.d.ts`.
+- **Adding fields to the session**: extend `Session.user`, `User`, and `JWT` in `types/next-auth.d.ts` first, then write them in the `jwt` callback (sign-in only) and read them in the `session` callback (every read).
+- **Never serialize `passwordHash` outside the repository's auth-only path** (`findUserByEmailWithPassword`). Services strip it before returning.
+
 ---
 
 ## 11. Course Day-by-Day Progress (Source of Truth)
@@ -270,11 +437,11 @@ Past days that are actually reflected in the codebase:
 | 7 | Staging + branching | `feature/* → development → production` workflow, staging subdomains, release tags |
 | 8 | Backend setup | Server Actions in `app/actions/`, services/repositories scaffolding, zod validation, `useActionState` integration |
 | 9 | DB integration with MongoDB | `lib/db.ts` singleton, `lib/models/job.model.ts`, `lib/models/application.model.ts`, repositories with mappers, aggregation for applicants count, end-to-end "apply to job" flow with mock candidate, Dockerfile `ARG MONGO_URI`, `force-dynamic` layouts, `revalidatePath` in actions, deployed |
+| 10 | Authentication — Lectures 96–100 | **NextAuth.js v4 + JWT sessions, end-to-end.** Scaffolding (`lib/auth.ts`, `app/api/auth/[...nextauth]/route.ts`, `SessionProvider` in root layout). `UserModel`, `Role` const tuple, `users.repository.ts` (with `findUserByEmail` / `findUserByEmailWithPassword` split). `lib/password.ts` for bcryptjs. **Signup**: server-side validation + password match + uniqueness + bcrypt hash via `signup` service; Lecture 100 separately introduced the success redirect/entry behavior and cleaned it up into the current plain client handler that auto-`signIn`s on success. **Login**: `CredentialsProvider.authorize` delegates to `verifyCredentials` service; plain client handler calls `signIn("credentials", { redirect: false })`. **Types**: `types/next-auth.d.ts` augments `Session.user`, `User`, `JWT` with `id` + `role`. **Callbacks**: `jwt` writes `id` + `role` at sign-in, `session` copies them on every read. **UI**: `AuthArea` in navbar via `useSession`, sign out via `signOut`. **Guards**: `/login` and `/signup` server pages bounce signed-in users to `/`. **Payoff**: `applyToJob` reads `getServerSession(...).user.id` — no more hardcoded `candidateId`. |
 
 ### Planned next
 
-- **Day 10** — Authentication (NextAuth.js). Replace the hardcoded `candidateId` in `applyToJob` with the real session candidate.
-- **Day 11** — Authorization and route protection (admin vs candidate).
+- **Day 11** — Authorization. Admin-role gate at the edge in `proxy.ts` using `getToken({ req, secret })`, plus defense-in-depth `session.user.role === "ADMIN"` checks inside admin server components and actions. Migrate `services/candidates/candidates.service.ts` to `findUsersByRole("CANDIDATE")` and retire `data/CandidateData.ts`.
 - **Day 12+** — Performance, caching strategy, SEO, testing, CI/CD, AI screening, file uploads, i18n.
 
 ---
@@ -298,3 +465,11 @@ Keep this mindset when proposing changes: prefer the smallest reasonable step th
 - New job not appearing after create → check that the action calls `revalidatePath`, and that the layout exports `force-dynamic`.
 - Build fails on DigitalOcean with `MONGO_URI is not defined` → Dockerfile must declare `ARG MONGO_URI`/`ENV MONGO_URI=$MONGO_URI` in the builder stage and the env var must have build-time scope.
 - TypeScript complains about `instanceof Date` on a `string` field → widen the `Lean` type in the repository to `string | Date` for that field; final domain type stays `string`.
+- NextAuth says `[next-auth][error][NO_SECRET]` → `NEXTAUTH_SECRET` is missing from the runtime env. Required even with JWT sessions.
+- `useSession` returns `undefined` forever → `app/layout.tsx` must wrap `{children}` in `<SessionProvider>` (the client wrapper from `components/providers/SessionProvider.tsx`).
+- A user shows `role: undefined` in the session → JWT/session callbacks aren't propagating it; check `lib/auth.ts` callbacks and confirm `types/next-auth.d.ts` augments `User`/`JWT`/`Session.user`.
+- `Property 'role' does not exist on type 'User | AdapterUser'` in `lib/auth.ts` → `types/next-auth.d.ts` is missing or the TS server hasn't reloaded. Create the file using `extends DefaultUser` / `extends DefaultJWT`, then `Cmd+Shift+P → TypeScript: Restart TS Server`.
+- After login, navbar still shows LOG IN / SIGN UP until the next click → the client called `signIn` but forgot `router.refresh()`. `useSession` updates on its own, but server components on the destination need the refresh to re-render with the new cookie.
+- `signIn(...)` immediately redirects to a NextAuth error page and you can't show inline errors → you forgot `redirect: false`. With that flag, `signIn` returns `{ ok, error }` so the form can render an inline message and navigate itself.
+- Signup form submits but the user is "stranded" on `/signup` after success → the action returned `undefined` and no client-side navigation followed. Current Lecture 100 cleanup uses auto-login: call `signIn("credentials", { …, redirect: false })` in the same client handler, then `router.push("/") + router.refresh()`.
+- `applyToJob` errors with `errors.auth = ["You must be logged in to apply"]` even though the user appears logged-in → the request reaching the server has no `next-auth.session-token` cookie. Confirm `<SessionProvider>` is mounted, the user actually signed in (cookie present in DevTools), and the request is same-origin.
