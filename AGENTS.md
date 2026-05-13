@@ -79,29 +79,38 @@ app/
 components/                   ← UI (route-grouped: jobs/, applications/, users/, dashboard/, navbar/, ui/, common/, landing/, job-management/)
   auth/SignupForm.tsx         ← signup form (plain client handler; auto-`signIn` on success)
   auth/LoginForm.tsx          ← login form (plain client handler; calls `signIn("credentials")`)
-  auth/AuthArea.tsx           ← navbar widget (useSession + signOut)
+  navbar/NavbarHeader.tsx     ← server navbar shell
+  navbar/NavbarLinks.tsx      ← client active-link component (`usePathname`)
+  navbar/NavbarAccount.tsx    ← server account area (`getCurrentUser`)
+  navbar/SignOutButton.tsx    ← client sign-out click handler
+  users/UserNotFound.tsx      ← simple missing-profile state used on apply page
   providers/SessionProvider.tsx    ← client wrapper around next-auth/react SessionProvider
 context/                      ← Client-side React contexts (jobs/, applications/, users/)
 data/                         ← Static mock data (CandidateData.ts is still live; JobsData/ApplicationsData removed since real DB)
+hooks/
+  useCurrentUser.ts           ← client hook over `useSession()`; reserved for client-only auth UI
 lib/
   db.ts                       ← Mongoose singleton (globalThis cache)
   auth.ts                     ← NextAuth.js authOptions (JWT strategy)
+  current-user.ts             ← server helper over `getServerSession(authOptions)`
   password.ts                 ← bcryptjs wrapper (hashPassword / verifyPassword)
-  models/                     ← Mongoose schemas (Job, Application, User)
+  models/                     ← Mongoose schemas (Job, Application, User, UserProfile)
   utils.ts                    ← shared utilities (cn helper, etc.)
 repositories/                 ← Mongo access layer (one .repository.ts per entity)
   jobs.repository.ts
   applications.repository.ts
   users.repository.ts
+  user-profiles.repository.ts
 services/                     ← Business logic (one folder per entity)
   jobs/
     jobs.service.ts
     jobs.validation.ts        ← zod schemas + inferred types
   applications/
   auth/                       ← signup/login services + validation
+  users/                      ← user-related use cases, including current user profile
   candidates/                 ← Service exists but still returns static CandidateData
 docs/                         ← Long-form day-by-day course implementation notes
-types/                        ← Domain types (Job, Application, Candidate, User, Role, ServiceResult, StatusFilters)
+types/                        ← Domain types (Job, Application, Candidate, User, UserProfile, Role, ServiceResult, StatusFilters)
   next-auth.d.ts              ← module augmentation: adds `id` + `role` to Session.user, User, JWT
 utils/                        ← Cross-cutting helpers
 proxy.ts                      ← Next.js 16 proxy (subdomain routing)
@@ -159,9 +168,10 @@ This shape feeds directly into `useActionState` on the client.
 ### Models (`lib/models/*.model.ts`)
 
 - Use the pattern `mongoose.models.X || mongoose.model("X", schema)` to avoid `OverwriteModelError`.
-- Currently implemented: `JobModel`, `ApplicationModel`, `UserModel`. **No `CandidateModel` yet.**
+- Currently implemented: `JobModel`, `ApplicationModel`, `UserModel`, `UserProfileModel`. **No `CandidateModel` yet.**
 - `UserModel` holds **identity only** (email, name, role, passwordHash). Profile data (phone, skills, experience, etc.) is intentionally **not** on this model — those belong on a future `CandidateProfile` model.
 - `User.role` is constrained by the `ROLES` const tuple from `types/Roles.ts` (`["CANDIDATE", "ADMIN"]`).
+- `UserProfileModel` holds editable candidate profile data keyed by `userId` (`unique: true`). Current fields: `linkedin`, optional `resumeUrl`.
 
 ### Repository mapper
 
@@ -263,7 +273,7 @@ This was non-obvious and broke a prod build, so document explicitly:
 
 ---
 
-## 7b. Authentication (Day 10, complete)
+## 7b. Authentication (Day 10, in progress)
 
 We use **NextAuth.js v4** (stable on Next.js 16) rather than v5 (still beta). Session strategy is **JWT**.
 
@@ -306,7 +316,7 @@ Without this, `user.role` and `token.role` red-squiggle in `lib/auth.ts`.
 
 ### Signup flow (Lecture 98 + Lecture 100 cleanup)
 
-- `app/(client)/signup/page.tsx` — server component, calls `getServerSession`; redirects to `/` if already signed in.
+- `app/(client)/signup/page.tsx` — server component, calls `getCurrentUser()`; redirects to `/` if already signed in.
 - `components/auth/SignupForm.tsx` — **plain client handler** (not `useActionState`):
   1. Reads `email`/`password` from `FormData` once.
   2. Calls `handleSignup(formData)` Server Action.
@@ -317,23 +327,43 @@ Without this, `user.role` and `token.role` red-squiggle in `lib/auth.ts`.
 
 ### Login flow
 
-- `app/(client)/login/page.tsx` — server component, calls `getServerSession`; redirects to `/` if already signed in.
+- `app/(client)/login/page.tsx` — server component, calls `getCurrentUser()`; redirects to `/` if already signed in.
 - `components/auth/LoginForm.tsx` — plain client handler that calls `signIn("credentials", { …, redirect: false })`, displays inline error on failure, navigates on success with `router.push("/") + router.refresh()`.
 
-### Session in the UI
+### Current user helpers (Lecture 101)
 
-- `components/auth/AuthArea.tsx` uses `useSession()`:
-  - `status === "loading"` → render a placeholder.
-  - No session → render LOG IN / SIGN UP links.
-  - Session → render `name (role)` + a SIGN OUT button calling `signOut({ callbackUrl: "/" })`.
-- Mounted inside the public navbar.
+- `lib/current-user.ts` exports `getCurrentUser()`, a server helper that calls `getServerSession(authOptions)` and maps the NextAuth session into the app's `User` type (`id`, `email`, `name`, `role`) or `null`.
+- `/login` and `/signup` use `getCurrentUser()` to redirect already signed-in users to `/`.
+- `hooks/useCurrentUser.ts` exports a client hook over `useSession()` and returns the same `User | null` shape. It is available for client-only auth UI, but server-owned operations still use `getCurrentUser()`.
+- The client hook is for UI convenience only. Server actions/services must still call `getCurrentUser()` and must not trust client-submitted identity fields.
+
+### User profile (Lecture 102)
+
+- `types/UserProfile.ts` defines profile data separate from identity: `id`, `userId`, `linkedin`, optional `resumeUrl`.
+- `lib/models/user-profile.model.ts` defines `UserProfileModel`; `userId` references `User` and is unique so each user has one profile.
+- `repositories/user-profiles.repository.ts` owns profile persistence and mapping (`_id → id`, `userId → string`).
+- `services/users/users.service.ts` exposes `getCurrentUserProfile()`. It calls `getCurrentUser()`, fetches the profile by `currentUser.id`, and returns a combined `(UserProfile & User)` object for pages that need both identity and profile fields.
+- Signup now collects `linkedin` and `services/auth/auth.service.ts` creates both the `User` and the linked `UserProfile`.
+- `app/(client)/jobs/[id]/page.tsx` calls `getCurrentUserProfile()` server-side. If the profile is missing, it renders `components/users/UserNotFound.tsx`; otherwise it passes the combined object into `JobApplyForm`.
+- `components/jobs/JobApplyForm.tsx` receives `userProfile` as a prop and uses it to prefill name, email, and LinkedIn. It still submits these as snapshot fields, while `applyToJob` derives true ownership from the server session.
+- LinkedIn/profile data is **not** stored in the JWT/session. Session remains for identity/authorization (`id`, `name`, `email`, `role`); profile is editable product data and is fetched when needed.
 
 ### Session-derived candidate id
 
-`services/applications/applications.service.ts` no longer hardcodes a candidate id. `applyToJob` calls `getServerSession(authOptions)` and uses `session.user.id`. If there's no session, it returns `ServiceResult` with `errors.auth = ["You must be logged in to apply"]`.
+`services/applications/applications.service.ts` no longer hardcodes a candidate id. `applyToJob` calls `getCurrentUser()` and uses `currentUser.id`. If there's no current user, it returns `ServiceResult` with `errors.auth = ["You must be logged in to apply"]`.
+
+### Navbar auth state (Lecture 103)
+
+- `components/navbar/NavbarHeader.tsx` remains a server component and owns the navbar shell/layout.
+- `components/navbar/NavbarLinks.tsx` is a small client component because active link styling needs `usePathname()`.
+- `components/navbar/NavbarAccount.tsx` remains server-side and calls `getCurrentUser()` to render either guest links (`LOGIN`, `SIGN UP`) or the signed-in user's name plus sign-out.
+- `components/navbar/SignOutButton.tsx` is client-side because it handles a browser click and calls `signOut()` from `next-auth/react`.
+- The middle nav links are styled as underline/active links rather than brutal bordered buttons.
+- This is UX only. Hiding/showing navbar links is not authorization; server actions and admin pages still need protection in later lessons.
 
 ### Not yet implemented (Day 11+)
 
+- **Protecting server actions**: upcoming lesson will make auth checks explicit in sensitive Server Actions, not just service functions.
 - **Admin authorization**: the admin subdomain still has no role check. Plan: `proxy.ts` calls `getToken({ req, secret })` on the admin host and bounces non-`ADMIN` users.
 - **Defense-in-depth role checks**: admin server components / actions should additionally re-check `session.user.role === "ADMIN"`.
 - **Candidates migration**: `services/candidates/candidates.service.ts` still returns mock data. To be replaced with `findUsersByRole("CANDIDATE")`.
@@ -364,12 +394,15 @@ These are deliberate placeholders. When extending features, **don't quietly remo
 |------|---------------|------------|
 | Signup | Implemented end-to-end with bcrypt hashing. Lecture 100 added and cleaned up the success redirect behavior into auto-login, so users enter the app immediately after signup. | ✅ Lectures 96–98, 100 |
 | Login | `CredentialsProvider` with `authorize` delegating to `verifyCredentials` service. JWT sessions, `id` + `role` on `session.user`. Plain client form with `signIn`. | ✅ Lecture 99 |
-| Session-derived candidate id | `applyToJob` reads `getServerSession(authOptions)?.user.id`. Returns `errors.auth` if no session. | ✅ Lecture 99 |
+| Current logged user | `lib/current-user.ts` exposes server `getCurrentUser()`. `hooks/useCurrentUser.ts` exposes the client-side session-derived user for UI convenience. | ✅ Lecture 101 |
+| User profile | Signup collects LinkedIn and creates a linked `UserProfile`. `getCurrentUserProfile()` returns combined identity + profile data from the users service. | ✅ Lecture 102 |
+| Session-derived candidate id | `applyToJob` reads `getCurrentUser()?.id`. Returns `errors.auth` if no user. | ✅ Lecture 101 |
 | NextAuth type augmentation | `types/next-auth.d.ts` adds `id` + `role` to `Session.user`, `User`, `JWT` via `extends DefaultUser` / `extends DefaultJWT`. | ✅ Lecture 99 |
-| Logged-in guards | `/login` and `/signup` server pages call `getServerSession` and `redirect("/")` if a session exists. | ✅ Lecture 99 |
-| Sign out | `AuthArea` calls `signOut({ callbackUrl: "/" })`. | ✅ Lecture 99 |
+| Apply form prefill | Job page fetches `getCurrentUserProfile()` server-side and passes combined user/profile data to `JobApplyForm`, which prefills name, email, and LinkedIn. | ✅ Lecture 102 |
+| Logged-in guards | `/login` and `/signup` server pages call `getCurrentUser()` and `redirect("/")` if a user exists. | ✅ Lecture 101 |
+| Navbar auth state + sign out | Navbar shell stays server-side. Active links use `NavbarLinks` client component. Account area uses server `getCurrentUser()`. Sign out is isolated to `SignOutButton` client component. | ✅ Lecture 103 |
 | Authorization (admin role gate) | None — anyone hitting admin subdomain has full access. Need `proxy.ts` `getToken` check on admin host + defense-in-depth in server components. | Day 11 |
-| Candidates persistence | `services/candidates/candidates.service.ts` still returns the static `CandidateData` array. No `CandidateModel`. The dashboard "candidates" tab will be replaced by `findUsersByRole("CANDIDATE")`. | Day 11+ |
+| Candidates persistence | `services/candidates/candidates.service.ts` still returns the static `CandidateData` array. No `CandidateModel`. Candidate identity/profile is now represented by `User` + `UserProfile`, but the admin candidates page has not migrated yet. | Day 11+ |
 | Resume file upload | `candidateResume` field exists on the application schema as a string placeholder. No upload pipeline. | Future (file uploads day) |
 | Application active-job check | Marked TODO in `applyToJob`. | Future |
 | Duplicate-application check | Marked TODO in `applyToJob`. | Future |
@@ -412,10 +445,13 @@ These are deliberate placeholders. When extending features, **don't quietly remo
 - **Two form patterns**, picked by use case (full details in §6):
   - Server Action + `useActionState` for CRUD (`CreateJobForm`, `JobApplyForm`).
   - Plain client handler + `signIn`/`signOut` + `useRouter` for auth (`LoginForm`, `SignupForm`).
-- **Reading the session**:
-  - Server: `await getServerSession(authOptions)` — no fetch, just cookie + crypto.
-  - Client: `useSession()` — fetches `/api/auth/session` once and shares it through `SessionProvider`.
-  - Both return the same `{ user: { id, name, email, role }, expires }` shape thanks to the augmentation in `types/next-auth.d.ts`.
+- **Reading the current user**:
+  - Server: `await getCurrentUser()` from `lib/current-user.ts` — wraps `getServerSession(authOptions)` and returns the app's `User | null`.
+  - Client: `useCurrentUser()` from `hooks/useCurrentUser.ts` — wraps `useSession()` and returns `User | null` for UI convenience.
+  - Both helpers return the same app-level `User | null` shape (`id`, `name`, `email`, `role`) thanks to the augmentation in `types/next-auth.d.ts`.
+- Server-side ownership/security decisions must use `getCurrentUser()`. Client-side helpers are only for UI state and prefill.
+- **Profile data is not session data.** LinkedIn/resume/profile fields live in `UserProfile` and are fetched through repositories/services when needed. Do not put editable profile fields into the JWT/session.
+- The users service may orchestrate multiple user-related repositories. Current example: `services/users/users.service.ts` calls both `getCurrentUser()` and `user-profiles.repository.ts` to return a combined current-user profile view.
 - **Adding fields to the session**: extend `Session.user`, `User`, and `JWT` in `types/next-auth.d.ts` first, then write them in the `jwt` callback (sign-in only) and read them in the `session` callback (every read).
 - **Never serialize `passwordHash` outside the repository's auth-only path** (`findUserByEmailWithPassword`). Services strip it before returning.
 
@@ -437,11 +473,12 @@ Past days that are actually reflected in the codebase:
 | 7 | Staging + branching | `feature/* → development → production` workflow, staging subdomains, release tags |
 | 8 | Backend setup | Server Actions in `app/actions/`, services/repositories scaffolding, zod validation, `useActionState` integration |
 | 9 | DB integration with MongoDB | `lib/db.ts` singleton, `lib/models/job.model.ts`, `lib/models/application.model.ts`, repositories with mappers, aggregation for applicants count, end-to-end "apply to job" flow with mock candidate, Dockerfile `ARG MONGO_URI`, `force-dynamic` layouts, `revalidatePath` in actions, deployed |
-| 10 | Authentication — Lectures 96–100 | **NextAuth.js v4 + JWT sessions, end-to-end.** Scaffolding (`lib/auth.ts`, `app/api/auth/[...nextauth]/route.ts`, `SessionProvider` in root layout). `UserModel`, `Role` const tuple, `users.repository.ts` (with `findUserByEmail` / `findUserByEmailWithPassword` split). `lib/password.ts` for bcryptjs. **Signup**: server-side validation + password match + uniqueness + bcrypt hash via `signup` service; Lecture 100 separately introduced the success redirect/entry behavior and cleaned it up into the current plain client handler that auto-`signIn`s on success. **Login**: `CredentialsProvider.authorize` delegates to `verifyCredentials` service; plain client handler calls `signIn("credentials", { redirect: false })`. **Types**: `types/next-auth.d.ts` augments `Session.user`, `User`, `JWT` with `id` + `role`. **Callbacks**: `jwt` writes `id` + `role` at sign-in, `session` copies them on every read. **UI**: `AuthArea` in navbar via `useSession`, sign out via `signOut`. **Guards**: `/login` and `/signup` server pages bounce signed-in users to `/`. **Payoff**: `applyToJob` reads `getServerSession(...).user.id` — no more hardcoded `candidateId`. |
+| 10 (in progress) | Authentication — Lectures 96–103 | **NextAuth.js v4 + JWT sessions, in progress.** Scaffolding (`lib/auth.ts`, `app/api/auth/[...nextauth]/route.ts`, `SessionProvider` in root layout). `UserModel`, `Role` const tuple, `users.repository.ts` (with `findUserByEmail` / `findUserByEmailWithPassword` split). `lib/password.ts` for bcryptjs. **Signup**: server-side validation + password match + uniqueness + bcrypt hash via `signup` service; Lecture 100 separately introduced the success redirect/entry behavior and cleaned it up into the current plain client handler that auto-`signIn`s on success. **Login**: `CredentialsProvider.authorize` delegates to `verifyCredentials` service; plain client handler calls `signIn("credentials", { redirect: false })`. **Types/callbacks**: `types/next-auth.d.ts` augments `Session.user`, `User`, `JWT` with `id` + `role`; callbacks write/read those fields. **Lecture 101**: `getCurrentUser()` wraps `getServerSession` for server pages/services; `useCurrentUser()` wraps `useSession` for client-only UI; `/login` and `/signup` bounce signed-in users to `/`; `applyToJob` reads `getCurrentUser().id` — no more hardcoded `candidateId`. **Lecture 102**: `UserProfileModel`, `user-profiles.repository.ts`, and `services/users/users.service.ts`; signup creates `UserProfile` with LinkedIn; job details page fetches `getCurrentUserProfile()` and passes combined identity/profile data to `JobApplyForm`, pre-filling name, email, and LinkedIn. **Lecture 103**: navbar auth state with a server `NavbarAccount`, client `NavbarLinks` for active underline styling, and client `SignOutButton` for sign-out interaction. |
 
 ### Planned next
 
-- **Day 11** — Authorization. Admin-role gate at the edge in `proxy.ts` using `getToken({ req, secret })`, plus defense-in-depth `session.user.role === "ADMIN"` checks inside admin server components and actions. Migrate `services/candidates/candidates.service.ts` to `findUsersByRole("CANDIDATE")` and retire `data/CandidateData.ts`.
+- **Day 10 remaining** — Lesson 104 protected Server Actions, then admin route protection and RBAC lessons.
+- **Day 11** — Follow-up authorization hardening if not completed in the Day 10 security section: admin-role gate at the edge in `proxy.ts` using `getToken({ req, secret })`, plus defense-in-depth `session.user.role === "ADMIN"` checks inside admin server components and actions. Migrate `services/candidates/candidates.service.ts` to `findUsersByRole("CANDIDATE")` and retire `data/CandidateData.ts`.
 - **Day 12+** — Performance, caching strategy, SEO, testing, CI/CD, AI screening, file uploads, i18n.
 
 ---
@@ -473,3 +510,7 @@ Keep this mindset when proposing changes: prefer the smallest reasonable step th
 - `signIn(...)` immediately redirects to a NextAuth error page and you can't show inline errors → you forgot `redirect: false`. With that flag, `signIn` returns `{ ok, error }` so the form can render an inline message and navigate itself.
 - Signup form submits but the user is "stranded" on `/signup` after success → the action returned `undefined` and no client-side navigation followed. Current Lecture 100 cleanup uses auto-login: call `signIn("credentials", { …, redirect: false })` in the same client handler, then `router.push("/") + router.refresh()`.
 - `applyToJob` errors with `errors.auth = ["You must be logged in to apply"]` even though the user appears logged-in → the request reaching the server has no `next-auth.session-token` cookie. Confirm `<SessionProvider>` is mounted, the user actually signed in (cookie present in DevTools), and the request is same-origin.
+- Job details page shows `UserProfileNotFound` for a signed-in user → the user likely predates Lecture 102 and has no `userprofiles` document. Create a profile for that user or sign up a fresh account after the LinkedIn field was added.
+- LinkedIn does not prefill in `JobApplyForm` → do not expect it from `useSession()`. The page must call `getCurrentUserProfile()` server-side and pass the returned profile into the client form.
+- Navbar active state works on `/jobs` but not `/jobs/[id]` → `NavbarLinks` is using exact pathname matching. Use `pathname.startsWith("/jobs")` for the jobs link if nested job routes should stay active.
+- Navbar account cells look misaligned → do not mix the shared `Button` CTA defaults with plain navbar cells unless classes are normalized. The shared `Button` includes default padding, shadow, and hover transforms; navbar account cells need compact, consistent classes.
