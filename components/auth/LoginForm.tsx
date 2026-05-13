@@ -52,7 +52,7 @@ function LoginForm({ callbackUrl = "/" }: Props) {
       </Button>
       {error && <p className="text-red-500 text-sm">{error}</p>}
       <p className="text-center text-sm text-muted-foreground">
-        You don't have an account?{" "}
+        You don&apos;t have an account?{" "}
         <Link href="/signup" className="text-accent hover:underline">
           SIGN UP
         </Link>
