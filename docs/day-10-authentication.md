@@ -6,7 +6,7 @@ Add real authentication using NextAuth.js v4, create identity-only users, hash p
 
 ## Lectures Covered
 
-This day is represented in project context as Lectures 96-109. Lectures 96-103 are implemented so far.
+This day is represented in project context as Lectures 96-110. Lectures 96-105 are implemented so far.
 
 - Lecture 96 - Installing and Configuring NextAuth.js
 - Lecture 97 - Creating User Model and Roles
@@ -16,12 +16,13 @@ This day is represented in project context as Lectures 96-109. Lectures 96-103 a
 - Lecture 101 - Getting Current Logged User
 - Lecture 102 - Adding User Profile
 - Lecture 103 - Showing Auth State in the Navbar
-- Lecture 104 - Protecting Server Actions (planned)
-- Lecture 105 - Protecting Admin Pages with Proxy (planned)
-- Lecture 106 - Role-Based Access Control (RBAC) (planned)
-- Lecture 107 - Admin vs Candidate Access Rules (planned)
-- Lecture 108 - Feature Branch for Day 10 (planned)
-- Lecture 109 - Recap Day 10 (planned)
+- Lecture 104 - Protecting Server Action & Enhance UX | حماية السيرفر أكشن وتحسين تجربة المستخدم
+- Lecture 105 - Protecting Admin Pages with Proxy | حماية صفحات الأدمن باستخدام البروكسي
+- Lecture 106 - Clean Layout for Auth Pages | صفحات بسيطة لتسجيل الدخول وإنشاء حساب (planned)
+- Lecture 107 - Role-Based Access Control (RBAC) | التحكم في الصلاحيات حسب الدور (planned)
+- Lecture 108 - Admin vs Candidate Access Rules | صلاحيات الإدارة والمستخدمين (planned)
+- Lecture 109 - Feature Branch for Day (10) | برانش جيتهاب لليوم العاشر (planned)
+- Lecture 110 - Recap Day (10) | ملخص اليوم العاشر (planned)
 
 ## Commit Evidence
 
@@ -43,8 +44,10 @@ At the time this doc was written, Day 10 exists as working-tree changes plus `AG
 - `app/api/auth/[...nextauth]/route.ts`
 - `app/(client)/signup/page.tsx`
 - `app/(client)/login/page.tsx`
+- `app/(admin)/not-authorized/page.tsx`
 - `components/auth/SignupForm.tsx`
 - `components/auth/LoginForm.tsx`
+- `components/jobs/ApplyAuthPrompt.tsx`
 - `components/providers/SessionProvider.tsx`
 - `components/navbar/NavbarHeader.tsx`
 - `components/navbar/NavbarLinks.tsx`
@@ -56,6 +59,7 @@ At the time this doc was written, Day 10 exists as working-tree changes plus `AG
 - `types/User.ts`
 - `types/Roles.ts`
 - `types/next-auth.d.ts`
+- `proxy.ts`
 
 ## Final State
 
@@ -81,6 +85,11 @@ Day 10 authentication is in progress. So far it includes:
 - `JobApplyForm` prefills candidate name/email/LinkedIn from server-provided combined profile data.
 - `applyToJob` uses `getCurrentUser().id` instead of a hardcoded candidate id.
 - Navbar auth state with a server account component, client active-link component, and client sign-out button.
+- Guest users on the job details page now see an apply CTA that sends them to login/signup instead of `USER PROFILE NOT FOUND`.
+- Auth forms accept `callbackUrl`, so users can return to the job page or dashboard after login/signup.
+- Admin mutations are protected at the Server Action layer, starting with `handleCreateJob`.
+- Admin dashboard access is protected in `proxy.ts` using `getToken()` and the JWT `role`.
+- `app/(admin)/dashboard/layout.tsx` repeats the admin check as defense in depth.
 
 ## Main Files
 
@@ -171,7 +180,7 @@ Lecture 100 cleaned up success behavior. The current signup form:
 - uses a plain client handler
 - calls `handleSignup(formData)`
 - on success calls `signIn("credentials", { email, password, redirect: false })`
-- navigates with `router.push("/")`
+- navigates with `router.push(callbackUrl ?? "/")`
 - calls `router.refresh()`
 
 This means the user enters the app immediately after signup instead of logging in again.
@@ -284,6 +293,69 @@ For guests, the account area renders `LOGIN` and `SIGN UP`. For signed-in users,
 
 This lesson is still UI state, not security. The navbar can hide or show links, but protecting data still belongs in services, Server Actions, route handlers, pages, and proxy/RBAC checks.
 
+### Protecting Server Actions and apply UX
+
+- `components/jobs/ApplyAuthPrompt.tsx`
+- `app/(client)/jobs/[id]/page.tsx`
+- `components/auth/LoginForm.tsx`
+- `components/auth/SignupForm.tsx`
+- `app/actions/jobs/jobs.action.ts`
+- `components/job-management/CreateJobForm.tsx`
+
+Lecture 104 started from the bad guest experience on the apply page: a logged-out visitor saw `USER PROFILE NOT FOUND`, even though the real issue was that they had not logged in yet.
+
+The page now guides guests instead of showing a confusing profile error:
+
+```txt
+JobDetailsPage
+  -> getJob(id)
+  -> getCurrentUserProfile()
+  -> if no usable profile/user, show ApplyAuthPrompt
+  -> otherwise show JobApplyForm
+```
+
+`ApplyAuthPrompt` links to `/login?callbackUrl=/jobs/[id]` and `/signup?callbackUrl=/jobs/[id]`. The login and signup forms accept `callbackUrl` and navigate back after successful auth, so the user returns to the job page and sees the prefilled apply form.
+
+The security point remains separate from the UX point:
+
+- The page prompt guides honest users.
+- `applyToJob` still checks `getCurrentUser()` server-side before saving an application.
+- Admin mutations also need their own checks, so `handleCreateJob` now returns `errors.auth` unless the current user exists and has `role === "ADMIN"`.
+
+### Admin page protection with proxy
+
+- `proxy.ts`
+- `app/(admin)/not-authorized/page.tsx`
+- `app/(admin)/dashboard/layout.tsx`
+
+Lecture 105 protects admin routes before they render. It uses `getToken()` from `next-auth/jwt` because proxy runs before Server Components and should read the signed JWT directly from the request cookies.
+
+The proxy rules:
+
+```txt
+public host + /dashboard
+  -> redirect to /
+
+admin host + /
+  -> redirect to /dashboard
+
+admin host + unknown public path
+  -> redirect to /dashboard
+
+admin route + no token
+  -> redirect to /login?callbackUrl=/dashboard
+
+admin route + non-admin token
+  -> redirect to /not-authorized
+
+admin route + ADMIN token
+  -> allow
+```
+
+`app/(admin)/dashboard/layout.tsx` also checks `getCurrentUser()` and redirects guests/non-admins. This is defense in depth: proxy blocks early, and the dashboard layout still refuses access if the request reaches it.
+
+For testing, one user role is changed manually in MongoDB from `CANDIDATE` to `ADMIN`. After changing the role, the user must log out and log back in so the JWT receives the updated role.
+
 ## Auth Flow Summary
 
 Login request:
@@ -362,6 +434,9 @@ Day 10 is a sequence:
 11. Create the profile during signup with LinkedIn.
 12. Prefill the apply form with the logged-in user's name, email, and LinkedIn profile URL.
 13. Show the auth state in the navbar with a server account area and small client components only where browser APIs are needed.
+14. Improve the logged-out apply experience with a login/signup prompt and callback return.
+15. Protect sensitive Server Actions, starting with admin job creation.
+16. Protect admin routes with proxy-level JWT role checks and dashboard-layout defense in depth.
 
 The key teaching line:
 
@@ -369,9 +444,8 @@ The key teaching line:
 
 ## Known Remaining Work
 
-- Protect sensitive Server Actions explicitly.
-- Admin authorization is not done. Day 11 should protect the admin subdomain with `proxy.ts` and `getToken`.
-- Admin server components/actions should also check `session.user.role === "ADMIN"` for defense in depth.
+- Auth pages still render inside the regular client layout with navbar/footer. Lecture 106 will introduce a cleaner auth-only layout that can serve both public and admin login/signup flows.
+- Admin seeding is not implemented. For now, an existing user's role is changed manually in MongoDB for testing.
 - `services/candidates/candidates.service.ts` still returns mock `CandidateData`.
 - The admin candidates page has not migrated to `User` + `UserProfile` yet.
 - Resume upload is not implemented.

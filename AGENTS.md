@@ -63,6 +63,7 @@ app/
     applications/
     jobs/
     users/
+  (admin)/not-authorized/     ← friendly non-admin access page
   (client)/                   ← Public route group (wazifa.app)
     layout.tsx                ← force-dynamic + revalidate=0
     page.tsx                  ← landing
@@ -321,14 +322,14 @@ Without this, `user.role` and `token.role` red-squiggle in `lib/auth.ts`.
   1. Reads `email`/`password` from `FormData` once.
   2. Calls `handleSignup(formData)` Server Action.
   3. On success, calls `signIn("credentials", { email, password, redirect: false })` with the same credentials.
-  4. Navigates with `router.push("/") + router.refresh()`.
+  4. Navigates with `router.push(callbackUrl ?? "/") + router.refresh()`.
 - `app/actions/auth/auth.action.ts` exports `handleSignup(formData)` returning `SignupResult = { errors } | undefined`. **No `redirect()` inside.** No `prevState` parameter — it's called as a plain async function.
 - History/narrative: Lecture 98 introduced secure signup with bcrypt. Lecture 100 focused specifically on the successful-signup redirect/entry behavior, then cleaned it up into the current auto-login flow so a new user enters the app immediately instead of being sent back to a separate login step.
 
 ### Login flow
 
 - `app/(client)/login/page.tsx` — server component, calls `getCurrentUser()`; redirects to `/` if already signed in.
-- `components/auth/LoginForm.tsx` — plain client handler that calls `signIn("credentials", { …, redirect: false })`, displays inline error on failure, navigates on success with `router.push("/") + router.refresh()`.
+- `components/auth/LoginForm.tsx` — plain client handler that calls `signIn("credentials", { …, redirect: false })`, displays inline error on failure, navigates on success with `router.push(callbackUrl ?? "/") + router.refresh()`.
 
 ### Current user helpers (Lecture 101)
 
@@ -361,11 +362,34 @@ Without this, `user.role` and `token.role` red-squiggle in `lib/auth.ts`.
 - The middle nav links are styled as underline/active links rather than brutal bordered buttons.
 - This is UX only. Hiding/showing navbar links is not authorization; server actions and admin pages still need protection in later lessons.
 
+### Server Action protection + apply UX (Lecture 104)
+
+- `components/jobs/ApplyAuthPrompt.tsx` replaces the confusing guest-facing `USER PROFILE NOT FOUND` state on job details pages.
+- The apply prompt links to `/login?callbackUrl=/jobs/[id]` and `/signup?callbackUrl=/jobs/[id]`.
+- `LoginForm` and `SignupForm` accept `callbackUrl` and navigate there after successful auth, then call `router.refresh()`.
+- `applyToJob` still checks `getCurrentUser()` server-side before saving; the UI prompt is guidance, not security.
+- `app/actions/jobs/jobs.action.ts` now checks `getCurrentUser()` and requires `role === "ADMIN"` before creating a job.
+- `CreateJobForm` renders `errors.auth` and uses `isPending` for the submit button.
+
+### Admin route protection with proxy (Lecture 105)
+
+- `proxy.ts` uses `getToken({ req, secret: process.env.NEXTAUTH_SECRET })` from `next-auth/jwt` for route-level checks. Use `getToken()` in proxy, not `getServerSession()`.
+- Admin hosts: `admin.wazifa.app`, `dev-admin.wazifa.app`.
+- Public hosts: `wazifa.app`, `dev.wazifa.app`.
+- Public host + `/dashboard` redirects to `/`.
+- Admin host `/` redirects to `/dashboard`.
+- Admin host non-dashboard public paths redirect to `/dashboard`, except `/login` and `/not-authorized`.
+- Admin route with no JWT redirects to `/login?callbackUrl=/dashboard`.
+- Admin route with non-admin JWT redirects to `/not-authorized`.
+- Admin route with `role === "ADMIN"` continues.
+- `app/(admin)/dashboard/layout.tsx` repeats the `getCurrentUser()` + `role === "ADMIN"` check as defense in depth.
+- `app/(admin)/not-authorized/page.tsx` is the friendly non-admin page.
+- Testing currently requires manually changing a user's MongoDB role to `ADMIN`, then logging out/in so the JWT picks up the updated role. Admin seeding is a later lesson.
+
 ### Not yet implemented (Day 11+)
 
-- **Protecting server actions**: upcoming lesson will make auth checks explicit in sensitive Server Actions, not just service functions.
-- **Admin authorization**: the admin subdomain still has no role check. Plan: `proxy.ts` calls `getToken({ req, secret })` on the admin host and bounces non-`ADMIN` users.
-- **Defense-in-depth role checks**: admin server components / actions should additionally re-check `session.user.role === "ADMIN"`.
+- **Clean auth layout**: login/signup still render in the public layout with navbar/footer. Lecture 106 will introduce an auth-only layout that can support both public and admin auth flows.
+- **Admin seeding**: no seed script/route yet. Admin role is manually changed in MongoDB during the lesson.
 - **Candidates migration**: `services/candidates/candidates.service.ts` still returns mock data. To be replaced with `findUsersByRole("CANDIDATE")`.
 
 ---
@@ -401,7 +425,11 @@ These are deliberate placeholders. When extending features, **don't quietly remo
 | Apply form prefill | Job page fetches `getCurrentUserProfile()` server-side and passes combined user/profile data to `JobApplyForm`, which prefills name, email, and LinkedIn. | ✅ Lecture 102 |
 | Logged-in guards | `/login` and `/signup` server pages call `getCurrentUser()` and `redirect("/")` if a user exists. | ✅ Lecture 101 |
 | Navbar auth state + sign out | Navbar shell stays server-side. Active links use `NavbarLinks` client component. Account area uses server `getCurrentUser()`. Sign out is isolated to `SignOutButton` client component. | ✅ Lecture 103 |
-| Authorization (admin role gate) | None — anyone hitting admin subdomain has full access. Need `proxy.ts` `getToken` check on admin host + defense-in-depth in server components. | Day 11 |
+| Apply auth UX | Guests on job details see `ApplyAuthPrompt` with login/signup callback links instead of `USER PROFILE NOT FOUND`. | ✅ Lecture 104 |
+| Server Action protection | `applyToJob` requires a current user; `handleCreateJob` requires an admin user before creating jobs. | ✅ Lecture 104 |
+| Authorization (admin role gate) | `proxy.ts` uses `getToken()` and JWT `role` to protect admin routes; dashboard layout repeats the admin check as defense in depth. | ✅ Lecture 105 |
+| Auth-only layout | Login/signup still use the regular client layout with navbar/footer. Needs a dedicated auth layout shared by public/admin auth flows. | Lecture 106 |
+| Admin seeding | Not implemented. Current lesson tests admin by manually changing one user's MongoDB role to `ADMIN` and logging in again. | Future |
 | Candidates persistence | `services/candidates/candidates.service.ts` still returns the static `CandidateData` array. No `CandidateModel`. Candidate identity/profile is now represented by `User` + `UserProfile`, but the admin candidates page has not migrated yet. | Day 11+ |
 | Resume file upload | `candidateResume` field exists on the application schema as a string placeholder. No upload pipeline. | Future (file uploads day) |
 | Application active-job check | Marked TODO in `applyToJob`. | Future |
@@ -450,6 +478,8 @@ These are deliberate placeholders. When extending features, **don't quietly remo
   - Client: `useCurrentUser()` from `hooks/useCurrentUser.ts` — wraps `useSession()` and returns `User | null` for UI convenience.
   - Both helpers return the same app-level `User | null` shape (`id`, `name`, `email`, `role`) thanks to the augmentation in `types/next-auth.d.ts`.
 - Server-side ownership/security decisions must use `getCurrentUser()`. Client-side helpers are only for UI state and prefill.
+- **Proxy route protection uses `getToken()`**, not `getCurrentUser()`/`getServerSession()`. The proxy reads the JWT from cookies and checks `token.role`.
+- **Admin protection is layered**: proxy blocks early, dashboard layout repeats the check, and admin Server Actions still check `role === "ADMIN"` before mutating data.
 - **Profile data is not session data.** LinkedIn/resume/profile fields live in `UserProfile` and are fetched through repositories/services when needed. Do not put editable profile fields into the JWT/session.
 - The users service may orchestrate multiple user-related repositories. Current example: `services/users/users.service.ts` calls both `getCurrentUser()` and `user-profiles.repository.ts` to return a combined current-user profile view.
 - **Adding fields to the session**: extend `Session.user`, `User`, and `JWT` in `types/next-auth.d.ts` first, then write them in the `jwt` callback (sign-in only) and read them in the `session` callback (every read).
@@ -473,11 +503,11 @@ Past days that are actually reflected in the codebase:
 | 7 | Staging + branching | `feature/* → development → production` workflow, staging subdomains, release tags |
 | 8 | Backend setup | Server Actions in `app/actions/`, services/repositories scaffolding, zod validation, `useActionState` integration |
 | 9 | DB integration with MongoDB | `lib/db.ts` singleton, `lib/models/job.model.ts`, `lib/models/application.model.ts`, repositories with mappers, aggregation for applicants count, end-to-end "apply to job" flow with mock candidate, Dockerfile `ARG MONGO_URI`, `force-dynamic` layouts, `revalidatePath` in actions, deployed |
-| 10 (in progress) | Authentication — Lectures 96–103 | **NextAuth.js v4 + JWT sessions, in progress.** Scaffolding (`lib/auth.ts`, `app/api/auth/[...nextauth]/route.ts`, `SessionProvider` in root layout). `UserModel`, `Role` const tuple, `users.repository.ts` (with `findUserByEmail` / `findUserByEmailWithPassword` split). `lib/password.ts` for bcryptjs. **Signup**: server-side validation + password match + uniqueness + bcrypt hash via `signup` service; Lecture 100 separately introduced the success redirect/entry behavior and cleaned it up into the current plain client handler that auto-`signIn`s on success. **Login**: `CredentialsProvider.authorize` delegates to `verifyCredentials` service; plain client handler calls `signIn("credentials", { redirect: false })`. **Types/callbacks**: `types/next-auth.d.ts` augments `Session.user`, `User`, `JWT` with `id` + `role`; callbacks write/read those fields. **Lecture 101**: `getCurrentUser()` wraps `getServerSession` for server pages/services; `useCurrentUser()` wraps `useSession` for client-only UI; `/login` and `/signup` bounce signed-in users to `/`; `applyToJob` reads `getCurrentUser().id` — no more hardcoded `candidateId`. **Lecture 102**: `UserProfileModel`, `user-profiles.repository.ts`, and `services/users/users.service.ts`; signup creates `UserProfile` with LinkedIn; job details page fetches `getCurrentUserProfile()` and passes combined identity/profile data to `JobApplyForm`, pre-filling name, email, and LinkedIn. **Lecture 103**: navbar auth state with a server `NavbarAccount`, client `NavbarLinks` for active underline styling, and client `SignOutButton` for sign-out interaction. |
+| 10 (in progress) | Authentication — Lectures 96–105 | **NextAuth.js v4 + JWT sessions, in progress.** Scaffolding (`lib/auth.ts`, `app/api/auth/[...nextauth]/route.ts`, `SessionProvider` in root layout). `UserModel`, `Role` const tuple, `users.repository.ts` (with `findUserByEmail` / `findUserByEmailWithPassword` split). `lib/password.ts` for bcryptjs. **Signup**: server-side validation + password match + uniqueness + bcrypt hash via `signup` service; Lecture 100 separately introduced the success redirect/entry behavior and cleaned it up into the current plain client handler that auto-`signIn`s on success. **Login**: `CredentialsProvider.authorize` delegates to `verifyCredentials` service; plain client handler calls `signIn("credentials", { redirect: false })`. **Types/callbacks**: `types/next-auth.d.ts` augments `Session.user`, `User`, `JWT` with `id` + `role`; callbacks write/read those fields. **Lecture 101**: `getCurrentUser()` wraps `getServerSession` for server pages/services; `useCurrentUser()` wraps `useSession` for client-only UI; `/login` and `/signup` bounce signed-in users to `/`; `applyToJob` reads `getCurrentUser().id` — no more hardcoded `candidateId`. **Lecture 102**: `UserProfileModel`, `user-profiles.repository.ts`, and `services/users/users.service.ts`; signup creates `UserProfile` with LinkedIn; job details page fetches `getCurrentUserProfile()` and passes combined identity/profile data to `JobApplyForm`, pre-filling name, email, and LinkedIn. **Lecture 103**: navbar auth state with a server `NavbarAccount`, client `NavbarLinks` for active underline styling, and client `SignOutButton` for sign-out interaction. **Lecture 104**: guest apply UX via `ApplyAuthPrompt`, auth callback returns, and Server Action protection for admin job creation. **Lecture 105**: proxy-level admin route protection with `getToken()` plus dashboard layout defense in depth. |
 
 ### Planned next
 
-- **Day 10 remaining** — Lesson 104 protected Server Actions, then admin route protection and RBAC lessons.
+- **Day 10 remaining** — Lesson 106: Clean Layout for Auth Pages | صفحات بسيطة لتسجيل الدخول وإنشاء حساب, then RBAC and admin/candidate access-rule lessons.
 - **Day 11** — Follow-up authorization hardening if not completed in the Day 10 security section: admin-role gate at the edge in `proxy.ts` using `getToken({ req, secret })`, plus defense-in-depth `session.user.role === "ADMIN"` checks inside admin server components and actions. Migrate `services/candidates/candidates.service.ts` to `findUsersByRole("CANDIDATE")` and retire `data/CandidateData.ts`.
 - **Day 12+** — Performance, caching strategy, SEO, testing, CI/CD, AI screening, file uploads, i18n.
 
@@ -514,3 +544,5 @@ Keep this mindset when proposing changes: prefer the smallest reasonable step th
 - LinkedIn does not prefill in `JobApplyForm` → do not expect it from `useSession()`. The page must call `getCurrentUserProfile()` server-side and pass the returned profile into the client form.
 - Navbar active state works on `/jobs` but not `/jobs/[id]` → `NavbarLinks` is using exact pathname matching. Use `pathname.startsWith("/jobs")` for the jobs link if nested job routes should stay active.
 - Navbar account cells look misaligned → do not mix the shared `Button` CTA defaults with plain navbar cells unless classes are normalized. The shared `Button` includes default padding, shadow, and hover transforms; navbar account cells need compact, consistent classes.
+- User role was changed to `ADMIN` in MongoDB but proxy still redirects to `/not-authorized` → the JWT still has the old role. Log out and log in again so the `jwt` callback writes the updated role into the token.
+- Proxy redirects every admin page to login → confirm `NEXTAUTH_SECRET` is set and matches the secret used by NextAuth; `getToken()` needs the same secret to verify the JWT.
