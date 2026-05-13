@@ -7,11 +7,23 @@ import {
   findJobById,
   saveNewJob,
 } from "@/repositories/jobs.repository";
+import { getCurrentUser } from "@/lib/current-user";
 
 export async function createJob(
   input: CreateJobInput,
 ): Promise<ServiceResult<Job>> {
   const validated = createJobSchema.safeParse(input);
+
+  const currentUser = await getCurrentUser();
+
+  if (!currentUser || currentUser.role !== "ADMIN") {
+    return {
+      success: false,
+      errors: {
+        auth: ["You are not allowed to create jobs"],
+      },
+    };
+  }
 
   if (!validated.success) {
     return {

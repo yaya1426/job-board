@@ -1,4 +1,6 @@
 import Link from "next/link";
+import NavbarAccount from "./NavbarAccount";
+import NavbarLinks from "./NavbarLinks";
 
 const NavbarHeader = () => {
   return (
@@ -10,20 +12,8 @@ const NavbarHeader = () => {
         >
           WAZIFA<span className="text-accent">_</span>
         </Link>
-        <div className="flex items-center gap-0">
-          <Link
-            href="/"
-            className="brutal-border px-5 py-2 font-heading text-sm font-bold hover:bg-foreground hover:text-background transition-none"
-          >
-            HOME
-          </Link>
-          <Link
-            href="/jobs"
-            className="brutal-border border-l-0 px-5 py-2 font-heading text-sm font-bold hover:bg-foreground hover:text-background transition-none"
-          >
-            BROWSE JOBS
-          </Link>
-        </div>
+        <NavbarLinks />
+        <NavbarAccount />
       </div>
     </nav>
   );

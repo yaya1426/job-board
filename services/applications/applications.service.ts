@@ -7,6 +7,7 @@ import {
 import { findJobById } from "@/repositories/jobs.repository";
 import { ApplyToJobInput, applyToJobSchema } from "./applications.validation";
 import { z } from "zod";
+import { getCurrentUser } from "@/lib/current-user";
 
 export async function applyToJob(
   input: ApplyToJobInput,
@@ -30,13 +31,20 @@ export async function applyToJob(
 
   // TODO: check if job is active or not
 
-  // TODO: who is this candidate?
+  const currentUser = await getCurrentUser();
+
+  if (!currentUser) {
+    return {
+      success: false,
+      errors: { auth: ["You must be logged in to apply"] },
+    };
+  }
 
   // TODO: check if candidate already applied to this job
 
   const newApplication = await saveNewApplication({
     ...validated.data,
-    candidateId: "69f21dc7e02f33189d6b08d8", // TODO: replace with actual candidate id
+    candidateId: currentUser.id,
     jobTitle: job.title,
     role: job.title,
     jobCompany: job.company,
