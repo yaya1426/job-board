@@ -12,7 +12,11 @@ async function AuthLayout({ children }: { children: React.ReactNode }) {
   const isAdminHost = ADMIN_HOSTS.includes(host);
 
   if (isAdminHost) {
-    return <div className="min-h-screen bg-background">{children}</div>;
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-6 py-12">
+        {children}
+      </div>
+    );
   }
 
   return (

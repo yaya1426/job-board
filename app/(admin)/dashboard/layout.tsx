@@ -18,7 +18,7 @@ async function DashboardLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background flex">
-      <AdminSidebar />
+      <AdminSidebar currentUser={currentUser} />
       <main className="flex-1 p-8 overflow-auto">{children}</main>
     </div>
   );
