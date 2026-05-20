@@ -363,10 +363,9 @@ Without this, `user.role` and `token.role` red-squiggle in `lib/auth.ts`.
 
 ### Not yet implemented (Day 11+)
 
-- **Protecting server actions**: upcoming lesson will make auth checks explicit in sensitive Server Actions, not just service functions.
-- **Admin authorization**: the admin subdomain still has no role check. Plan: `proxy.ts` calls `getToken({ req, secret })` on the admin host and bounces non-`ADMIN` users.
-- **Defense-in-depth role checks**: admin server components / actions should additionally re-check `session.user.role === "ADMIN"`.
-- **Candidates migration**: `services/candidates/candidates.service.ts` still returns mock data. To be replaced with `findUsersByRole("CANDIDATE")`.
+- **Admin seeding**: no seed script/route yet. Admin role is manually changed in MongoDB during the lesson.
+- **Resume upload**: Day 11 will replace the placeholder resume drop area with real object-storage uploads.
+- **Candidates migration**: `services/candidates/candidates.service.ts` still returns mock data. Planned for the search/filter/pagination work when admin users/candidates listing is revisited.
 
 ---
 
@@ -401,9 +400,13 @@ These are deliberate placeholders. When extending features, **don't quietly remo
 | Apply form prefill | Job page fetches `getCurrentUserProfile()` server-side and passes combined user/profile data to `JobApplyForm`, which prefills name, email, and LinkedIn. | ✅ Lecture 102 |
 | Logged-in guards | `/login` and `/signup` server pages call `getCurrentUser()` and `redirect("/")` if a user exists. | ✅ Lecture 101 |
 | Navbar auth state + sign out | Navbar shell stays server-side. Active links use `NavbarLinks` client component. Account area uses server `getCurrentUser()`. Sign out is isolated to `SignOutButton` client component. | ✅ Lecture 103 |
-| Authorization (admin role gate) | None — anyone hitting admin subdomain has full access. Need `proxy.ts` `getToken` check on admin host + defense-in-depth in server components. | Day 11 |
-| Candidates persistence | `services/candidates/candidates.service.ts` still returns the static `CandidateData` array. No `CandidateModel`. Candidate identity/profile is now represented by `User` + `UserProfile`, but the admin candidates page has not migrated yet. | Day 11+ |
-| Resume file upload | `candidateResume` field exists on the application schema as a string placeholder. No upload pipeline. | Future (file uploads day) |
+| Apply auth UX | Guests on job details see `ApplyAuthPrompt` with login/signup callback links instead of `USER PROFILE NOT FOUND`. | ✅ Lecture 104 |
+| Server Action protection | `applyToJob` requires a current user; `handleCreateJob` requires an admin user before creating jobs. | ✅ Lecture 104 |
+| Authorization (admin role gate) | `proxy.ts` uses `getToken()` and JWT `role` to protect admin routes; dashboard layout repeats the admin check as defense in depth. | ✅ Lecture 105 |
+| Auth-only layout | Login/signup moved to the `(auth)` route group so URLs stay `/login` and `/signup` while using a clean auth layout instead of public navbar/footer. Admin login is centered without public branding. | ✅ Lecture 106 |
+| Admin seeding | Not implemented. Current lesson tests admin by manually changing one user's MongoDB role to `ADMIN` and logging in again. | Future |
+| Candidates persistence | `services/candidates/candidates.service.ts` still returns the static `CandidateData` array. No `CandidateModel`. Candidate identity/profile is now represented by `User` + `UserProfile`, but the admin candidates page has not migrated yet. | Planned Day 12 |
+| Resume file upload | `candidateResume` field exists on the application schema as a string placeholder. No upload pipeline. | Planned Day 11 |
 | Application active-job check | Marked TODO in `applyToJob`. | Future |
 | Duplicate-application check | Marked TODO in `applyToJob`. | Future |
 | Application validation (resume file) | `applications.validation.ts` validates text fields only. Single schema today; a separate `applyFormSchema` for `File` may be introduced when uploads land. | Future |
@@ -473,13 +476,20 @@ Past days that are actually reflected in the codebase:
 | 7 | Staging + branching | `feature/* → development → production` workflow, staging subdomains, release tags |
 | 8 | Backend setup | Server Actions in `app/actions/`, services/repositories scaffolding, zod validation, `useActionState` integration |
 | 9 | DB integration with MongoDB | `lib/db.ts` singleton, `lib/models/job.model.ts`, `lib/models/application.model.ts`, repositories with mappers, aggregation for applicants count, end-to-end "apply to job" flow with mock candidate, Dockerfile `ARG MONGO_URI`, `force-dynamic` layouts, `revalidatePath` in actions, deployed |
-| 10 (in progress) | Authentication — Lectures 96–103 | **NextAuth.js v4 + JWT sessions, in progress.** Scaffolding (`lib/auth.ts`, `app/api/auth/[...nextauth]/route.ts`, `SessionProvider` in root layout). `UserModel`, `Role` const tuple, `users.repository.ts` (with `findUserByEmail` / `findUserByEmailWithPassword` split). `lib/password.ts` for bcryptjs. **Signup**: server-side validation + password match + uniqueness + bcrypt hash via `signup` service; Lecture 100 separately introduced the success redirect/entry behavior and cleaned it up into the current plain client handler that auto-`signIn`s on success. **Login**: `CredentialsProvider.authorize` delegates to `verifyCredentials` service; plain client handler calls `signIn("credentials", { redirect: false })`. **Types/callbacks**: `types/next-auth.d.ts` augments `Session.user`, `User`, `JWT` with `id` + `role`; callbacks write/read those fields. **Lecture 101**: `getCurrentUser()` wraps `getServerSession` for server pages/services; `useCurrentUser()` wraps `useSession` for client-only UI; `/login` and `/signup` bounce signed-in users to `/`; `applyToJob` reads `getCurrentUser().id` — no more hardcoded `candidateId`. **Lecture 102**: `UserProfileModel`, `user-profiles.repository.ts`, and `services/users/users.service.ts`; signup creates `UserProfile` with LinkedIn; job details page fetches `getCurrentUserProfile()` and passes combined identity/profile data to `JobApplyForm`, pre-filling name, email, and LinkedIn. **Lecture 103**: navbar auth state with a server `NavbarAccount`, client `NavbarLinks` for active underline styling, and client `SignOutButton` for sign-out interaction. |
+| 10 (complete) | Authentication | NextAuth.js v4 + JWT sessions, identity-only `UserModel`, `UserProfileModel`, signup/login, current-user helpers, apply form prefill, navbar auth state, protected Server Actions, admin proxy protection, clean auth layout, admin sidebar auth state, and Day 10 release flow. |
+| 11 (planned) | File Uploading and AI Screening | Planned doc exists: resume upload pipeline, object storage, application resume snapshots, admin resume visibility, AI screening service, persisted screening score/summary/status. |
+| 12 (planned) | Search, Filters, and Pagination | Planned doc exists: URL search params, zod query schemas, paginated repository contracts, public jobs search, admin application filters, candidate listing migration, shared pagination UI. |
+| 13 (planned) | SEO and Metadata | Planned doc exists: static/dynamic metadata, Open Graph, canonical URLs, robots/sitemap, JobPosting structured data, metadata QA. |
+| 14 (planned) | Performance and Caching | Planned doc exists: measurement, rendering strategy, overfetching, MongoDB indexes, cache invalidation, client/server component split, loading/error states. |
+| 15 (planned) | Multi Language Support | Planned doc exists: locale routing strategy, dictionaries, public page translation, RTL support, localized validation and metadata, language switcher. |
 
 ### Planned next
 
-- **Day 10 remaining** — Lesson 104 protected Server Actions, then admin route protection and RBAC lessons.
-- **Day 11** — Follow-up authorization hardening if not completed in the Day 10 security section: admin-role gate at the edge in `proxy.ts` using `getToken({ req, secret })`, plus defense-in-depth `session.user.role === "ADMIN"` checks inside admin server components and actions. Migrate `services/candidates/candidates.service.ts` to `findUsersByRole("CANDIDATE")` and retire `data/CandidateData.ts`.
-- **Day 12+** — Performance, caching strategy, SEO, testing, CI/CD, AI screening, file uploads, i18n.
+- **Day 11** — File Uploading and AI Screening.
+- **Day 12** — Search, Filters, and Pagination.
+- **Day 13** — SEO and Metadata.
+- **Day 14** — Performance and Caching.
+- **Day 15** — Multi Language Support.
 
 ---
 

@@ -16,3 +16,8 @@ This folder holds the longer day-by-day course history for the Wazifa job board 
 - [Day 8 - Backend Setup in Next.js](./day-08-backend-setup.md)
 - [Day 9 - Database Setup](./day-09-database-setup.md)
 - [Day 10 - Authentication](./day-10-authentication.md)
+- [Day 11 - File Uploading and AI Screening](./day-11-file-uploading-ai-screening.md)
+- [Day 12 - Search, Filters, and Pagination](./day-12-search-filters-pagination.md)
+- [Day 13 - SEO and Metadata](./day-13-seo-metadata.md)
+- [Day 14 - Performance and Caching](./day-14-performance-caching.md)
+- [Day 15 - Multi Language Support](./day-15-multi-language-support.md)
