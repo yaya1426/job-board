@@ -63,6 +63,7 @@ app/
     applications/
     jobs/
     users/
+  (admin)/not-authorized/     ← friendly non-admin access page
   (client)/                   ← Public route group (wazifa.app)
     layout.tsx                ← force-dynamic + revalidate=0
     page.tsx                  ← landing
@@ -321,14 +322,14 @@ Without this, `user.role` and `token.role` red-squiggle in `lib/auth.ts`.
   1. Reads `email`/`password` from `FormData` once.
   2. Calls `handleSignup(formData)` Server Action.
   3. On success, calls `signIn("credentials", { email, password, redirect: false })` with the same credentials.
-  4. Navigates with `router.push("/") + router.refresh()`.
+  4. Navigates with `router.push(callbackUrl ?? "/") + router.refresh()`.
 - `app/actions/auth/auth.action.ts` exports `handleSignup(formData)` returning `SignupResult = { errors } | undefined`. **No `redirect()` inside.** No `prevState` parameter — it's called as a plain async function.
 - History/narrative: Lecture 98 introduced secure signup with bcrypt. Lecture 100 focused specifically on the successful-signup redirect/entry behavior, then cleaned it up into the current auto-login flow so a new user enters the app immediately instead of being sent back to a separate login step.
 
 ### Login flow
 
 - `app/(client)/login/page.tsx` — server component, calls `getCurrentUser()`; redirects to `/` if already signed in.
-- `components/auth/LoginForm.tsx` — plain client handler that calls `signIn("credentials", { …, redirect: false })`, displays inline error on failure, navigates on success with `router.push("/") + router.refresh()`.
+- `components/auth/LoginForm.tsx` — plain client handler that calls `signIn("credentials", { …, redirect: false })`, displays inline error on failure, navigates on success with `router.push(callbackUrl ?? "/") + router.refresh()`.
 
 ### Current user helpers (Lecture 101)
 
@@ -360,6 +361,30 @@ Without this, `user.role` and `token.role` red-squiggle in `lib/auth.ts`.
 - `components/navbar/SignOutButton.tsx` is client-side because it handles a browser click and calls `signOut()` from `next-auth/react`.
 - The middle nav links are styled as underline/active links rather than brutal bordered buttons.
 - This is UX only. Hiding/showing navbar links is not authorization; server actions and admin pages still need protection in later lessons.
+
+### Server Action protection + apply UX (Lecture 104)
+
+- `components/jobs/ApplyAuthPrompt.tsx` replaces the confusing guest-facing `USER PROFILE NOT FOUND` state on job details pages.
+- The apply prompt links to `/login?callbackUrl=/jobs/[id]` and `/signup?callbackUrl=/jobs/[id]`.
+- `LoginForm` and `SignupForm` accept `callbackUrl` and navigate there after successful auth, then call `router.refresh()`.
+- `applyToJob` still checks `getCurrentUser()` server-side before saving; the UI prompt is guidance, not security.
+- `app/actions/jobs/jobs.action.ts` now checks `getCurrentUser()` and requires `role === "ADMIN"` before creating a job.
+- `CreateJobForm` renders `errors.auth` and uses `isPending` for the submit button.
+
+### Admin route protection with proxy (Lecture 105)
+
+- `proxy.ts` uses `getToken({ req, secret: process.env.NEXTAUTH_SECRET })` from `next-auth/jwt` for route-level checks. Use `getToken()` in proxy, not `getServerSession()`.
+- Admin hosts: `admin.wazifa.app`, `dev-admin.wazifa.app`.
+- Public hosts: `wazifa.app`, `dev.wazifa.app`.
+- Public host + `/dashboard` redirects to `/`.
+- Admin host `/` redirects to `/dashboard`.
+- Admin host non-dashboard public paths redirect to `/dashboard`, except `/login` and `/not-authorized`.
+- Admin route with no JWT redirects to `/login?callbackUrl=/dashboard`.
+- Admin route with non-admin JWT redirects to `/not-authorized`.
+- Admin route with `role === "ADMIN"` continues.
+- `app/(admin)/dashboard/layout.tsx` repeats the `getCurrentUser()` + `role === "ADMIN"` check as defense in depth.
+- `app/(admin)/not-authorized/page.tsx` is the friendly non-admin page.
+- Testing currently requires manually changing a user's MongoDB role to `ADMIN`, then logging out/in so the JWT picks up the updated role. Admin seeding is a later lesson.
 
 ### Not yet implemented (Day 11+)
 
@@ -453,6 +478,8 @@ These are deliberate placeholders. When extending features, **don't quietly remo
   - Client: `useCurrentUser()` from `hooks/useCurrentUser.ts` — wraps `useSession()` and returns `User | null` for UI convenience.
   - Both helpers return the same app-level `User | null` shape (`id`, `name`, `email`, `role`) thanks to the augmentation in `types/next-auth.d.ts`.
 - Server-side ownership/security decisions must use `getCurrentUser()`. Client-side helpers are only for UI state and prefill.
+- **Proxy route protection uses `getToken()`**, not `getCurrentUser()`/`getServerSession()`. The proxy reads the JWT from cookies and checks `token.role`.
+- **Admin protection is layered**: proxy blocks early, dashboard layout repeats the check, and admin Server Actions still check `role === "ADMIN"` before mutating data.
 - **Profile data is not session data.** LinkedIn/resume/profile fields live in `UserProfile` and are fetched through repositories/services when needed. Do not put editable profile fields into the JWT/session.
 - The users service may orchestrate multiple user-related repositories. Current example: `services/users/users.service.ts` calls both `getCurrentUser()` and `user-profiles.repository.ts` to return a combined current-user profile view.
 - **Adding fields to the session**: extend `Session.user`, `User`, and `JWT` in `types/next-auth.d.ts` first, then write them in the `jwt` callback (sign-in only) and read them in the `session` callback (every read).
@@ -524,3 +551,5 @@ Keep this mindset when proposing changes: prefer the smallest reasonable step th
 - LinkedIn does not prefill in `JobApplyForm` → do not expect it from `useSession()`. The page must call `getCurrentUserProfile()` server-side and pass the returned profile into the client form.
 - Navbar active state works on `/jobs` but not `/jobs/[id]` → `NavbarLinks` is using exact pathname matching. Use `pathname.startsWith("/jobs")` for the jobs link if nested job routes should stay active.
 - Navbar account cells look misaligned → do not mix the shared `Button` CTA defaults with plain navbar cells unless classes are normalized. The shared `Button` includes default padding, shadow, and hover transforms; navbar account cells need compact, consistent classes.
+- User role was changed to `ADMIN` in MongoDB but proxy still redirects to `/not-authorized` → the JWT still has the old role. Log out and log in again so the `jwt` callback writes the updated role into the token.
+- Proxy redirects every admin page to login → confirm `NEXTAUTH_SECRET` is set and matches the secret used by NextAuth; `getToken()` needs the same secret to verify the JWT.

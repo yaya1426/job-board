@@ -2,6 +2,9 @@
 import { Briefcase, Users, LayoutGrid, FileText } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { User } from "@/types/User";
+import { signOut } from "next-auth/react";
+import { Button } from "../ui/button";
 
 const adminLinks = [
   { to: "/dashboard", label: "OVERVIEW", icon: LayoutGrid },
@@ -10,11 +13,15 @@ const adminLinks = [
   { to: "/dashboard/users", label: "USERS", icon: Users },
 ];
 
-const AdminSidebar = () => {
+type Props = {
+  currentUser: User;
+};
+
+const AdminSidebar = ({ currentUser }: Props) => {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 min-h-screen bg-foreground text-background brutal-border border-t-0 border-l-0 border-b-0 flex-shrink-0">
+    <aside className="w-64 min-h-screen bg-foreground text-background brutal-border border-t-0 border-l-0 border-b-0 flex-shrink-0 flex flex-col">
       <div className="p-6 border-b-3 border-muted-foreground">
         <Link href="/admin" className="font-heading text-xl font-bold">
           WAZIFA<span className="text-accent">_</span>
@@ -42,6 +49,17 @@ const AdminSidebar = () => {
           );
         })}
       </nav>
+      <div className="mt-auto p-6 border-t-3 border-muted-foreground flex flex-col items-center">
+        <p className="font-heading text-sm font-bold">{currentUser.name}</p>
+
+        <Button
+          variant="outline"
+          className="w-full mt-4"
+          onClick={() => signOut({ callbackUrl: "/login" })}
+        >
+          SIGN OUT
+        </Button>
+      </div>
     </aside>
   );
 };

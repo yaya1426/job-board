@@ -9,9 +9,17 @@ import {
 } from "@/app/actions/applications/applications.action";
 import { useParams } from "next/navigation";
 import { TextArea } from "../ui/textarea";
+import { UserProfile } from "@/types/UserProfile";
+import { User } from "@/types/User";
 
-function JobApplyForm() {
+type Props = {
+  userProfile: UserProfile & User;
+};
+
+
+function JobApplyForm({ userProfile }: Props) {
   const { id: jobId } = useParams<{ id: string }>();
+
 
   const [state, formAction, isPending] = useActionState<
     ApplyToJobState,
@@ -30,17 +38,20 @@ function JobApplyForm() {
           label="FULL NAME"
           placeholder="YOUR NAME"
           error={state?.errors?.candidateName?.[0]}
+          defaultValue={userProfile.name}
         />
         <Input
           name="candidateEmail"
           label="EMAIL"
           placeholder="YOUR@EMAIL.COM"
           error={state?.errors?.candidateEmail?.[0]}
+          defaultValue={userProfile.email}
         />
         <Input
           name="candidateLinkedin"
           label="LINKEDIN"
           placeholder="LINKEDIN.COM/IN/..."
+          defaultValue={userProfile.linkedin}
           error={state?.errors?.candidateLinkedin?.[0]}
         />
         {/* TODO: add resume file upload */}
@@ -65,8 +76,13 @@ function JobApplyForm() {
             error={state?.errors?.candidateCoverLetter?.[0]}
           />
         </div>
-        <Button variant="accent" className="w-full mt-4">
-          SUBMIT APPLICATION →
+        <Button
+          type="submit"
+          variant="accent"
+          className="w-full mt-4"
+          disabled={isPending}
+        >
+          {isPending ? "SUBMITTING..." : "SUBMIT APPLICATION →"}
         </Button>
       </div>
     </form>

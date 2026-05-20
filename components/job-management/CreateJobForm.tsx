@@ -93,9 +93,15 @@ function CreateJobForm() {
         />
       </div>
 
+      {state?.errors?.auth?.[0] && (
+        <p className="font-mono text-sm text-destructive">
+          {state.errors.auth[0]}
+        </p>
+      )}
+
       <div className="flex gap-0 pt-4 border-t-3 border-foreground">
-        <Button type="submit" variant="accent">
-          PUBLISH JOB
+        <Button type="submit" variant="accent" disabled={isPending}>
+          {isPending ? "PUBLISHING..." : "PUBLISH JOB"}
         </Button>
         <Button
           type="button"
