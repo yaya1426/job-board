@@ -2,31 +2,40 @@
 
 ## Goal
 
-Turn the fake resume upload UI and static AI score into a real application workflow: candidates upload a resume, the app stores a resume URL on the application, and the admin side can see an AI-assisted screening result.
+Turn the fake resume UI and static AI score into a private, asynchronous application workflow: candidates upload a PDF directly to DigitalOcean Spaces with a signed URL, MongoDB stores the object metadata, and a durable worker screens the application through OpenAI.
 
 ## Planning Status
 
-This day is planned, not implemented yet.
+Infrastructure setup has started, but the application pipeline is not implemented yet.
+
+Current audited state on `develop`:
+
+- DigitalOcean Space was provisioned externally.
+- S3 client and presigner dependencies are installed in the working tree.
+- `.env.local` contains the six existing `DO_SPACES_*` variables, including `DO_SPACES_PUBLIC_URL`; deployment settings still need verification.
+- `OPENAI_API_KEY` is not present yet, which is expected before Lecture 120.
+- Storage client, presign route, resume input, metadata persistence, PDF extraction, queue worker, and OpenAI integration are not implemented.
+- The lesson files below are the instructor-ready source of truth.
 
 ## Udemy Lectures Reflected
 
 Day 11 starts at Lecture 110 in the Udemy curriculum.
 
-- Lecture 110 - Day (11) Plan | خطة اليوم الحادي عشر
-- Lecture 111 - File Upload Architecture | معمارية رفع الملفات
-- Lecture 112 - Setting Up DigitalOcean Spaces | إعداد مساحة التخزين
-- Lecture 113 - Upload Service and File Validation | خدمة رفع الملفات والتحقق من الملفات
-- Lecture 114 - Upload Resume from Apply Form | رفع السيرة الذاتية من نموذج التقديم
-- Lecture 115 - Save Resume Metadata and Pending Screening | حفظ بيانات السيرة وتجهيز التقييم
-- Lecture 116 - Display Resume and Screening State in Admin | عرض السيرة وحالة التقييم في لوحة الإدارة
-- Lecture 117 - Extract Resume Text from PDF | استخراج النص من السيرة الذاتية
-- Lecture 118 - Automated Screening Architecture | معمارية التقييم التلقائي
-- Lecture 119 - Create Screening Job After Apply | إنشاء مهمة التقييم بعد التقديم
-- Lecture 120 - OpenAI Screening Service | خدمة التقييم باستخدام OpenAI
-- Lecture 121 - Store AI Screening Results | حفظ نتائج التقييم الذكي
-- Lecture 122 - Screening Status and Failure States | حالات التقييم ومعالجة الأخطاء
-- Lecture 123 - Feature Branch for Day (11) | برانش جيتهاب لليوم الحادي عشر
-- Lecture 124 - Recap Day (11) | ملخص اليوم الحادي عشر
+- [Lecture 110 - Day (11) Plan | خطة اليوم الحادي عشر](./lecture-110-day-11-plan.md)
+- [Lecture 111 - File Upload Architecture | معمارية رفع الملفات](./lecture-111-file-upload-architecture.md)
+- [Lecture 112 - Setting Up DigitalOcean Spaces | إعداد مساحة التخزين](./lecture-112-setting-up-digitalocean-spaces.md)
+- [Lecture 113 - Upload Service and File Validation | خدمة رفع الملفات والتحقق من الملفات](./lecture-113-upload-service-and-file-validation.md)
+- [Lecture 114 - Upload Resume from Apply Form | رفع السيرة الذاتية من نموذج التقديم](./lecture-114-upload-resume-from-apply-form.md)
+- [Lecture 115 - Save Resume Metadata and Pending Screening | حفظ بيانات السيرة وتجهيز التقييم](./lecture-115-save-resume-metadata-and-pending-screening.md)
+- [Lecture 116 - Display Resume and Screening State in Admin | عرض السيرة وحالة التقييم في لوحة الإدارة](./lecture-116-display-resume-and-screening-state-in-admin.md)
+- [Lecture 117 - Extract Resume Text from PDF | استخراج النص من السيرة الذاتية](./lecture-117-extract-resume-text-from-pdf.md)
+- [Lecture 118 - Automated Screening Architecture | معمارية التقييم التلقائي](./lecture-118-automated-screening-architecture.md)
+- [Lecture 119 - Create Screening Job After Apply | إنشاء مهمة التقييم بعد التقديم](./lecture-119-create-screening-job-after-apply.md)
+- [Lecture 120 - OpenAI Screening Service | خدمة التقييم باستخدام OpenAI](./lecture-120-openai-screening-service.md)
+- [Lecture 121 - Store AI Screening Results | حفظ نتائج التقييم الذكي](./lecture-121-store-ai-screening-results.md)
+- [Lecture 122 - Screening Status and Failure States | حالات التقييم ومعالجة الأخطاء](./lecture-122-screening-status-and-failure-states.md)
+- [Lecture 123 - Feature Branch for Day (11) | برانش جيتهاب لليوم الحادي عشر](./lecture-123-feature-branch.md)
+- [Lecture 124 - Recap Day (11) | ملخص اليوم الحادي عشر](./lecture-124-recap.md)
 
 ## Course Position
 
@@ -73,12 +82,11 @@ Explain the full upload flow before coding, including why the fake upload UI is 
 
 ```txt
 JobApplyForm
-  -> FormData with File
-  -> Server Action
-  -> upload service
-  -> object storage
+  -> request signed PUT URL
+  -> upload PDF directly to private Spaces
+  -> submit object key/metadata
   -> application service
-  -> MongoDB metadata
+  -> MongoDB metadata + PENDING screening state
 ```
 
 Teaching point:
@@ -108,7 +116,7 @@ DO_SPACES_SECRET_ACCESS_KEY
 DO_SPACES_PUBLIC_URL
 ```
 
-Also discuss public URLs vs signed URLs. For the course, public URLs may be simpler, but signed URLs are the safer production direction for resumes.
+Resumes remain private. Uploads and downloads use short-lived signed URLs. `DO_SPACES_PUBLIC_URL` records the enabled CDN/base URL but is not the authorization mechanism for private resumes.
 
 Teaching point:
 
@@ -126,11 +134,11 @@ services/uploads/uploads.validation.ts
 
 Responsibilities:
 
-- Validate file type (`pdf`, `doc`, `docx` if supported).
+- Validate PDF content type and a 5 MB maximum.
 - Validate max size.
 - Generate a safe object key.
-- Upload to object storage.
-- Return a serializable result: `{ key, url, fileName, fileSize, contentType }`.
+- Generate short-lived signed PUT/GET URLs.
+- Return a serializable result: `{ key, uploadUrl, fileName, fileSize, contentType }`.
 
 Teaching point:
 
@@ -142,10 +150,10 @@ Update the apply flow:
 
 ```txt
 JobApplyForm
-  -> sends resume file with FormData
-  -> handleApplyToJob
-  -> applyToJob service
-  -> upload resume
+  -> requests signed upload
+  -> uploads PDF directly to Spaces
+  -> sends key/metadata through handleApplyToJob
+  -> applyToJob service saves application
 ```
 
 Teaching point:
@@ -156,8 +164,7 @@ Teaching point:
 
 Likely model/type updates:
 
-- `Application.candidateResumeUrl`
-- optional `Application.candidateResumeKey`
+- `Application.candidateResumeKey`
 - optional `Application.candidateResumeFileName`
 - optional `Application.candidateResumeSize`
 - optional `Application.candidateResumeContentType`
@@ -187,7 +194,7 @@ Introduce resume parsing as a separate step before AI screening.
 Possible flow:
 
 ```txt
-resume file/url
+private resume object key
   -> extraction service
   -> plain text
   -> AI screening input
@@ -227,11 +234,7 @@ applyToJob
   -> update application with result
 ```
 
-Implementation levels to discuss:
-
-1. Simple async trigger for teaching.
-2. Internal job route as an intermediate step.
-3. Queue/pub-sub worker as the production direction.
+Implementation uses a durable queue/pub-sub worker. Do not rely on an un-awaited, fire-and-forget promise after the application response.
 
 Expected AI provider:
 
@@ -248,15 +251,14 @@ Teaching point:
 
 Wire the application creation flow to trigger screening without requiring an admin click.
 
-For the course, the first version can be a simple internal abstraction:
-
 ```txt
 applyToJob
   -> save application
-  -> requestScreening(application.id)
+  -> durably publish application.created
+  -> worker processes application.id
 ```
 
-Then explain how `requestScreening` can later publish to a real queue/pub-sub system without changing the apply form.
+The queue message contains only the application id; the worker reloads trusted data.
 
 Teaching point:
 
@@ -294,7 +296,7 @@ aiScore
 aiSummary
 aiStrengths[]
 aiRisks[]
-screeningStatus: PENDING | COMPLETED | FAILED
+screeningStatus: PENDING | PROCESSING | COMPLETED | FAILED
 screenedAt
 ```
 
@@ -347,29 +349,27 @@ Teaching point:
 
 - Candidates upload a resume during application.
 - Uploaded files are stored outside MongoDB.
-- Application documents store resume metadata/URL.
-- Admin applications table can link to the uploaded resume.
+- Application documents store resume object keys and metadata.
+- Admin applications table opens resumes through short-lived signed GET URLs.
 - Admin can view an automatically generated AI screening score/summary.
 - OpenAI is integrated behind the screening service.
 - Screening fields are persisted on the application.
 
 ## Open Decisions
 
-- Exact storage provider: DigitalOcean Spaces is recommended for course consistency.
-- Whether resumes are public URLs or private signed URLs.
-- Whether the first implementation uses a simple async trigger, an internal job route, or a real queue/pub-sub worker.
+- Durable queue provider (recommended shape: signed HTTP queue such as QStash).
 - Which OpenAI model to use for the first version.
-- Whether to extract text from PDFs in-app or send file content to an AI/file processing service.
+- Which current Node-compatible PDF parser to use; OCR remains future work.
 - Whether to use strict structured outputs/JSON schema or prompt-based JSON parsing for the screening response.
 
 ## Production Notes
 
 - Never store large files in MongoDB documents.
 - Validate file type and size on the server, not just the client.
-- Avoid public access to sensitive resumes unless the product accepts that risk.
+- Keep resumes private and generate short-lived signed PUT/GET URLs.
 - Keep OpenAI prompts and provider calls in a service layer.
 - Store `OPENAI_API_KEY` only in server-side environment variables.
 - Do not send unnecessary personal data to OpenAI; only send what the screening task needs.
 - Validate and normalize OpenAI responses before saving them to MongoDB.
-- Prefer queue/pub-sub for production screening so file parsing and OpenAI calls do not block the candidate apply request.
+- Use durable queue/pub-sub screening so file parsing and OpenAI calls do not block the candidate apply request.
 - Treat AI scoring as assistant data, not a final hiring decision.
