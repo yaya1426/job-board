@@ -21,16 +21,21 @@ This project is also the basis of a long-form course. Pedagogical narrative matt
 
 Longer day-by-day implementation notes live in `docs/`. Keep `AGENTS.md` compact and operational; use these docs for teaching narrative, commit evidence, and historical detail.
 
-- Day 1 - First Deployment: `docs/day-01-first-deployment.md`
-- Day 2 - Domain, DNS and HTTPS: `docs/day-02-domain-dns-https.md`
-- Day 3 - App Router Fundamentals: `docs/day-03-app-router-fundamentals.md`
-- Day 4 - Route Groups and Admin Setup: `docs/day-04-route-groups-admin-setup.md`
-- Day 5 - Layouts and Shared UI: `docs/day-05-layouts-shared-ui.md`
-- Day 6 - Product UI with Mock Data: `docs/day-06-product-ui-mock-data.md`
-- Day 7 - Staging and Branch Rules: `docs/day-07-staging-branch-rules.md`
-- Day 8 - Backend Setup in Next.js: `docs/day-08-backend-setup.md`
-- Day 9 - Database Setup: `docs/day-09-database-setup.md`
-- Day 10 - Authentication: `docs/day-10-authentication.md`
+- Day 1 - First Deployment: `docs/day-01-first-deployment/`
+- Day 2 - Domain, DNS and HTTPS: `docs/day-02-domain-dns-https/`
+- Day 3 - App Router Fundamentals: `docs/day-03-app-router-fundamentals/`
+- Day 4 - Route Groups and Admin Setup: `docs/day-04-route-groups-admin-setup/`
+- Day 5 - Layouts and Shared UI: `docs/day-05-layouts-shared-ui/`
+- Day 6 - Product UI with Mock Data: `docs/day-06-product-ui-mock-data/`
+- Day 7 - Staging and Branch Rules: `docs/day-07-staging-branch-rules/`
+- Day 8 - Backend Setup in Next.js: `docs/day-08-backend-setup/`
+- Day 9 - Database Setup: `docs/day-09-database-setup/`
+- Day 10 - Authentication: `docs/day-10-authentication/`
+- Day 11 - File Uploading and AI Screening: `docs/day-11-file-uploading-ai-screening/`
+- Day 12 - Search, Filters, and Pagination: `docs/day-12-search-filters-pagination/`
+- Day 13 - SEO and Metadata: `docs/day-13-seo-metadata/`
+- Day 14 - Performance and Caching: `docs/day-14-performance-caching/`
+- Day 15 - Multi Language Support: `docs/day-15-multi-language-support/`
 
 ---
 
@@ -389,7 +394,7 @@ Without this, `user.role` and `token.role` red-squiggle in `lib/auth.ts`.
 ### Not yet implemented (Day 11+)
 
 - **Admin seeding**: no seed script/route yet. Admin role is manually changed in MongoDB during the lesson.
-- **Resume upload**: Day 11 will replace the placeholder resume drop area with real object-storage uploads.
+- **Resume upload**: Day 11 will replace the placeholder resume drop area with private DigitalOcean Spaces uploads using short-lived presigned PUT/GET URLs. SDK dependencies are installed, but the pipeline is not implemented.
 - **Candidates migration**: `services/candidates/candidates.service.ts` still returns mock data. Planned for the search/filter/pagination work when admin users/candidates listing is revisited.
 
 ---
@@ -504,7 +509,7 @@ Past days that are actually reflected in the codebase:
 | 8 | Backend setup | Server Actions in `app/actions/`, services/repositories scaffolding, zod validation, `useActionState` integration |
 | 9 | DB integration with MongoDB | `lib/db.ts` singleton, `lib/models/job.model.ts`, `lib/models/application.model.ts`, repositories with mappers, aggregation for applicants count, end-to-end "apply to job" flow with mock candidate, Dockerfile `ARG MONGO_URI`, `force-dynamic` layouts, `revalidatePath` in actions, deployed |
 | 10 (complete) | Authentication | NextAuth.js v4 + JWT sessions, identity-only `UserModel`, `UserProfileModel`, signup/login, current-user helpers, apply form prefill, navbar auth state, protected Server Actions, admin proxy protection, clean auth layout, admin sidebar auth state, and Day 10 release flow. |
-| 11 (planned) | File Uploading and AI Screening | Planned doc exists: resume upload pipeline, object storage, application resume snapshots, admin resume visibility, AI screening service, persisted screening score/summary/status. |
+| 11 (in progress) | File Uploading and AI Screening | Instructor-ready lecture files 110–128 exist (server-proxied upload chosen over presigned direct upload for simplicity). DigitalOcean Space is provisioned and AWS S3/presigner dependencies are installed. Remaining implementation: server-side private upload, resume metadata, signed admin download access, PDF extraction, durable queue worker, OpenAI structured screening, and status/failure handling. |
 | 12 (planned) | Search, Filters, and Pagination | Planned doc exists: URL search params, zod query schemas, paginated repository contracts, public jobs search, admin application filters, candidate listing migration, shared pagination UI. |
 | 13 (planned) | SEO and Metadata | Planned doc exists: static/dynamic metadata, Open Graph, canonical URLs, robots/sitemap, JobPosting structured data, metadata QA. |
 | 14 (planned) | Performance and Caching | Planned doc exists: measurement, rendering strategy, overfetching, MongoDB indexes, cache invalidation, client/server component split, loading/error states. |
