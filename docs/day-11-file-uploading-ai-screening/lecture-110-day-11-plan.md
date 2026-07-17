@@ -45,15 +45,15 @@ The big idea students should leave with: this is *not* "add a file input." It's 
 
 ```txt
 Candidate selects resume
-  -> app requests a short-lived signed upload URL
-  -> browser uploads directly to private DigitalOcean Spaces
+  -> apply form submits the file with the application (one request)
+  -> server validates the file and uploads it to private DigitalOcean Spaces
   -> application saves resume key + metadata
   -> application is marked screeningStatus=PENDING
   -> application.created screening job is queued
   -> worker extracts PDF text
   -> worker calls OpenAI
   -> application becomes COMPLETED or FAILED
-  -> admin sees resume and screening result
+  -> admin opens resume via a short-lived signed download URL and sees the screening result
 ```
 
 6. Explain the three storage boundaries:
@@ -64,7 +64,7 @@ MongoDB              -> application, file metadata, screening result/status
 OpenAI               -> produces structured screening output
 ```
 
-7. Preview Lectures 111–124 from the Day 11 `README.md`.
+7. Preview Lectures 111–128 from the Day 11 `README.md`.
 
 ## Key Teaching Lines
 
@@ -80,4 +80,4 @@ Students understand the problem, the final workflow, and why the day needs multi
 
 ## Next
 
-Lecture 111 maps the file upload architecture and chooses direct presigned uploads for private resumes.
+Lecture 111 maps the file upload architecture and chooses simple server-proxied uploads for private resumes (with presigned direct upload named as a future scaling upgrade).

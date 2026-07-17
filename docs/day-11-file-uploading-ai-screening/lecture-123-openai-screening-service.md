@@ -1,4 +1,4 @@
-# Lecture 120 - OpenAI Screening Service | خدمة التقييم باستخدام OpenAI
+# Lecture 123 - OpenAI Screening Service | خدمة التقييم باستخدام OpenAI
 
 ## Goal
 
@@ -154,4 +154,4 @@ The result assists admin review:
 
 ## Next
 
-Lecture 121 persists the structured result and completes the application’s screening state.
+Lecture 124 persists the structured result and completes the application’s screening state.

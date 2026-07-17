@@ -12,15 +12,16 @@ DigitalOcean Spaces is just cloud storage for files (it behaves like Amazon S3, 
 
 - The **bucket** is your unit.
 - The **access key + secret key** are the keys to the unit. If someone steals them, they can read or dump anything inside — so these never go in the browser and never get committed to git.
-- **CORS** is the guard list at the gate: it says which websites (`localhost:3000`, `dev.wazifa.app`, etc.) are allowed to upload directly from a browser. Without it, the browser blocks the upload for security.
 
 The most common beginner mistake here is a **name mismatch**: the code reads `DO_SPACES_BUCKET`, but the env variable is spelled differently, or exists locally but not on the deployed server. "It works on my machine" almost always means an env variable is missing in the other environment.
+
+> Note on CORS: because we upload *through our server* (not directly from the browser to Spaces), we do **not** need to configure bucket CORS for this course's flow. CORS only matters if you later switch to presigned direct browser uploads. The section below is kept as optional/future reference.
 
 ### Jargon decoder
 
 - **Environment variable (env var)** = a secret/config value kept *outside* the code (in `.env.local` or the hosting dashboard) so secrets aren't hard-coded.
-- **CORS** (Cross-Origin Resource Sharing) = browser security that blocks one website from calling another unless the other explicitly allows it.
 - **CDN** = a fast public delivery network for files. Great for public images, **wrong** for private resumes — we deliberately don't use it as the resume access path.
+- **CORS** (Cross-Origin Resource Sharing) = browser security that blocks one website from calling another unless the other explicitly allows it. Only relevant if the browser talks to Spaces directly — which it doesn't in our server-proxied flow.
 - **`NEXT_PUBLIC_` prefix** = tells Next.js to ship that variable to the browser. *Never* put a secret key behind it.
 
 ## Current Status
@@ -41,8 +42,8 @@ https://wazifa-resumes-dev.fra1.cdn.digitaloceanspaces.com
 Resumes contain personal data. Keep objects private.
 
 - Do not add `ACL: "public-read"`.
-- Upload with signed PUT URLs.
-- Download with signed GET URLs.
+- Upload through our server using the S3 client (`PutObject`), authenticated by the candidate's session.
+- Download with short-lived signed GET URLs.
 - The CDN endpoint is optional for future public assets; a normal public CDN URL should not be the resume access mechanism.
 
 ## Recording Steps
@@ -67,11 +68,11 @@ Open DigitalOcean API → Spaces Keys.
 - Never show the secret on screen.
 - Never prefix either credential with `NEXT_PUBLIC_`.
 
-### 3. Configure CORS
+### 3. Configure CORS (Optional — Skip for This Course)
 
-Direct browser uploads require CORS on the Space.
+**Our server-proxied upload does not need CORS**, because the browser never talks to Spaces directly — it only talks to our own server. You can skip this step.
 
-Allow the exact development/public origins that upload files, for example:
+Only if you later switch to presigned **direct browser uploads** would you configure CORS on the Space, allowing the exact origins that upload files:
 
 ```txt
 http://localhost:3000
@@ -79,9 +80,7 @@ https://dev.wazifa.app
 https://wazifa.app
 ```
 
-Allowed methods should include `PUT`; allow the headers needed for `Content-Type`.
-
-Do not use `*` for production origins when credentials or sensitive data are involved.
+In that case, allowed methods should include `PUT`, allow the headers needed for `Content-Type`, and never use `*` for production origins when sensitive data is involved.
 
 ### 4. Verify Local Variable Names
 
@@ -121,11 +120,11 @@ These are already present in the current working tree; do not reinstall unless t
 - Space exists in the intended region.
 - Space/object access is private.
 - Scoped access key exists.
-- CORS permits local, staging, and production upload origins.
 - Local variable names exist.
 - Deployment variable names exist.
 - SDK packages are installed.
 - No secret value is committed or shown in the recording.
+- (CORS is not required for the server-proxied flow — only for optional direct browser upload.)
 
 ## Key Teaching Lines
 
@@ -135,4 +134,4 @@ These are already present in the current working tree; do not reinstall unless t
 
 ## Next
 
-Lecture 113 creates the storage client, validates file metadata, and generates signed upload/download URLs.
+Lecture 113 creates the storage client, validates the uploaded file, and stores it privately in Spaces.

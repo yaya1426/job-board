@@ -1,4 +1,4 @@
-# Lecture 124 - Recap Day (11) | ملخص اليوم الحادي عشر
+# Lecture 128 - Recap Day (11) | ملخص اليوم الحادي عشر
 
 ## Goal
 
@@ -11,16 +11,17 @@ Step back and look at what we built. Day 11 turned *one fake upload box* into a 
 - **The file's bytes** live in DigitalOcean Spaces (private cloud storage).
 - **The facts about the application** (who, which job, the resume's key, the screening status) live in MongoDB.
 - **The AI's opinion** (score, summary, strengths, risks) is produced by OpenAI and then also saved in MongoDB.
-- **Nothing sensitive** ever lives in the browser — the browser only ever holds temporary, single-purpose links.
+- **Nothing sensitive** ever lives in the browser — no storage credentials, and downloads use temporary, single-purpose links.
 
-And the flow that connects them, in one breath: *upload the file privately → save the application as PENDING → queue the screening → tell the candidate they're done → a background worker reads the file, asks the AI, and marks it COMPLETED or FAILED → the admin views the result with a temporary link.*
+And the flow that connects them, in one breath: *the server validates and uploads the file privately → saves the application as PENDING → queues the screening → tells the candidate they're done → a background worker reads the file, asks the AI, and marks it COMPLETED or FAILED → the admin views the result with a temporary link.*
 
 The recurring themes worth repeating out loud to learners:
 
-- **The browser gets permission, not power** — signed URLs, never raw keys.
-- **Snapshots over live links** — store what was submitted, generate fresh download links on demand.
+- **The server is the gatekeeper** — it authenticates, validates, and uploads; the browser never holds storage credentials.
+- **Snapshots over live links** — store the object key, generate fresh signed download links on demand.
 - **Automatic ≠ inline** — slow AI work runs in the background, not while the candidate waits.
 - **Honest states** — a missing score isn't zero; a failed screening isn't a failed application.
+- **Simple first** — we upload through our server; presigned direct upload is a scaling upgrade for later.
 
 The "future hardening" list at the end isn't homework the app is missing — it's the honest "here's what a bigger team would add next" so students know where the edges are.
 
@@ -28,12 +29,15 @@ The "future hardening" list at the end isn't homework the app is missing — it'
 
 ```txt
 Candidate
-  -> requests signed PUT URL
-  -> uploads private PDF directly to Spaces
-  -> submits application with object key/metadata
+  -> submits application form with the PDF file (one request)
+
+Apply Server Action
+  -> authenticates the candidate
+  -> validates the file and uploads it privately to Spaces
+  -> receives the object key
 
 Application service
-  -> saves application as PENDING
+  -> saves application (with resume key) as PENDING
   -> publishes application.created
   -> returns success
 
@@ -60,8 +64,8 @@ Admin
 ### Validation and Security
 
 - browser validation is UX
-- server validates metadata/auth
-- keys are generated server-side
+- server validates the real file + auth
+- object keys are generated server-side
 - secrets never reach the browser
 
 ### Application Snapshot
@@ -106,7 +110,7 @@ PENDING -> PROCESSING -> COMPLETED
 Students should be able to explain:
 
 1. Why resumes should not be public MongoDB fields/blobs.
-2. Why presigned direct upload is useful.
+2. Why the file is uploaded through the server, and when presigned direct upload becomes worth it.
 3. Why the object key is stored instead of a signed URL.
 4. Why screening should run through a queue.
 5. Why workers must be idempotent.

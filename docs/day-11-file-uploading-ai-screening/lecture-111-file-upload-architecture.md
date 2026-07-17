@@ -8,42 +8,41 @@ Map the resume lifecycle and assign one responsibility to each layer before impl
 
 There are two ways to get a file from the browser into cloud storage:
 
-1. **Through our server** (the slow, expensive way): browser → our server → storage. The whole 5 MB file passes through us. Our server has to hold it in memory, and big files can hit request-size limits or time out.
-2. **Directly to storage** (the way we choose): the browser uploads the file *straight* to DigitalOcean Spaces. Our server never touches the bytes — it only hands out a temporary permission slip first.
+1. **Through our server** (the way we choose): browser → our server → storage. The apply form submits the file like any other field; our server validates it and uploads it to DigitalOcean Spaces.
+2. **Directly to storage** (the fancier way): the browser uploads the file *straight* to Spaces after the server hands it a temporary "permission slip" (a presigned URL). The bytes never touch our server.
 
-We pick option 2. It's like a nightclub: our server is the **bouncer** who checks your ID and gives you a wristband (the *signed URL*), but you walk through the door yourself. The bouncer doesn't carry you in.
+We pick **option 1** because it's simple and familiar: one request, one place doing the work. It's like handing a document to a clerk at the counter — they check it and file it in the back for you. Option 2 scales better (great for huge files or high traffic), but it adds an extra route, a two-step upload handshake, and bucket CORS. We name it as a **future upgrade**, not something we build now.
 
-**Why not just make the files public?** Resumes contain personal data (names, phone numbers, addresses). A public URL means anyone who guesses the link can read someone's resume. So files stay private, and we hand out short-lived links only to people who are allowed.
+The cost of our choice: the file's bytes flow through our server, using a little memory, and we must raise the Next.js Server Action body limit to ~5 MB. For a course and a 5 MB resume cap, that's a fine trade.
 
-The diagrams below look busy, but they're really just this one sentence drawn out: *the browser uploads the bytes; the server only grants limited permission.* Everything else (database, queue, worker, AI) is what happens **after** the file is safely stored.
+**Why not just make the files public?** Resumes contain personal data (names, phone numbers, addresses). A public URL means anyone who guesses the link can read someone's resume. So files stay private, and admins get short-lived **signed download links** on demand. Note the asymmetry: *upload* is simple (through our server), but *download* still uses temporary signed links because the bucket is private.
 
 ### Jargon decoder
 
-- **Presigned URL** = a temporary web link, created by our server using its secret keys, that lets the holder do exactly one thing (upload *this* file, or download *that* file) for a few minutes.
-- **PUT / GET** = the HTTP verbs for "upload this" (PUT) and "download this" (GET).
-- **Object key** = the file's address inside the bucket, e.g. `resumes/abc-123.pdf`. We store *this*, not the whole file.
+- **Object key** = the file's address inside the bucket, e.g. `resumes/abc-123.pdf`. We store *this* on the application, not the whole file.
+- **`PutObject` / `GetObject`** = the S3 commands to upload a file and to read one.
+- **Signed GET URL** = a temporary link that lets someone download one specific private file for a few minutes.
+- **Presigned (PUT) URL** = the *upload* version of that idea, used only in the option-2 direct-upload approach we are **not** building.
 - **Layer** = one part of the code with one job. Keeping jobs separate makes each piece easy to understand and test.
 
 ## Architecture Decision
 
-Use a **private Space with presigned URLs**:
+Use a **private Space with server-proxied uploads**:
 
-- The server validates upload intent and creates a short-lived signed PUT URL.
-- The browser uploads the file directly to DigitalOcean Spaces.
+- The apply Server Action authenticates the candidate, validates the file, and uploads it to Spaces.
 - MongoDB stores the object key and metadata, not the file bytes.
 - Admin downloads use short-lived signed GET URLs.
 
-This is preferred over sending a 5 MB file through a Server Action because it avoids request body limits, server memory usage, and unnecessary bandwidth through the Next.js server.
+We deliberately send the file through our server (not a presigned direct upload) because it keeps the flow to a single request, reuses the existing Server Action pattern, and needs no bucket CORS. The trade-off is server memory/bandwidth per upload plus raising the Server Action `bodySizeLimit`. **Presigned direct upload is the scaling upgrade to reach for later**, when server bandwidth becomes the real pain point.
 
 ## Architecture Diagram
 
 ```mermaid
 flowchart TD
-  A[JobApplyForm] -->|file name, type, size| B[Presign Route]
-  B --> C[Upload Service]
-  C -->|signed PUT URL| A
-  A -->|file bytes| D[Private DigitalOcean Space]
-  A -->|fields + resume metadata/key| E[Apply Server Action]
+  A[JobApplyForm] -->|form fields + PDF file| E[Apply Server Action]
+  E -->|validate + hand off file| C[Upload Service]
+  C -->|PutObject bytes| D[(Private DigitalOcean Space)]
+  C -->|object key| E
   E --> F[Application Service]
   F --> G[Applications Repository]
   G --> H[(MongoDB)]
@@ -62,9 +61,9 @@ flowchart TD
 sequenceDiagram
   actor Candidate
   participant Form as JobApplyForm
-  participant Presign as Presign Route
-  participant Spaces as Private DO Space
   participant Action as Apply Server Action
+  participant Upload as Upload Service
+  participant Spaces as Private DO Space
   participant Service as Application Service
   participant DB as MongoDB
   participant Queue as Screening Queue
@@ -72,12 +71,13 @@ sequenceDiagram
   participant AI as OpenAI
 
   Candidate->>Form: Select PDF resume
-  Form->>Presign: Send name, type, size
-  Presign-->>Form: Return key + signed PUT URL
-  Form->>Spaces: PUT file directly
-  Spaces-->>Form: Upload succeeded
-  Form->>Action: Submit application + resume metadata
-  Action->>Service: Apply input
+  Form->>Action: Submit form fields + file (one request)
+  Action->>Action: getCurrentUser() + validate file
+  Action->>Upload: uploadResume(file)
+  Upload->>Spaces: PutObject (bytes)
+  Spaces-->>Upload: Stored
+  Upload-->>Action: object key
+  Action->>Service: Apply input + resume key
   Service->>DB: Save application as PENDING
   Service->>Queue: Publish application.created
   Service-->>Form: Application submitted
@@ -94,19 +94,18 @@ sequenceDiagram
 ```txt
 JobApplyForm
   -> collect file
-  -> request signed upload
-  -> upload directly to Spaces
-  -> submit returned key/metadata
+  -> submit form + file in one normal Server Action request
 
-Presign route
-  -> require authenticated candidate
-  -> validate file metadata
-  -> generate server-owned object key
-  -> return short-lived signed URL
+Apply Server Action
+  -> require authenticated candidate (getCurrentUser)
+  -> hand the file to the upload service
+  -> save the returned key with the application
 
 Upload service
-  -> configure S3-compatible commands
-  -> create signed PUT/GET operations
+  -> validate the file (PDF, size)
+  -> generate a server-owned object key
+  -> upload bytes to Spaces (PutObject)
+  -> sign short-lived GET URLs for admin downloads
 
 Application service
   -> validate application
@@ -128,19 +127,21 @@ Screening worker
 1. Revisit the fake upload UI from Lecture 110.
 2. Draw the architecture diagram.
 3. Compare server-proxied upload and direct presigned upload.
-4. Choose private presigned uploads and explain why.
+4. Choose server-proxied upload for simplicity; name presigned as the scaling upgrade.
 5. Walk through each layer’s responsibility.
 6. Walk through the sequence diagram.
 7. Connect the stored object key to admin downloads and AI processing.
 
 ## Key Teaching Lines
 
-> The browser uploads bytes; the server grants limited permission.
+> The file flows through our server; the server validates, uploads, and owns the object key.
 
-> The form must not know storage credentials. It receives a temporary signed URL.
+> The browser never holds storage credentials, and downloads use short-lived signed GET URLs.
 
 > The file lives in Spaces. MongoDB stores how to find and describe it.
 
+> Presigned direct upload is the scaling upgrade for later, not a requirement now.
+
 ## Next
 
-Lecture 112 verifies the private Space, credentials, endpoints, CORS, and local/deployment environment variables.
+Lecture 112 verifies the private Space, credentials, endpoints, and local/deployment environment variables (bucket CORS is only needed if you later switch to direct browser upload).

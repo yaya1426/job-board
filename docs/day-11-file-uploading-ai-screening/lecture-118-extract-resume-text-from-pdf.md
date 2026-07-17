@@ -1,4 +1,4 @@
-# Lecture 117 - Extract Resume Text from PDF | استخراج النص من السيرة الذاتية
+# Lecture 118 - Extract Resume Text from PDF | استخراج النص من السيرة الذاتية
 
 ## Goal
 
@@ -25,6 +25,12 @@ Privacy matters here too: resume text is personal. We keep it inside the pipelin
 ## Dependency
 
 Choose a Node-compatible PDF parser and install its current supported version during recording. Verify compatibility with the project’s Node runtime before committing.
+
+This service uses `Buffer`, the S3 SDK stream, and a Node-compatible PDF parser. It must run in the **Node.js runtime**, not the Edge runtime. The worker route that later calls it should explicitly export:
+
+```ts
+export const runtime = "nodejs";
+```
 
 ## Files Created
 
@@ -102,4 +108,4 @@ Do not pretend all PDFs contain extractable text.
 
 ## Next
 
-Lecture 118 designs the automated, durable screening workflow around this extraction service.
+Lecture 119 designs the automated, durable screening workflow around this extraction service.

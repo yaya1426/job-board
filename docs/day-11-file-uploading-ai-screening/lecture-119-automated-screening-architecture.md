@@ -1,4 +1,4 @@
-# Lecture 118 - Automated Screening Architecture | معمارية التقييم التلقائي
+# Lecture 119 - Automated Screening Architecture | معمارية التقييم التلقائي
 
 ## Goal
 
@@ -78,7 +78,7 @@ Use a durable HTTP queue/pub-sub provider for the tutorial’s deployed architec
 
 Do not use an un-awaited promise after the response; it is not durable.
 
-Possible provider: Upstash QStash. Confirm the provider before recording Lecture 119 and use its current SDK/signature verification documentation.
+Possible provider: Upstash QStash. Confirm the provider before recording Lecture 120 and use its current SDK/signature verification documentation.
 
 ## Idempotency Rules
 
@@ -124,4 +124,4 @@ repositories/applications.repository.ts
 
 ## Next
 
-Lecture 119 implements the producer and worker route after the application is saved.
+Lecture 120 implements the producer that publishes a screening job after the application is saved.

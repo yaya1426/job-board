@@ -2,7 +2,33 @@
 
 ## Goal
 
-Build the server-only storage foundation that validates resume metadata and generates short-lived signed upload/download URLs.
+One small win: take an uploaded PDF, validate it on the server, and store it privately in DigitalOcean Spaces. That's the whole lesson. (Admin *downloads* come later, in Lecture 117, exactly when we build the screen that needs them.)
+
+## Explain It Simply (For Beginners)
+
+We use the plain, familiar **backend/frontend** model here:
+
+1. The candidate picks a PDF and submits the apply form — the file rides along like any other field.
+2. The request reaches **our server**, which checks the logged-in candidate, validates the file (real PDF? under 5 MB?), and then uploads it to private storage.
+3. The server saves the file's **key** (its address in storage) on the application and responds.
+
+That's it. One request. The file goes browser → our server → Spaces. It's like handing a document to a clerk at the counter: they check it and file it in the back for you.
+
+### "Do I even need a presigned URL?" — No, not here.
+
+There's a fancier approach where the browser uploads *directly* to storage and the server only hands out a temporary "upload permission slip" (a **presigned URL**). It scales better because the file never passes through your server — but it adds a lot of moving parts (an extra route, a two-step upload handshake, and bucket CORS).
+
+For this app (a 5 MB resume cap, course-scale traffic) that complexity isn't worth it. We stream through our own server because it's simple and easy to reason about. **Presigned direct-upload is the upgrade you reach for later, when server bandwidth actually becomes the pain point.** We'll name it as future hardening, not build it now.
+
+> Teaching line: *We trade a little scalability for a lot of simplicity — and we say so out loud.*
+
+> Note: the bucket is **private**, so there's no public link to a resume. We don't need to solve "how does an admin open it?" yet — that's Lecture 117's job. This lesson stops at "the file is safely stored."
+
+### Jargon decoder
+
+- **Object key** = the file's address inside the bucket, e.g. `resumes/abc-123.pdf`. We store this on the application, not the file's bytes.
+- **`PutObjectCommand`** = the S3 SDK command to upload a file.
+- **Server Action body limit** = Next.js caps how big a Server Action request can be (~1 MB by default). Since the file now travels through the action, we raise it (see the config note below).
 
 ## Files Created
 
@@ -10,12 +36,26 @@ Build the server-only storage foundation that validates resume metadata and gene
 lib/storage.ts
 services/uploads/uploads.validation.ts
 services/uploads/uploads.service.ts
-app/api/uploads/resume/presign/route.ts
 ```
+
+> Config note: because the resume's bytes now travel through a Server Action, raise the limit in `next.config.ts` so a 5 MB PDF isn't rejected:
+>
+> ```ts
+> const nextConfig = {
+>   // ...existing config
+>   experimental: {
+>     serverActions: { bodySizeLimit: "6mb" },
+>   },
+> };
+> ```
+>
+> (Slightly above 5 MB to leave room for the other form fields.)
 
 ## Step 1 - Configure the Storage Client
 
 Create `lib/storage.ts`.
+
+This code uses the AWS SDK, `Buffer`, and Node's crypto APIs, so it must run in the **Node.js runtime**, not the Edge runtime. Next.js Server Actions use Node.js by default in this app.
 
 Responsibilities:
 
@@ -52,7 +92,7 @@ export const spacesClient = new S3Client({
 
 Create `services/uploads/uploads.validation.ts`.
 
-For the first version, accept PDF only because Lecture 117 extracts PDF text.
+For the first version, accept PDF only because Lecture 118 extracts PDF text.
 
 ```ts
 import { z } from "zod";
@@ -82,219 +122,134 @@ Explain that browser `accept=".pdf"` is UX only; server validation is authoritat
 
 Create `services/uploads/uploads.service.ts`.
 
+The service has **one** job for now: take a real `File`, validate it, and upload the bytes with `PutObjectCommand`. It returns the object key and metadata. That's all this lesson needs.
+
 ```ts
 import "server-only";
-import {
-  GetObjectCommand,
-  PutObjectCommand,
-} from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { randomUUID } from "node:crypto";
 import { spacesBucket, spacesClient } from "@/lib/storage";
-import {
-  resumeUploadRequestSchema,
-  type ResumeUploadRequest,
-} from "./uploads.validation";
+import { resumeUploadRequestSchema } from "./uploads.validation";
 
-const SIGNED_URL_TTL_SECONDS = 5 * 60;
+export async function uploadResume(file: File) {
+  // Validate the ACTUAL uploaded file, server-side. The browser cannot be trusted.
+  const validated = resumeUploadRequestSchema.parse({
+    fileName: file.name,
+    fileSize: file.size,
+    contentType: file.type,
+  });
 
-export async function createResumeUploadUrl(input: ResumeUploadRequest) {
-  const validated = resumeUploadRequestSchema.parse(input);
+  // The server owns the key. Never use the raw filename as the object path.
   const key = `resumes/${randomUUID()}.pdf`;
+  const bytes = Buffer.from(await file.arrayBuffer());
 
-  const uploadUrl = await getSignedUrl(
-    spacesClient,
+  await spacesClient.send(
     new PutObjectCommand({
       Bucket: spacesBucket,
       Key: key,
+      Body: bytes,
       ContentType: validated.contentType,
     }),
-    { expiresIn: SIGNED_URL_TTL_SECONDS },
   );
 
   return {
     key,
-    uploadUrl,
     fileName: validated.fileName,
     fileSize: validated.fileSize,
     contentType: validated.contentType,
   };
 }
-
-export async function createResumeDownloadUrl(key: string) {
-  return getSignedUrl(
-    spacesClient,
-    new GetObjectCommand({
-      Bucket: spacesBucket,
-      Key: key,
-    }),
-    { expiresIn: SIGNED_URL_TTL_SECONDS },
-  );
-}
 ```
 
-The server generates the key. Never use the raw filename as an object path.
+Two teaching points: the server generates the key (so a malicious filename can't control the storage path), and the upload reuses the same zod schema as validation so there is exactly one source of truth for "what counts as a valid resume."
 
-## *Step 4 - Add the Presign Route*
+> We'll add a `createResumeDownloadUrl` helper to this same file later, in Lecture 117, when the admin screen actually needs to open a resume. No need to write it now.
 
-### The idea in one sentence
+## Step 4 - Where Auth and Upload Happen (No Separate Route)
 
-The browser is not allowed to hold our Spaces secret keys, so it asks **our server** for a temporary permission slip (a *presigned URL*), and only then uploads the file straight to Spaces.
+With the server-proxied approach there is **no presign route and no extra upload endpoint.** The upload happens *inside the existing apply Server Action* (wired up in Lecture 115). That action already:
 
-Think of it like a coat check. You don't get the key to the whole cloakroom; you get a single ticket that only works for your one coat, for a short time.
+- runs `getCurrentUser()` to confirm a logged-in candidate, and
+- receives the whole form, including the resume `File`.
+
+So it just calls `uploadResume(file)`, gets back a `key`, and saves that key with the rest of the application. One request does auth + validation + upload + save.
 
 ### How the pieces talk to each other
 
 ```txt
-  [ Browser ]                 [ Our Server ]              [ DigitalOcean Spaces ]
-  apply form                  presign route               the storage bucket
+  [ Browser ]                 [ Our Server ]                 [ DigitalOcean Spaces ]
+  apply form                  apply Server Action            the private bucket
       |                            |                              |
-      | 1. "I want to upload       |                              |
-      |    resume.pdf, PDF,        |                              |
-      |    120 KB"  (JSON)         |                              |
+      | 1. submit form + PDF file  |                              |
       | -------------------------> |                              |
-      |                            | 2. check: logged in?         |
-      |                            |    role = CANDIDATE?          |
-      |                            |    metadata valid? (zod)     |
+      |                            | 2. getCurrentUser() ok?      |
+      |                            |    validate file (zod):      |
+      |                            |    PDF? <= 5 MB?             |
       |                            |                              |
-      |                            | 3. sign a short-lived URL    |
-      |                            |    using our secret keys     |
-      |                            |    (keys never leave server) |
+      |                            | 3. PutObjectCommand          |
+      |                            |    (upload the bytes)        |
+      |                            | ---------------------------> |
       |                            |                              |
-      | 4. { key, uploadUrl }      |                              |
+      |                            | 4. returns object key        |
+      |                            | <--------------------------- |
+      |                            |                              |
+      |                            | 5. save application + key    |
+      | 6. success (or field errors)|                             |
       | <------------------------- |                              |
-      |                            |                              |
-      | 5. PUT the actual file straight to Spaces using uploadUrl  |
-      | ---------------------------------------------------------> |
-      |                            |                              |
-      | 6. 200 OK (file stored)                                    |
-      | <--------------------------------------------------------- |
 ```
 
-Key point for learners: the file bytes never pass through our server. Our server only issues permission (steps 1-4). The heavy upload (step 5) goes browser -> Spaces directly.
+Key point for learners: the file bytes **do** pass through our server this time (step 1 → 3). That's the deliberate simplicity/scalability trade-off from the intro. The server is the single gatekeeper: it authenticates, validates, and uploads in one place.
 
-### What this route is (and is not)
+### Why this is simpler than the presigned version
 
-Steps 1-3 already built the *service* that knows how to sign a URL (`createResumeUploadUrl`). Step 4 is just the **front door** for that service over HTTP: a thin route that adds two things the service doesn't do on its own — *who is asking* (auth) and *reading the request body* (parse JSON). The signing itself stays in the service.
+- No `/api/uploads/resume/presign` route to build, secure, and explain.
+- No client-side "get a URL, then PUT to it" handshake.
+- No bucket CORS needed for uploads (the browser never calls Spaces directly).
+- Auth reuses the apply action's existing `getCurrentUser()` check — nothing new.
 
-### Create `app/api/uploads/resume/presign/route.ts`
+### Where validation errors surface
 
-*The route must:*
+`uploadResume` calls `resumeUploadRequestSchema.parse(...)`, so an invalid file (not a PDF, too big) throws a `ZodError`. The apply action catches it and returns field errors in the usual `ServiceResult` shape — the same pattern every other form in the app already uses. No custom HTTP status codes to hand-roll.
 
-1. *Require a logged-in user.* → nobody anonymous should be able to mint upload permissions.
-2. *Require* `CANDIDATE` *role if candidate-only uploads are enforced.* → only candidates upload resumes.
-3. *Parse JSON metadata.* → read `{ fileName, fileSize, contentType }` from the request body.
-4. *Call* `createResumeUploadUrl`*.* → let the service validate and sign.
-5. *Return safe JSON; never return credentials.* → return `{ key, uploadUrl }`, never anything from `lib/storage.ts`.
-6. *Return* `400` *for validation errors and* `401/403` *for auth errors.*
+### Cleanup
 
-### Which status code means what
-
-| Situation | Status | Meaning |
-| --- | --- | --- |
-| Not logged in | `401 Unauthorized` | "I don't know who you are." |
-| Logged in, wrong role | `403 Forbidden` | "I know you, but you're not allowed." |
-| Allowed, but bad file metadata | `400 Bad Request` | "Your request is malformed" (not a PDF, too big). |
-| All good | `200 OK` | Returns `key` + `uploadUrl`. |
-
-Because `createResumeUploadUrl` uses `schema.parse(...)`, invalid metadata throws a `ZodError`. We catch it and turn it into a `400`.
-
-### The route
-
-```ts
-import { NextResponse } from "next/server";
-import { z } from "zod";
-import { getCurrentUser } from "@/lib/current-user";
-import { createResumeUploadUrl } from "@/services/uploads/uploads.service";
-
-export async function POST(request: Request) {
-  const currentUser = await getCurrentUser();
-
-  if (!currentUser) {
-    return NextResponse.json(
-      { error: "You must be logged in to upload" },
-      { status: 401 },
-    );
-  }
-
-  if (currentUser.role !== "CANDIDATE") {
-    return NextResponse.json(
-      { error: "Only candidates can upload resumes" },
-      { status: 403 },
-    );
-  }
-
-  try {
-    const body = await request.json();
-    const result = await createResumeUploadUrl(body);
-    return NextResponse.json(result);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { errors: z.flattenError(error).fieldErrors },
-        { status: 400 },
-      );
-    }
-
-    return NextResponse.json(
-      { error: "Could not create upload URL" },
-      { status: 500 },
-    );
-  }
-}
-```
-
-Why `POST` and not `GET`? The client is *sending* data (the file description) and asking us to *create* something (a permission slip). `GET` is for reading; `POST` is for "here is a body, do something with it."
-
-*Do not use the existing placeholder* `app/api/jobs/route.ts`*; remove that unrelated experiment when the user is ready.*
+*Remove the placeholder* `app/api/jobs/route.ts`*; it is an unrelated “Hello, world” experiment and is not part of this flow.*
 
 ## Step 5 - Explain the Security Boundary
 
-The signed URL grants permission only to:
+Even though uploads now go through our server, the security rules are the same:
 
-- one object key
-- one HTTP method (`PUT`)
-- one content type
-- a short time window
+- The bucket stays **private** — no `public-read`, no public URLs to resumes.
+- The **server** is the only thing holding Spaces credentials; they never reach the browser.
+- Only an authenticated candidate can trigger an upload (the apply action checks this in Lecture 115).
 
-It does not reveal Spaces credentials.
+(How admins later *read* a private file is a Lecture 117 concern — we don't touch it here.)
 
-## Step 6 - Verify Without the Form
+## Step 6 - Verify
 
-Use a temporary REST client request:
+Because the form is not wired until Lecture 115, make this lesson's result visible with a temporary **server-side** test of `uploadResume`:
 
-```json
-{
-  "fileName": "resume.pdf",
-  "fileSize": 120000,
-  "contentType": "application/pdf"
-}
-```
+- a valid PDF returns a `key` and the object appears in the private bucket
+- a non-PDF is rejected by validation
+- a file over 5 MB is rejected
+- the resume is **not** publicly reachable by URL
 
-Verify:
-
-- unauthenticated request is rejected
-- non-PDF is rejected
-- file over 5 MB is rejected
-- valid metadata returns `key` and `uploadUrl`
-- URL expires after the configured window
-
-Do not commit a permanent debug route or credentials.
+Log only the returned key—never the file contents or credentials—then remove the temporary test before committing. Do not create a permanent debug route.
 
 ## Key Teaching Lines
 
-> We validate upload intent before granting permission to upload.
+> Validation runs on the real file, server-side. Browser `accept=".pdf"` is only a hint.
 
-> A presigned URL is temporary permission, not a storage credential.
+> The server owns the object key, so a malicious filename can never control the storage path.
 
-> PDF-only keeps the upload contract aligned with the text-extraction lesson.
+> One lesson, one job: this lesson only proves we can store a file safely. Reading it back comes later.
 
-
+> Presigned direct-upload is a scaling upgrade for later, not a requirement now.
 
 ## End State
 
-The backend can safely issue signed upload/download URLs. The apply form still does not upload yet.
+The backend can validate a resume and store it privately. The apply form still does not upload yet, and reading files back (admin downloads) is not built until Lecture 117.
 
 ## Next
 
-Lecture 114 wires the file input to the presign route, uploads directly to Spaces, and submits the resulting metadata.
+Lecture 114 prepares the application type, model, and repository to store the resume snapshot before the form starts filling it.

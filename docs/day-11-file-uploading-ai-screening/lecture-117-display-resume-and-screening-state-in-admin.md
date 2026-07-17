@@ -1,4 +1,4 @@
-# Lecture 116 - Display Resume and Screening State in Admin | عرض السيرة وحالة التقييم في لوحة الإدارة
+# Lecture 117 - Display Resume and Screening State in Admin | عرض السيرة وحالة التقييم في لوحة الإدارة
 
 ## Goal
 
@@ -29,19 +29,39 @@ components/applications/*
 app/(admin)/dashboard/applications/page.tsx
 ```
 
-## Step 1 - Protect Resume Access
+## Step 1 - Add the Download-URL Helper (Deferred from Lecture 113)
+
+Now that something finally needs to *read* a private file, add the signed-download helper to the upload service. We left it out of Lecture 113 on purpose — you only build a tool when a lesson needs it.
+
+```ts
+// services/uploads/uploads.service.ts (add alongside uploadResume)
+import { GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+
+const SIGNED_URL_TTL_SECONDS = 5 * 60;
+
+export async function createResumeDownloadUrl(key: string) {
+  return getSignedUrl(
+    spacesClient,
+    new GetObjectCommand({ Bucket: spacesBucket, Key: key }),
+    { expiresIn: SIGNED_URL_TTL_SECONDS },
+  );
+}
+```
+
+## Step 2 - Protect Resume Access
 
 Create an admin-only route that:
 
 1. Calls `getCurrentUser()`.
 2. Requires `role === "ADMIN"`.
 3. Loads the application by id.
-4. Creates a short-lived signed GET URL using `candidateResumeKey`.
+4. Creates a short-lived signed GET URL with `createResumeDownloadUrl(candidateResumeKey)`.
 5. Redirects to that URL or returns it as JSON.
 
 Do not render a permanent public resume URL.
 
-## Step 2 - Add Resume UI
+## Step 3 - Add Resume UI
 
 Add an `OPEN RESUME` action to the application row/details UI.
 
@@ -49,7 +69,7 @@ Add an `OPEN RESUME` action to the application row/details UI.
 - Use `rel="noopener noreferrer"` if using a link.
 - Show a missing-resume state for legacy records.
 
-## Step 3 - Add Screening Status Badge
+## Step 4 - Add Screening Status Badge
 
 Map internal values to display labels:
 
@@ -62,11 +82,11 @@ FAILED     -> Failed
 
 Do not display an absent `aiScore` as `0`.
 
-## Step 4 - Preserve Authorization Layers
+## Step 5 - Preserve Authorization Layers
 
 The dashboard proxy/layout protects page access, but the resume route must still check admin role because route handlers are separate security boundaries.
 
-## Step 5 - Handle Expiration
+## Step 6 - Handle Expiration
 
 Signed download URLs expire. Generate a fresh URL each time the admin opens the resume rather than storing the signed URL in MongoDB.
 
@@ -86,4 +106,4 @@ Signed download URLs expire. Generate a fresh URL each time the admin opens the 
 
 ## Next
 
-Lecture 117 reads the private PDF and extracts plain text for screening.
+Lecture 118 reads the private PDF and extracts plain text for screening.

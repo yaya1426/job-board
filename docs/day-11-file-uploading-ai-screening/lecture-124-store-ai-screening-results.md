@@ -1,4 +1,4 @@
-# Lecture 121 - Store AI Screening Results | حفظ نتائج التقييم الذكي
+# Lecture 124 - Store AI Screening Results | حفظ نتائج التقييم الذكي
 
 ## Goal
 
@@ -119,4 +119,4 @@ For other states, render status UI instead.
 
 ## Next
 
-Lecture 122 completes failure handling, retries, pending UX, and operational recovery.
+Lecture 125 completes failure handling, retries, pending UX, and operational recovery.
