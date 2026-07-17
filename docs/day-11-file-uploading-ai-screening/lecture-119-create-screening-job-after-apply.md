@@ -4,6 +4,28 @@
 
 Publish a durable screening job after saving an application and receive it through a protected worker route.
 
+## Explain It Simply (For Beginners)
+
+Lecture 118 was the *plan*; this is where we *build* the two ends of the queue:
+
+- The **producer** — the code that drops the job onto the queue right after we save the application. It sends only the application's id, nothing else.
+- The **worker route** — a protected endpoint the queue provider calls to deliver the job. It reloads the real data from the database and does the screening.
+
+Why send *only* the id and not all the application data? Two reasons. First, the message stays tiny. Second, and more important: **never trust data that took a trip outside your server.** The worker looks up fresh, trustworthy data from MongoDB using the id, instead of believing whatever was stuffed into the message.
+
+There's a classic reliability puzzle here called the **dual-write problem**: we do two things in a row — (1) save to the database, (2) publish to the queue. What if step 1 works but step 2 fails? Now we have an application that will never get screened. For the course we handle it simply (catch the failure, leave it `PENDING`, log it, add retry later) and just *name* the fancy production fix ("transactional outbox") without over-engineering.
+
+The worker route also must **verify the queue provider's signature** — proof the request genuinely came from our queue and not a random attacker hitting the URL. And it can't rely on browser login cookies, because the caller is a server, not a logged-in person.
+
+### Jargon decoder
+
+- **Producer** = the code that *adds* a job to the queue.
+- **Consumer / worker** = the code that *receives and processes* a job.
+- **Signature verification** = checking a cryptographic stamp that proves the request came from the trusted queue provider.
+- **Dual-write problem** = the risk that one of two required writes (DB + queue) succeeds while the other fails.
+- **Idempotent claim** = atomically marking a job `PROCESSING` so two workers can't screen the same application at once.
+- **Retryable vs non-retryable** = whether it's worth trying the job again (a temporary network blip) or not (permanently broken input).
+
 ## Prerequisite Decision
 
 Select the queue provider from Lecture 118 before recording. The steps below assume an HTTP queue such as QStash; use the provider’s current SDK and signature-verification API.

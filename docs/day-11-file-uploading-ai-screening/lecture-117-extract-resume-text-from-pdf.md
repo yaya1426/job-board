@@ -4,6 +4,24 @@
 
 Turn a private PDF object into normalized plain text that the screening service can consume.
 
+## Explain It Simply (For Beginners)
+
+A PDF is not text — it's a bundle of bytes describing how to *draw* a page. But OpenAI needs actual words to read. So before we can screen a resume, we have to "unwrap" the PDF and pull the plain text out of it.
+
+Analogy: the PDF is a sealed envelope. This lecture is the step where we open it and copy the letter's words onto a clean sheet the AI can read. We also tidy that text up ("normalize" it) — collapse weird spacing, cap the length — so we don't send a giant messy blob to OpenAI.
+
+A critical real-world gotcha for students: **some PDFs are just pictures.** If someone scanned a paper resume, the "text" is actually an image, and a normal parser finds *nothing*. We don't pretend otherwise — we fail that case honestly with a clear error (and note that OCR could be added later). Uploading successfully does **not** guarantee readable text, so extraction gets its own error handling.
+
+Privacy matters here too: resume text is personal. We keep it inside the pipeline — never log it, never send it back to the browser, and only pass the necessary parts to OpenAI.
+
+### Jargon decoder
+
+- **Parse / parser** = a tool that reads a file format and extracts structured content (here, the text out of a PDF).
+- **Normalize** = clean up into a consistent shape (trim whitespace, enforce a max length).
+- **Buffer / byte array** = how raw file bytes are held in memory so the parser can work on them.
+- **OCR** (Optical Character Recognition) = tech that reads text *out of images* — needed for scanned PDFs, deliberately out of scope for now.
+- **Error boundary** = a dedicated place to catch and handle a specific kind of failure cleanly.
+
 ## Dependency
 
 Choose a Node-compatible PDF parser and install its current supported version during recording. Verify compatibility with the project’s Node runtime before committing.

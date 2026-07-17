@@ -4,6 +4,27 @@
 
 Replace the fake drop area with a real PDF input and direct browser-to-Spaces upload.
 
+## Explain It Simply (For Beginners)
+
+This is where the front-end finally does something real. When the candidate hits **Submit**, three things now happen in order, all from the browser:
+
+1. **Ask permission**: send just the file's *description* (name, size, type) to our presign route, and get back a temporary upload link.
+2. **Upload the file**: `PUT` the actual PDF straight to Spaces using that link.
+3. **Submit the application**: send the form fields *plus the file's key* (its address in storage) to our normal apply action.
+
+An analogy: you don't mail your original passport to a company. You get it verified, then send them the *reference number*. Same here — the big file goes to storage once, and the application only carries the small "reference" (the object key).
+
+**Why switch away from `useActionState` here?** Our other forms submit in one step. This form needs to do several `await` steps *in a row* (ask → upload → submit) and react to each result. That sequencing is exactly the "plain client handler" pattern we already use for login/signup (Pattern B in `AGENTS.md`), so we reuse it.
+
+**Two operations, not one:** the file upload and the application save are separate. It's possible for the upload to succeed and the save to fail, leaving a lonely "orphan" file. That's a known trade-off we name now and clean up later — not a bug to panic about.
+
+### Jargon decoder
+
+- **`accept=".pdf"`** = a browser hint that filters the file picker. It's *convenience only*; the server still re-checks, because anyone can bypass the browser.
+- **`FormData`** = the object that packages form fields (and now the resume key) to send to the server action.
+- **`isPending`** = a true/false flag we flip on while uploading so we can disable the button and avoid double submits.
+- **Orphan object** = an uploaded file whose application never got saved, so nothing points to it.
+
 ## Files Updated
 
 ```txt

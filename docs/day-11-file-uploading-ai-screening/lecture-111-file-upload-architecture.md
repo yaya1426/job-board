@@ -4,6 +4,26 @@
 
 Map the resume lifecycle and assign one responsibility to each layer before implementation.
 
+## Explain It Simply (For Beginners)
+
+There are two ways to get a file from the browser into cloud storage:
+
+1. **Through our server** (the slow, expensive way): browser → our server → storage. The whole 5 MB file passes through us. Our server has to hold it in memory, and big files can hit request-size limits or time out.
+2. **Directly to storage** (the way we choose): the browser uploads the file *straight* to DigitalOcean Spaces. Our server never touches the bytes — it only hands out a temporary permission slip first.
+
+We pick option 2. It's like a nightclub: our server is the **bouncer** who checks your ID and gives you a wristband (the *signed URL*), but you walk through the door yourself. The bouncer doesn't carry you in.
+
+**Why not just make the files public?** Resumes contain personal data (names, phone numbers, addresses). A public URL means anyone who guesses the link can read someone's resume. So files stay private, and we hand out short-lived links only to people who are allowed.
+
+The diagrams below look busy, but they're really just this one sentence drawn out: *the browser uploads the bytes; the server only grants limited permission.* Everything else (database, queue, worker, AI) is what happens **after** the file is safely stored.
+
+### Jargon decoder
+
+- **Presigned URL** = a temporary web link, created by our server using its secret keys, that lets the holder do exactly one thing (upload *this* file, or download *that* file) for a few minutes.
+- **PUT / GET** = the HTTP verbs for "upload this" (PUT) and "download this" (GET).
+- **Object key** = the file's address inside the bucket, e.g. `resumes/abc-123.pdf`. We store *this*, not the whole file.
+- **Layer** = one part of the code with one job. Keeping jobs separate makes each piece easy to understand and test.
+
 ## Architecture Decision
 
 Use a **private Space with presigned URLs**:

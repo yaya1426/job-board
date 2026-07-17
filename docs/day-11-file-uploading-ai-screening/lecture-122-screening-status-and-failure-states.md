@@ -4,6 +4,29 @@
 
 Make asynchronous screening observable, retryable, and honest in both code and UI.
 
+## Explain It Simply (For Beginners)
+
+Background work fails sometimes — OpenAI is busy, a PDF is corrupt, the network blips. This lecture is about being **honest about failure** instead of hiding it behind an endless spinner.
+
+The core idea: async work needs **states, not a loading boolean.** A simple "loading: true/false" can't tell the difference between "still waiting", "currently working", "done", and "broke." So we use a small **state machine** with four clear stages: `PENDING → PROCESSING → COMPLETED` (or `→ FAILED`, which can retry back to `PENDING`).
+
+Analogy: package tracking. "Ordered → Out for delivery → Delivered", or "Delivery failed → rescheduled." You always know exactly where things stand — far better than a spinning circle.
+
+Two distinctions students must get:
+
+- **Retryable vs non-retryable failures.** A rate limit is temporary — try again. A resume with zero extractable text will *never* work no matter how many times you retry — mark it `FAILED` and stop. Blindly retrying broken input just wastes money.
+- **Screening failure is NOT application failure.** If the AI step breaks, the candidate's application is still safely saved. We never delete their application because *our* AI had a bad day. The candidate never even sees these internal errors.
+
+We also store only **safe** error info (a short code/message), never secrets, raw provider dumps, or resume content. And we mention (without necessarily building) a cleanup task for jobs that get "stuck" in `PROCESSING`.
+
+### Jargon decoder
+
+- **State machine** = a defined set of statuses plus the allowed moves between them.
+- **Backoff / exponential backoff** = waiting longer and longer between retries so we don't hammer a struggling service.
+- **Dead-letter** = where a job goes after it has failed the maximum number of times, for humans to inspect.
+- **Reconciliation** = a periodic sweep that finds and fixes stuck/abandoned jobs.
+- **Observable** = you can look at the system and clearly tell what state everything is in.
+
 ## State Machine
 
 ```mermaid

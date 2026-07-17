@@ -4,6 +4,27 @@
 
 Introduce Day 11 as one connected production workflow: upload a private resume, save its metadata, process it asynchronously, screen it with OpenAI, and show the result to admins.
 
+## Explain It Simply (For Beginners)
+
+Right now our apply form has a *pretty box that pretends to accept a file* but does nothing. By the end of Day 11, a candidate can attach a real PDF resume, and an AI quietly reads it and gives admins a helpful summary and score.
+
+Think of it like a restaurant:
+
+- The **candidate** drops off their resume (the ingredients).
+- We put it in a **private fridge** (DigitalOcean Spaces) — not on the counter where anyone walks by.
+- We write a **ticket** describing the order and pin it to the board (MongoDB).
+- A **cook in the back** (the background worker) picks up the ticket when ready, reads the resume, asks the **AI chef** (OpenAI) for an opinion, and writes the result back on the ticket.
+- The **admin** later reads the finished ticket.
+
+The big idea students should leave with: this is *not* "add a file input." It's a small pipeline with four different places doing different jobs — storage, database, background processing, and AI.
+
+### Jargon decoder
+
+- **Metadata** = data *about* the file (its name, size, type, and where it's stored), not the file's actual bytes.
+- **Asynchronous / background processing** = work that happens *later*, after we've already told the candidate "thanks, you're done." They don't wait for the AI.
+- **Screening** = the AI reading the resume against the job and producing a score + summary. It *assists* admins; it does not auto-reject anyone.
+- **Private storage** = files nobody can open without a temporary, signed permission link.
+
 ## Current State to Show
 
 - `JobApplyForm` contains a visual “DROP FILE HERE” area, but no file input.

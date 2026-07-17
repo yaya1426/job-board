@@ -4,6 +4,25 @@
 
 Persist a durable resume snapshot on each application and initialize automated screening state.
 
+## Explain It Simply (For Beginners)
+
+The file is now sitting safely in Spaces. But an application needs to *remember* which file belongs to it and how far along the AI review is. This lecture updates the database side so each application carries:
+
+- a **snapshot** of the resume (its key, name, size, type), and
+- a **screening status** that starts at `PENDING`.
+
+Why store a copy of the file details on the application instead of just linking to the user's profile? Because a user can later change or delete their profile/resume, but the application should stay an honest record of *what they actually submitted on that day*. It's like a receipt: it captures the moment, even if prices change later. This is the same "snapshot" idea already used for `candidateName`, `jobTitle`, etc.
+
+One subtle but important point students miss: **a missing score is not a score of zero.** The old code faked `aiScore: 0`, which looks like "this candidate scored 0/100" — terrible and untrue. Instead we leave the score *absent* until the AI actually finishes, and we track progress with `screeningStatus` (`PENDING` → `PROCESSING` → `COMPLETED`/`FAILED`).
+
+### Jargon decoder
+
+- **Persist** = save it to the database so it survives after the request ends.
+- **Snapshot** = a frozen copy of some data at the moment of submission.
+- **Enum** = a field allowed to be only one of a fixed set of values (here: the four screening statuses).
+- **Untrusted input** = anything the browser sent us. We re-validate it server-side because the browser can lie.
+- **Optional field** = a field that may be absent (like `aiScore` before screening finishes), different from a field that is present but empty/zero.
+
 ## Files Updated
 
 ```txt

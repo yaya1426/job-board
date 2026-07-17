@@ -46,6 +46,8 @@ export const spacesClient = new S3Client({
 });
 ```
 
+
+
 ## Step 2 - Define Validation Rules
 
 Create `services/uploads/uploads.validation.ts`.
@@ -133,20 +135,118 @@ export async function createResumeDownloadUrl(key: string) {
 
 The server generates the key. Never use the raw filename as an object path.
 
-## Step 4 - Add the Presign Route
+## *Step 4 - Add the Presign Route*
 
-Create `app/api/uploads/resume/presign/route.ts`.
+### The idea in one sentence
 
-The route must:
+The browser is not allowed to hold our Spaces secret keys, so it asks **our server** for a temporary permission slip (a *presigned URL*), and only then uploads the file straight to Spaces.
 
-1. Require a logged-in user.
-2. Require `CANDIDATE` role if candidate-only uploads are enforced.
-3. Parse JSON metadata.
-4. Call `createResumeUploadUrl`.
-5. Return safe JSON; never return credentials.
-6. Return `400` for validation errors and `401/403` for auth errors.
+Think of it like a coat check. You don't get the key to the whole cloakroom; you get a single ticket that only works for your one coat, for a short time.
 
-Do not use the existing placeholder `app/api/jobs/route.ts`; remove that unrelated experiment when the user is ready.
+### How the pieces talk to each other
+
+```txt
+  [ Browser ]                 [ Our Server ]              [ DigitalOcean Spaces ]
+  apply form                  presign route               the storage bucket
+      |                            |                              |
+      | 1. "I want to upload       |                              |
+      |    resume.pdf, PDF,        |                              |
+      |    120 KB"  (JSON)         |                              |
+      | -------------------------> |                              |
+      |                            | 2. check: logged in?         |
+      |                            |    role = CANDIDATE?          |
+      |                            |    metadata valid? (zod)     |
+      |                            |                              |
+      |                            | 3. sign a short-lived URL    |
+      |                            |    using our secret keys     |
+      |                            |    (keys never leave server) |
+      |                            |                              |
+      | 4. { key, uploadUrl }      |                              |
+      | <------------------------- |                              |
+      |                            |                              |
+      | 5. PUT the actual file straight to Spaces using uploadUrl  |
+      | ---------------------------------------------------------> |
+      |                            |                              |
+      | 6. 200 OK (file stored)                                    |
+      | <--------------------------------------------------------- |
+```
+
+Key point for learners: the file bytes never pass through our server. Our server only issues permission (steps 1-4). The heavy upload (step 5) goes browser -> Spaces directly.
+
+### What this route is (and is not)
+
+Steps 1-3 already built the *service* that knows how to sign a URL (`createResumeUploadUrl`). Step 4 is just the **front door** for that service over HTTP: a thin route that adds two things the service doesn't do on its own — *who is asking* (auth) and *reading the request body* (parse JSON). The signing itself stays in the service.
+
+### Create `app/api/uploads/resume/presign/route.ts`
+
+*The route must:*
+
+1. *Require a logged-in user.* → nobody anonymous should be able to mint upload permissions.
+2. *Require* `CANDIDATE` *role if candidate-only uploads are enforced.* → only candidates upload resumes.
+3. *Parse JSON metadata.* → read `{ fileName, fileSize, contentType }` from the request body.
+4. *Call* `createResumeUploadUrl`*.* → let the service validate and sign.
+5. *Return safe JSON; never return credentials.* → return `{ key, uploadUrl }`, never anything from `lib/storage.ts`.
+6. *Return* `400` *for validation errors and* `401/403` *for auth errors.*
+
+### Which status code means what
+
+| Situation | Status | Meaning |
+| --- | --- | --- |
+| Not logged in | `401 Unauthorized` | "I don't know who you are." |
+| Logged in, wrong role | `403 Forbidden` | "I know you, but you're not allowed." |
+| Allowed, but bad file metadata | `400 Bad Request` | "Your request is malformed" (not a PDF, too big). |
+| All good | `200 OK` | Returns `key` + `uploadUrl`. |
+
+Because `createResumeUploadUrl` uses `schema.parse(...)`, invalid metadata throws a `ZodError`. We catch it and turn it into a `400`.
+
+### The route
+
+```ts
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { getCurrentUser } from "@/lib/current-user";
+import { createResumeUploadUrl } from "@/services/uploads/uploads.service";
+
+export async function POST(request: Request) {
+  const currentUser = await getCurrentUser();
+
+  if (!currentUser) {
+    return NextResponse.json(
+      { error: "You must be logged in to upload" },
+      { status: 401 },
+    );
+  }
+
+  if (currentUser.role !== "CANDIDATE") {
+    return NextResponse.json(
+      { error: "Only candidates can upload resumes" },
+      { status: 403 },
+    );
+  }
+
+  try {
+    const body = await request.json();
+    const result = await createResumeUploadUrl(body);
+    return NextResponse.json(result);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { errors: z.flattenError(error).fieldErrors },
+        { status: 400 },
+      );
+    }
+
+    return NextResponse.json(
+      { error: "Could not create upload URL" },
+      { status: 500 },
+    );
+  }
+}
+```
+
+Why `POST` and not `GET`? The client is *sending* data (the file description) and asking us to *create* something (a permission slip). `GET` is for reading; `POST` is for "here is a body, do something with it."
+
+*Do not use the existing placeholder* `app/api/jobs/route.ts`*; remove that unrelated experiment when the user is ready.*
 
 ## Step 5 - Explain the Security Boundary
 
@@ -188,6 +288,8 @@ Do not commit a permanent debug route or credentials.
 > A presigned URL is temporary permission, not a storage credential.
 
 > PDF-only keeps the upload contract aligned with the text-extraction lesson.
+
+
 
 ## End State
 

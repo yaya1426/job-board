@@ -4,6 +4,23 @@
 
 Let authorized admins open a private resume and understand whether screening is pending, processing, completed, or failed.
 
+## Explain It Simply (For Beginners)
+
+The resume is private, so there's no plain link an admin can click. Instead, when an admin clicks **Open Resume**, our server checks "are you really an admin?" and only then mints a fresh, short-lived download link and sends them to it.
+
+Think of a hotel key card: the front desk (our server) checks who you are, then programs a card that opens *one* room for a *limited* time. It doesn't hand you the master key, and old cards stop working. That's why we generate a **new** signed link every time instead of saving one in the database — a saved link would eventually expire and break.
+
+The most important security lesson here: **hiding a button is not security.** Even though the admin dashboard is already protected, the resume route needs its *own* admin check. A route handler is a separate door into the app — someone could call it directly without ever loading the dashboard page. Every door needs its own lock.
+
+For the status, we translate the internal words into friendlier labels (`PENDING` → "Waiting", `COMPLETED` → "Ready") and, again, never show an absent score as `0`.
+
+### Jargon decoder
+
+- **Route handler** = a small server endpoint (like `/api/.../resume`) that responds to a request. It's a separate entry point from your pages.
+- **Signed GET URL** = a temporary link that grants permission to *download* one specific file for a few minutes.
+- **`rel="noopener noreferrer"`** = a safety attribute on links that open new tabs, so the new page can't tamper with the original.
+- **Legacy record** = old data created before these fields existed (e.g., applications with no resume). The UI must not crash on them.
+
 ## Files Created/Updated
 
 ```txt

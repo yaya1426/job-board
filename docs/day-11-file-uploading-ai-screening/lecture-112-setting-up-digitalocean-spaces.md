@@ -4,6 +4,25 @@
 
 Finish and verify the infrastructure needed for private, direct resume uploads.
 
+## Explain It Simply (For Beginners)
+
+Before we write any upload code, the "cloud filing cabinet" needs to exist and be configured correctly. This lecture is pure setup — no app code — and it's mostly about **safety** and **matching names**.
+
+DigitalOcean Spaces is just cloud storage for files (it behaves like Amazon S3, which is why we use the AWS S3 SDK to talk to it). Think of it as a **rented storage unit**:
+
+- The **bucket** is your unit.
+- The **access key + secret key** are the keys to the unit. If someone steals them, they can read or dump anything inside — so these never go in the browser and never get committed to git.
+- **CORS** is the guard list at the gate: it says which websites (`localhost:3000`, `dev.wazifa.app`, etc.) are allowed to upload directly from a browser. Without it, the browser blocks the upload for security.
+
+The most common beginner mistake here is a **name mismatch**: the code reads `DO_SPACES_BUCKET`, but the env variable is spelled differently, or exists locally but not on the deployed server. "It works on my machine" almost always means an env variable is missing in the other environment.
+
+### Jargon decoder
+
+- **Environment variable (env var)** = a secret/config value kept *outside* the code (in `.env.local` or the hosting dashboard) so secrets aren't hard-coded.
+- **CORS** (Cross-Origin Resource Sharing) = browser security that blocks one website from calling another unless the other explicitly allows it.
+- **CDN** = a fast public delivery network for files. Great for public images, **wrong** for private resumes — we deliberately don't use it as the resume access path.
+- **`NEXT_PUBLIC_` prefix** = tells Next.js to ship that variable to the browser. *Never* put a secret key behind it.
+
 ## Current Status
 
 - The development Space has already been provisioned.

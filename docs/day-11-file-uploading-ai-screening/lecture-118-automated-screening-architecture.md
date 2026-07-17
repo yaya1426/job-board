@@ -4,6 +4,31 @@
 
 Design screening as durable background work rather than blocking the candidate’s apply request or requiring an admin click.
 
+## Explain It Simply (For Beginners)
+
+Imagine the candidate clicks **Apply** and then we make them stare at a spinner while we download their PDF, extract text, and wait for OpenAI to answer. That could take 10+ seconds, might time out, and if OpenAI hiccups, their application fails entirely. Terrible experience for something that isn't even their concern.
+
+So we split it into two phases:
+
+1. **Right now (fast):** save the application, drop a "please screen this" note into a **queue**, and immediately tell the candidate "you're done!"
+2. **Later (background):** a separate **worker** picks up that note whenever it can, does the slow AI work, and updates the application.
+
+Analogy: a coffee shop. You order and pay (application saved), your name goes on the cup and into the line (the queue), and you step aside. The barista (worker) makes drinks from the queue at their own pace. You're not blocking the register while your latte is poured.
+
+**Why a real queue and not just "start the work and don't wait for it"?** Because on serverless/cloud hosting, the moment we send the response the server can shut down and *kill* any unfinished background work. A durable queue stores the job safely and retries it until a worker confirms success. It survives restarts.
+
+The catch that comes with queues: a message may be delivered **more than once** ("at-least-once delivery"). So the worker must be **idempotent** — safe to run twice without doing the work or saving the result twice.
+
+### Jargon decoder
+
+- **Queue** = a durable to-do list of jobs that a provider stores and hands to workers reliably, retrying on failure.
+- **Worker** = code that receives a job from the queue and does the actual processing (here, a protected API route).
+- **Inline / blocking** = doing the work *during* the original request while the user waits. We're avoiding this.
+- **Durable** = survives crashes/restarts; won't silently disappear.
+- **Idempotent** = running it twice has the same effect as running it once (no duplicates).
+- **Fire-and-forget** = starting async work without tracking it — unsafe here because it can be lost.
+- **Payload** = the small data inside the queue message. We send only `{ applicationId }`; the worker reloads the rest from the database.
+
 ## Problem to Show
 
 Doing this inline is risky:

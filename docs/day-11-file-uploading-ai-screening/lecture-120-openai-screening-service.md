@@ -4,6 +4,30 @@
 
 Send job requirements, cover letter, and extracted resume text to OpenAI and receive a validated structured screening result.
 
+## Explain It Simply (For Beginners)
+
+Now the fun part: we hand the job details and the resume text to OpenAI and ask, "how well does this candidate match, and why?" But we don't just want a paragraph of free-form chatter — we want a *predictable shape* our app can store and display: a score, a summary, strengths, and risks.
+
+The key trick is **structured output validated by zod**. AI text is probabilistic — it might come back slightly different each time. By demanding a strict JSON shape and then validating it with a zod schema, we turn "vibes" into a **contract**: if the AI's answer doesn't fit the shape, we reject it rather than saving garbage.
+
+Analogy: instead of asking an assistant to "write me some thoughts," you hand them a **fill-in-the-blank form** with exactly four boxes. Everyone's answer comes back in the same format you can file.
+
+Two principles beginners should internalize:
+
+- **Send the minimum personal data.** OpenAI only needs the job info + cover letter + resume text. It does *not* need the candidate's email, LinkedIn, or ids. Less data shared = less risk.
+- **This is decision *support*, not a decision.** The score helps an admin review faster. It never auto-rejects anyone, and it must not judge protected characteristics (race, gender, age, etc.).
+
+Notice `OPENAI_API_KEY` is server-only — like the storage keys, it must never reach the browser.
+
+### Jargon decoder
+
+- **SDK** = the official library that makes calling OpenAI easy from our code.
+- **Structured output / JSON schema** = forcing the model to answer in an exact, machine-readable shape.
+- **zod schema** = our validation rulebook; `.parse()` throws if the AI's answer doesn't match.
+- **Prompt / instructions** = the directions we give the model about how to score and what to avoid.
+- **Adapter** = a thin wrapper so OpenAI is a swappable detail *behind* our screening service, not woven through the whole app.
+- **Transient error** = a temporary failure (rate limit, network) worth retrying.
+
 ## Dependencies and Environment
 
 Install the current OpenAI JavaScript SDK during recording:
