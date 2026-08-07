@@ -24,11 +24,15 @@ For this app (a 5 MB resume cap, course-scale traffic) that complexity isn't wor
 
 > Note: the bucket is **private**, so there's no public link to a resume. We don't need to solve "how does an admin open it?" yet — that's Lecture 117's job. This lesson stops at "the file is safely stored."
 
+
+
 ### Jargon decoder
 
 - **Object key** = the file's address inside the bucket, e.g. `resumes/abc-123.pdf`. We store this on the application, not the file's bytes.
-- **`PutObjectCommand`** = the S3 SDK command to upload a file.
+- `PutObjectCommand` = the S3 SDK command to upload a file.
 - **Server Action body limit** = Next.js caps how big a Server Action request can be (~1 MB by default). Since the file now travels through the action, we raise it (see the config note below).
+
+
 
 ## Files Created
 
@@ -50,6 +54,8 @@ services/uploads/uploads.service.ts
 > ```
 >
 > (Slightly above 5 MB to leave room for the other form fields.)
+
+
 
 ## Step 1 - Configure the Storage Client
 
@@ -165,6 +171,8 @@ Two teaching points: the server generates the key (so a malicious filename can't
 
 > We'll add a `createResumeDownloadUrl` helper to this same file later, in Lecture 117, when the admin screen actually needs to open a resume. No need to write it now.
 
+
+
 ## Step 4 - Where Auth and Upload Happen (No Separate Route)
 
 With the server-proxied approach there is **no presign route and no extra upload endpoint.** The upload happens *inside the existing apply Server Action* (wired up in Lecture 115). That action already:
@@ -207,6 +215,8 @@ Key point for learners: the file bytes **do** pass through our server this time 
 - No bucket CORS needed for uploads (the browser never calls Spaces directly).
 - Auth reuses the apply action's existing `getCurrentUser()` check — nothing new.
 
+
+
 ### Where validation errors surface
 
 `uploadResume` calls `resumeUploadRequestSchema.parse(...)`, so an invalid file (not a PDF, too big) throws a `ZodError`. The apply action catches it and returns field errors in the usual `ServiceResult` shape — the same pattern every other form in the app already uses. No custom HTTP status codes to hand-roll.
@@ -245,6 +255,8 @@ Log only the returned key—never the file contents or credentials—then remove
 > One lesson, one job: this lesson only proves we can store a file safely. Reading it back comes later.
 
 > Presigned direct-upload is a scaling upgrade for later, not a requirement now.
+
+
 
 ## End State
 

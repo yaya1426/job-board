@@ -25,9 +25,9 @@ Day 11 starts at Lecture 110 in the Udemy curriculum.
 - [Lecture 111 - File Upload Architecture | معمارية رفع الملفات](./lecture-111-file-upload-architecture.md)
 - [Lecture 112 - Setting Up DigitalOcean Spaces | إعداد مساحة التخزين](./lecture-112-setting-up-digitalocean-spaces.md)
 - [Lecture 113 - Upload Service and File Validation | خدمة رفع الملفات والتحقق من الملفات](./lecture-113-upload-service-and-file-validation.md)
-- [Lecture 114 - Prepare the Resume Snapshot | تجهيز بيانات السيرة الذاتية](./lecture-114-save-resume-snapshot.md)
+- [Lecture 114 - Prepare the Resume Snapshot | تجهيز بيانات السيرة الذاتية](./lecture-114-prepare-resume-snapshot.md)
 - [Lecture 115 - Upload Resume from Apply Form | رفع السيرة الذاتية من نموذج التقديم](./lecture-115-upload-resume-from-apply-form.md)
-- [Lecture 116 - Mark Screening as Pending | تجهيز حالة التقييم](./lecture-116-mark-screening-pending.md)
+- [Lecture 116 - Pending and Post-Apply State | حالة التقييم بعد التقديم](./lecture-116-pending-and-post-apply-state.md)
 - [Lecture 117 - Display Resume and Screening State in Admin | عرض السيرة وحالة التقييم في لوحة الإدارة](./lecture-117-display-resume-and-screening-state-in-admin.md)
 - [Lecture 118 - Extract Resume Text from PDF | استخراج النص من السيرة الذاتية](./lecture-118-extract-resume-text-from-pdf.md)
 - [Lecture 119 - Automated Screening Architecture | معمارية التقييم التلقائي](./lecture-119-automated-screening-architecture.md)
@@ -38,8 +38,9 @@ Day 11 starts at Lecture 110 in the Udemy curriculum.
 - [Lecture 124 - Store AI Screening Results | حفظ نتائج التقييم الذكي](./lecture-124-store-ai-screening-results.md)
 - [Lecture 125 - Model Screening Failures | نمذجة أخطاء التقييم](./lecture-125-model-screening-failures.md)
 - [Lecture 126 - Show Screening Status to Humans | عرض حالة التقييم للمستخدمين](./lecture-126-screening-status-ui.md)
-- [Lecture 127 - Feature Branch for Day (11) | برانش جيتهاب لليوم الحادي عشر](./lecture-127-feature-branch.md)
-- [Lecture 128 - Recap Day (11) | ملخص اليوم الحادي عشر](./lecture-128-recap.md)
+- [Lecture 127 - Make the Resume Drop Zone Functional | تفعيل منطقة رفع السيرة الذاتية](./lecture-127-functional-resume-drop-zone.md)
+- [Lecture 128 - Feature Branch for Day (11) | برانش جيتهاب لليوم الحادي عشر](./lecture-128-feature-branch.md)
+- [Lecture 129 - Recap Day (11) | ملخص اليوم الحادي عشر](./lecture-129-recap.md)
 
 ## Course Position
 
@@ -181,13 +182,13 @@ Teaching point:
 
 > The file is just another form field. The Server Action validates, uploads, and saves it—no extra route or client upload handshake.
 
-### Lecture 116 - Mark Screening as Pending
+### Lecture 116 - Pending and Post-Apply State
 
-One win: introduce `screeningStatus` and start new applications at `PENDING`; remove the fake `aiScore: 0`.
+Introduce `screeningStatus: PENDING`, prevent duplicate applications, replace the form with a persistent submitted state after applying, and remove the hard-coded public `7.8` score. Keep stored `aiScore: 0` for one transitional lesson so existing score consumers remain runnable; Lecture 117 removes it while adding real pending-state UI.
 
 Teaching point:
 
-> A missing score is not a score of zero. Async work needs an honest status field from day one.
+> The UI should say only what the database can prove: submitted and pending—not a fake AI score.
 
 ### Lecture 117 - Display Resume and Screening State in Admin
 
@@ -294,7 +295,15 @@ Teaching point:
 
 > Same events, audience-appropriate detail: admins see the machine; candidates see "done."
 
-### Lecture 127 - Feature Branch for Day (11)
+### Lecture 127 - Make the Resume Drop Zone Functional
+
+Return to the original dashed resume mockup after the backend works. Keep the native file input as the form's source of truth, then add clickable selection, drag-and-drop, selected filename, and immediate PDF/size feedback.
+
+Teaching point:
+
+> Build the reliable upload first; polish the interaction after the pipeline works.
+
+### Lecture 128 - Feature Branch for Day (11)
 
 Create the Day 11 branch, validate the feature, open the PR, and merge into the development flow.
 
@@ -302,9 +311,9 @@ Teaching point:
 
 > A production feature is not done until it is reviewed, merged, and tested in the deployment workflow.
 
-### Lecture 128 - Recap Day (11)
+### Lecture 129 - Recap Day (11)
 
-Recap object storage vs database, server-proxied upload, the resume snapshot, admin resume display, text extraction, the queue/worker/idempotency trio, the OpenAI service, result persistence, and failure states.
+Recap object storage vs database, server-proxied upload, the functional drop zone, the resume snapshot, admin resume display, text extraction, the queue/worker/idempotency trio, the OpenAI service, result persistence, and failure states.
 
 Teaching point:
 

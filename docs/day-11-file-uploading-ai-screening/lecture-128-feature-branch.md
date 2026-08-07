@@ -1,4 +1,4 @@
-# Lecture 127 - Feature Branch for Day (11) | برانش جيتهاب لليوم الحادي عشر
+# Lecture 128 - Feature Branch for Day (11) | برانش جيتهاب لليوم الحادي عشر
 
 ## Goal
 
@@ -113,4 +113,4 @@ Use the exact branch naming convention currently used by the course repository.
 
 ## Next
 
-Lecture 128 recaps the complete Day 11 architecture and remaining production hardening.
+Lecture 129 recaps the complete Day 11 architecture and remaining production hardening.

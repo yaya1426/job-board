@@ -64,7 +64,7 @@ MongoDB              -> application, file metadata, screening result/status
 OpenAI               -> produces structured screening output
 ```
 
-7. Preview Lectures 111–128 from the Day 11 `README.md`.
+7. Preview Lectures 111–129 from the Day 11 `README.md`.
 
 ## Key Teaching Lines
 

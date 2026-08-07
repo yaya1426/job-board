@@ -48,4 +48,4 @@ Application submission should confirm success once the application is saved/queu
 
 ## Next
 
-Lecture 127 packages Day 11 work into its feature branch and validates deployment configuration.
+Lecture 127 returns to the original resume mockup and makes its dashed drop zone fully functional.
