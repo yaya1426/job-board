@@ -23,7 +23,7 @@ async function DashboardPage() {
   ).length;
 
   const avgScore = (
-    applications.reduce((s, c) => s + c.aiScore, 0) /
+    applications.reduce((s, c) => s + (c.aiScore ?? 0), 0) /
     applications.length
   ).toFixed(1);
 
