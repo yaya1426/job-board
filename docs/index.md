@@ -21,3 +21,4 @@ This folder holds the longer day-by-day course history for the Wazifa job board 
 - [Day 13 - SEO and Metadata](./day-13-seo-metadata/)
 - [Day 14 - Performance and Caching](./day-14-performance-caching/)
 - [Day 15 - Multi Language Support](./day-15-multi-language-support/)
+- [Day 16 - Scalable AI Screening](./day-16-scalable-ai-screening/)

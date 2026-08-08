@@ -16,10 +16,8 @@ type Props = {
   userProfile: UserProfile & User;
 };
 
-
 function JobApplyForm({ userProfile }: Props) {
   const { id: jobId } = useParams<{ id: string }>();
-
 
   const [state, formAction, isPending] = useActionState<
     ApplyToJobState,
@@ -59,12 +57,19 @@ function JobApplyForm({ userProfile }: Props) {
           <label className="font-heading text-xs font-bold uppercase block mb-2">
             RESUME
           </label>
-          <div className="brutal-border border-dashed border-3 p-8 text-center cursor-pointer hover:bg-accent/10 transition-none">
+          <input
+            type="file"
+            name="resume"
+            accept="application/pdf,.pdf"
+            required
+            className="brutal-border w-full p-3 font-mono text-sm"
+          />
+          {/* <div className="brutal-border border-dashed border-3 p-8 text-center cursor-pointer hover:bg-accent/10 transition-none">
             <p className="font-mono text-sm font-bold">DROP FILE HERE</p>
             <p className="font-mono text-xs text-muted-foreground mt-1">
               PDF, DOC — MAX 5MB
             </p>
-          </div>
+          </div> */}
         </div>
         <div>
           <label className="font-heading text-xs font-bold uppercase block mb-2">

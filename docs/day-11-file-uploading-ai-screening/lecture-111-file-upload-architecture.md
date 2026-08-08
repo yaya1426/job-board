@@ -46,10 +46,11 @@ flowchart TD
   E --> F[Application Service]
   F --> G[Applications Repository]
   G --> H[(MongoDB)]
-  F --> I[Screening Queue]
-  I --> J[Screening Worker]
+  F -->|same request after save| J[Screening Service]
   J --> D
-  J --> K[OpenAI]
+  J --> K[OpenAI Files API]
+  K --> M[OpenAI Responses API]
+  K -->|automatic expiration after one hour| N[Expired temporary file]
   J --> H
   H --> L[Admin Applications UI]
   L -->|request signed GET URL| C
@@ -66,9 +67,9 @@ sequenceDiagram
   participant Spaces as Private DO Space
   participant Service as Application Service
   participant DB as MongoDB
-  participant Queue as Screening Queue
-  participant Worker as Screening Worker
-  participant AI as OpenAI
+  participant Screening as Screening Service
+  participant Files as OpenAI Files
+  participant AI as Responses API
 
   Candidate->>Form: Select PDF resume
   Form->>Action: Submit form fields + file (one request)
@@ -79,14 +80,16 @@ sequenceDiagram
   Upload-->>Action: object key
   Action->>Service: Apply input + resume key
   Service->>DB: Save application as PENDING
-  Service->>Queue: Publish application.created
+  Service->>DB: Mark PROCESSING
+  Service->>Screening: Analyze saved application
+  Screening->>Spaces: Read resume
+  Screening->>Files: Upload temporary PDF with one-hour expires_after
+  Files-->>Screening: file_id + expires_at
+  Screening->>AI: file_id + job data + cover letter
+  AI-->>Screening: Structured screening result
+  Note over Files: File may remain available until automatic expiration
+  Screening->>DB: Save COMPLETED or FAILED
   Service-->>Form: Application submitted
-  Queue->>Worker: Deliver screening job
-  Worker->>Spaces: Read resume
-  Worker->>Worker: Extract PDF text
-  Worker->>AI: Job data + resume text
-  AI-->>Worker: Structured screening result
-  Worker->>DB: Save result as COMPLETED or FAILED
 ```
 
 ## Layer Responsibilities
@@ -110,15 +113,17 @@ Upload service
 Application service
   -> validate application
   -> save resume snapshot metadata
-  -> create pending screening job
+  -> save PENDING before screening
+  -> invoke screening in the same request
 
 Repository
   -> persist plain application data only
 
-Screening worker
+Screening service
   -> fetch object
-  -> extract text
-  -> call OpenAI
+  -> upload temporary PDF to OpenAI Files with one-hour expiration
+  -> call Responses API with file_id
+  -> rely on automatic file expiration
   -> persist status/result
 ```
 
@@ -131,6 +136,7 @@ Screening worker
 5. Walk through each layer’s responsibility.
 6. Walk through the sequence diagram.
 7. Connect the stored object key to admin downloads and AI processing.
+8. Name the deliberate limitation: the candidate request waits for OpenAI. Day 16 introduces durable background processing after students can observe why it is needed.
 
 ## Key Teaching Lines
 

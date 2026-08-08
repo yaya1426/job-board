@@ -61,7 +61,7 @@ function ApplicationsTable() {
               <AiScore score={app.aiScore} size="sm" />
               <Badge variant={statusVariant}>{app.status}</Badge>
               <div className="flex gap-1 justify-end">
-                <Link href={`/admin/candidates/${app.candidateId}`}>
+                <Link href={`/dashboard/applications/${app.id}`}>
                   <Button variant="ghost" size="icon" title="VIEW">
                     <Eye size={14} />
                   </Button>

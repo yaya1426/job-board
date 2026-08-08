@@ -1,46 +1,29 @@
-# Lecture 117 - Application Details, Private Resume, and Screening State | تفاصيل الطلب والسيرة الذاتية الخاصة
+# Lecture 117 - Application Details and Screening State in Admin | تفاصيل الطلب وحالة التقييم في لوحة الإدارة
 
 ## Goal
 
-Turn the inactive **VIEW** action into a real application details page, display what the candidate submitted, reproduce the private resume `403`, and then let an authorized admin open the resume through a temporary signed URL.
+Turn the applications table's **VIEW** action into a real application details route, then split the page into focused candidate and workflow components.
+
+This lecture stops at the application snapshot and workflow state. Cover-letter/resume presentation and secure private resume access belong to Lecture 118.
 
 ## Problem-First Story
 
-There are two visible problems:
+The applications table already has an eye action, but the admin needs that action to open the exact application being reviewed.
 
-1. The eye button currently points to an unrelated candidate URL.
-2. Opening the resume through its CDN/object URL returns:
+The details screen should answer two groups of questions:
 
-```txt
-AccessDenied (403)
-```
+1. Who applied, and what candidate identity snapshot was submitted?
+2. What is the application's current hiring and screening state?
 
-The `403` is not an upload failure. It proves the object is private. We need to authorize the admin without making candidate resumes public.
-
-## Final Request Flow
-
-```txt
-Admin clicks OPEN RESUME
-  -> GET /api/applications/{applicationId}/resume
-  -> verify the logged-in user is an ADMIN
-  -> load the application and its resume key
-  -> create a signed GET URL valid for five minutes
-  -> redirect the browser to DigitalOcean Spaces
-  -> Spaces validates the signature and returns the PDF
-```
-
-The permanent object remains private.
+The route should orchestrate data loading while small components own each visual section.
 
 ## Files Changed
 
 ```txt
 components/applications/ApplicationsTable.tsx
+components/applications/details/ApplicationCandidateDetails.tsx
+components/applications/details/ApplicationWorkflowDetails.tsx
 app/(admin)/dashboard/applications/[applicationId]/page.tsx
-services/uploads/uploads.service.ts
-app/api/applications/[applicationId]/resume/route.ts
-types/Application.ts
-lib/models/application.model.ts
-services/applications/applications.service.ts
 ```
 
 The application lookup already exists:
@@ -52,7 +35,7 @@ repositories/applications.repository.ts       -> findApplicationById()
 
 ---
 
-## Step 1 - Fix the VIEW Action
+## Step 1 - Fix the Applications Table VIEW Link
 
 Open:
 
@@ -60,27 +43,17 @@ Open:
 components/applications/ApplicationsTable.tsx
 ```
 
-Find the current eye-button link:
+The eye action must link to the application ID, not a candidate profile or an `/admin` URL:
 
 ```tsx
-<Link href={`/admin/candidates/${app.candidateId}`}>
+<Link href={`/dashboard/applications/${app.id}`}>
   <Button variant="ghost" size="icon" title="VIEW">
     <Eye size={14} />
   </Button>
 </Link>
 ```
 
-Replace it with:
-
-```tsx
-<Link href={`/dashboard/applications/${app.id}`}>
-  <Button variant="ghost" size="icon" title="VIEW APPLICATION">
-    <Eye size={14} />
-  </Button>
-</Link>
-```
-
-Now clicking the eye opens:
+The final destination is:
 
 ```txt
 /dashboard/applications/{applicationId}
@@ -88,13 +61,168 @@ Now clicking the eye opens:
 
 Teaching point:
 
-> The admin is reviewing a specific application snapshot, not the candidate's mutable profile.
+> The admin is reviewing one application snapshot, not the candidate's mutable profile.
 
 ---
 
-## Step 2 - Build the Application Details Page
+## Step 2 - Build the Application Details Route
 
-The dynamic route already exists, but it is only a placeholder:
+The page stays responsible for orchestration:
+
+```txt
+page
+  -> read applicationId
+  -> call getApplicationById()
+  -> handle failure or missing data
+  -> render AdminPageHeader
+  -> compose detail components
+```
+
+The dashboard layout already performs the admin authorization check. The page can focus on loading the requested application.
+
+We will build the two presentation components first and compose them in the route afterward.
+
+---
+
+## Step 3 - Create ApplicationCandidateDetails
+
+Create:
+
+```txt
+components/applications/details/ApplicationCandidateDetails.tsx
+```
+
+Add:
+
+```tsx
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Application } from "@/types";
+
+type Props = {
+  application: Application;
+};
+
+function ApplicationCandidateDetails({ application }: Props) {
+  const { candidateName, candidateEmail, candidateLinkedin } = application;
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>CANDIDATE INFORMATION</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        <div>
+          <p className="font-mono text-xs text-muted-foreground">NAME</p>
+          <p className="font-heading text-lg font-bold">{candidateName}</p>
+        </div>
+        <div>
+          <p className="font-mono text-xs text-muted-foreground">EMAIL</p>
+          <a
+            className="font-heading text-lg font-bold hover:underline hover:text-blue-500"
+            href={`mailto:${candidateEmail}`}
+          >
+            {candidateEmail}
+          </a>
+        </div>
+        <div>
+          <p className="font-mono text-xs text-muted-foreground">LINKEDIN</p>
+          <a
+            className="font-heading text-lg font-bold hover:underline hover:text-blue-500"
+            href={candidateLinkedin}
+            target="_blank"
+          >
+            {candidateLinkedin}
+          </a>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default ApplicationCandidateDetails;
+```
+
+This component displays the candidate fields stored on the application document. It deliberately does not fetch the candidate's current profile.
+
+Why that matters:
+
+```txt
+current profile     -> may change later
+application snapshot -> records what was submitted at apply time
+```
+
+---
+
+## Step 4 - Create ApplicationWorkflowDetails
+
+Create:
+
+```txt
+components/applications/details/ApplicationWorkflowDetails.tsx
+```
+
+Add:
+
+```tsx
+import { AiScore, StatusBadge } from "@/components/BrutalUI";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Application } from "@/types";
+
+type Props = {
+  application: Application;
+};
+
+function ApplicationWorkflowDetails({ application }: Props) {
+  const { screeningStatus, status, aiScore, appliedDate } = application;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>APPLICATION WORKFLOW</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        <div>
+          <p className="font-mono text-xs text-muted-foreground">
+            APPLICATION STATUS
+          </p>
+          <StatusBadge status={status} />
+        </div>
+        <div>
+          <p className="font-mono text-xs text-muted-foreground">
+            SCREENING STATUS
+          </p>
+          <p className="font-heading text-lg font-bold">
+            {screeningStatus ?? "PENDING"}
+          </p>
+        </div>
+        <div>
+          <p className="font-mono text-xs text-muted-foreground">AI SCORE</p>
+          <AiScore score={aiScore} />
+        </div>
+        <div>
+          <p className="font-mono text-xs text-muted-foreground">
+            APPLIED DATE
+          </p>
+          <p className="font-heading text-lg font-bold">{appliedDate}</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default ApplicationWorkflowDetails;
+```
+
+This component owns the current application status, screening status, transitional AI score display, and applied date.
+
+Important scope note:
+
+> Do not remove the transitional `aiScore: 0` yet. Lecture 122 makes the score optional while persisting real results, and Lecture 123 replaces this transitional UI.
+
+---
+
+## Step 5 - Compose the Details Page
+
+Open:
 
 ```txt
 app/(admin)/dashboard/applications/[applicationId]/page.tsx
@@ -103,739 +231,126 @@ app/(admin)/dashboard/applications/[applicationId]/page.tsx
 Replace the complete file with:
 
 ```tsx
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { ArrowLeft, ExternalLink, FileText } from "lucide-react";
+import AdminPageHeader from "@/components/common/AdminPageHeader";
 import { getApplicationById } from "@/services/applications/applications.service";
-import { AiScore, StatusBadge } from "@/components/BrutalUI";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import type { ScreeningStatus } from "@/types/ScreeningStatus";
+import Link from "next/link";
+import ApplicationCandidateDetails from "@/components/applications/details/ApplicationCandidateDetails";
+import ApplicationWorkflowDetails from "@/components/applications/details/ApplicationWorkflowDetails";
 
 type Props = {
   params: Promise<{ applicationId: string }>;
 };
 
-const screeningLabels: Record<ScreeningStatus, string> = {
-  PENDING: "WAITING",
-  PROCESSING: "SCREENING",
-  COMPLETED: "READY",
-  FAILED: "FAILED",
-};
-
-function formatFileSize(size?: number) {
-  if (!size) {
-    return "UNKNOWN SIZE";
-  }
-
-  return `${(size / 1024 / 1024).toFixed(2)} MB`;
-}
-
 async function ApplicationDetailsPage({ params }: Props) {
   const { applicationId } = await params;
+
   const result = await getApplicationById(applicationId);
 
-  if (!result.success || !result.data) {
-    notFound();
+  if (!result.success) {
+    return <div>Something went wrong</div>;
   }
 
-  const application = result.data;
+  const { data: application } = result;
+
+  if (!application) {
+    return <div>Application not found</div>;
+  }
 
   return (
-    <div>
-      <div className="flex items-start justify-between gap-6">
-        <div>
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/dashboard/applications">
-              <ArrowLeft />
-              BACK TO APPLICATIONS
-            </Link>
-          </Button>
-
-          <h1 className="mt-6 font-heading text-4xl font-bold">
-            {application.candidateName}
-          </h1>
-
-          <p className="mt-1 font-mono text-sm text-muted-foreground">
-            Applied for {application.jobTitle} at {application.jobCompany}
-          </p>
-        </div>
-
-        <div className="text-right">
-          <StatusBadge status={application.status} />
-          <p className="mt-3 font-mono text-xs text-muted-foreground">
-            APPLIED {application.appliedDate}
-          </p>
-        </div>
-      </div>
+    <>
+      <AdminPageHeader
+        title={`${application.candidateName} — ${application.candidateEmail}`}
+        subtitle={`${application.jobTitle} — ${application.jobCompany}`}
+        actionButtonLink="/dashboard/applications"
+        actionButtonVariant="outline"
+        actionButtonText="← BACK"
+      />
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>CANDIDATE SNAPSHOT</CardTitle>
-          </CardHeader>
-
-          <CardContent className="space-y-5">
-            <div>
-              <p className="font-mono text-xs text-muted-foreground">NAME</p>
-              <p className="mt-1 font-heading font-bold">
-                {application.candidateName}
-              </p>
-            </div>
-
-            <div>
-              <p className="font-mono text-xs text-muted-foreground">EMAIL</p>
-              <a
-                href={`mailto:${application.candidateEmail}`}
-                className="mt-1 inline-block font-mono text-sm underline"
-              >
-                {application.candidateEmail}
-              </a>
-            </div>
-
-            <div>
-              <p className="font-mono text-xs text-muted-foreground">
-                LINKEDIN
-              </p>
-              <a
-                href={application.candidateLinkedin}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-1 inline-flex items-center gap-2 font-mono text-sm underline"
-              >
-                OPEN PROFILE
-                <ExternalLink size={14} />
-              </a>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>WORKFLOW</CardTitle>
-          </CardHeader>
-
-          <CardContent className="space-y-6">
-            <div>
-              <p className="font-mono text-xs text-muted-foreground">
-                APPLICATION STATUS
-              </p>
-              <div className="mt-2">
-                <StatusBadge status={application.status} />
-              </div>
-            </div>
-
-            <div>
-              <p className="font-mono text-xs text-muted-foreground">
-                SCREENING STATUS
-              </p>
-              <Badge variant="outline" className="mt-2">
-                {screeningLabels[application.screeningStatus]}
-              </Badge>
-            </div>
-
-            <div>
-              <p className="font-mono text-xs text-muted-foreground">
-                AI SCORE
-              </p>
-
-              {application.screeningStatus === "COMPLETED" ? (
-                <div className="mt-2">
-                  <AiScore score={application.aiScore} />
-                </div>
-              ) : (
-                <p className="mt-2 font-mono text-sm">
-                  NOT AVAILABLE UNTIL SCREENING COMPLETES
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        <ApplicationCandidateDetails application={application} />
+        <ApplicationWorkflowDetails application={application} />
       </div>
-
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle>APPLICATION</CardTitle>
-        </CardHeader>
-
-        <CardContent className="space-y-8">
-          <div>
-            <p className="font-mono text-xs text-muted-foreground">
-              COVER LETTER
-            </p>
-            <p className="mt-3 whitespace-pre-wrap font-mono text-sm leading-7">
-              {application.candidateCoverLetter}
-            </p>
-          </div>
-
-          <div>
-            <p className="font-mono text-xs text-muted-foreground">RESUME</p>
-
-            {application.candidateResumeKey ? (
-              <div className="mt-3 flex items-center justify-between gap-4 brutal-border p-4">
-                <div className="flex items-center gap-3">
-                  <FileText />
-                  <div>
-                    <p className="font-heading text-sm font-bold">
-                      {application.candidateResumeFileName ?? "RESUME.PDF"}
-                    </p>
-                    <p className="font-mono text-xs text-muted-foreground">
-                      {formatFileSize(application.candidateResumeSize)}
-                    </p>
-                  </div>
-                </div>
-
-                <span className="font-mono text-xs text-muted-foreground">
-                  PRIVATE FILE
-                </span>
-              </div>
-            ) : (
-              <p className="mt-3 font-mono text-sm">NO RESUME AVAILABLE</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    </>
   );
 }
 
 export default ApplicationDetailsPage;
 ```
 
-What to explain:
-
-- This is a Server Component, so it loads the application directly through the service.
-- It uses application snapshot fields such as `candidateName` and `candidateEmail`.
-- It does not replace submitted data with the candidate's current profile.
-- The dashboard layout already protects this page.
-
-At this point the resume metadata is visible, but there is no way to open the private file.
-
----
-
-## Step 3 - Reproduce the `403` Problem
-
-For the demonstration only, construct the raw object URL inside the details page.
-
-After:
-
-```tsx
-const application = result.data;
-```
-
-temporarily add:
-
-```tsx
-const rawResumeUrl =
-  process.env.DO_SPACES_PUBLIC_URL && application.candidateResumeKey
-    ? `${process.env.DO_SPACES_PUBLIC_URL.replace(/\/$/, "")}/${application.candidateResumeKey}`
-    : null;
-```
-
-Then replace:
-
-```tsx
-<span className="font-mono text-xs text-muted-foreground">
-  PRIVATE FILE
-</span>
-```
-
-with:
-
-```tsx
-{rawResumeUrl && (
-  <Button asChild variant="outline" size="sm">
-    <a href={rawResumeUrl} target="_blank" rel="noopener noreferrer">
-      OPEN RESUME
-      <ExternalLink />
-    </a>
-  </Button>
-)}
-```
-
-Click **OPEN RESUME**. DigitalOcean should return:
-
-```xml
-<Error>
-  <Code>AccessDenied</Code>
-</Error>
-```
-
-Explain why:
-
-- CDN enablement does not automatically make every object public.
-- The upload did not use `ACL: "public-read"`.
-- The object key identifies the file but does not authorize access.
-- Candidate resumes contain personal information, so public access is inappropriate.
-
-Do not make the Space public. The temporary code above will be removed in Step 6.
-
----
-
-## Step 4 - Add the Signed Download Service
-
-Open:
-
-```txt
-services/uploads/uploads.service.ts
-```
-
-Replace the complete file with:
-
-```ts
-import "server-only";
-import { randomUUID } from "node:crypto";
-import {
-  GetObjectCommand,
-  PutObjectCommand,
-} from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { spacesBucket, spacesClient } from "@/lib/storage";
-import { resumeUploadRequestSchema } from "./uploads.validation";
-
-const SIGNED_URL_TTL_SECONDS = 5 * 60;
-
-export async function uploadResume(file: File) {
-  const validated = resumeUploadRequestSchema.parse({
-    fileName: file.name,
-    fileSize: file.size,
-    contentType: file.type,
-  });
-
-  const id = randomUUID();
-  const key = `resumes/${id}.pdf`;
-  const bytes = Buffer.from(await file.arrayBuffer());
-
-  await spacesClient.send(
-    new PutObjectCommand({
-      Bucket: spacesBucket,
-      Key: key,
-      Body: bytes,
-      ContentType: validated.contentType,
-    }),
-  );
-
-  return {
-    key,
-    fileName: validated.fileName,
-    fileSize: validated.fileSize,
-    contentType: validated.contentType,
-  };
-}
-
-export async function createResumeDownloadUrl(
-  key: string,
-  fileName?: string,
-) {
-  const contentDisposition = fileName
-    ? `inline; filename*=UTF-8''${encodeURIComponent(fileName)}`
-    : "inline";
-
-  return getSignedUrl(
-    spacesClient,
-    new GetObjectCommand({
-      Bucket: spacesBucket,
-      Key: key,
-      ResponseContentDisposition: contentDisposition,
-      ResponseContentType: "application/pdf",
-    }),
-    { expiresIn: SIGNED_URL_TTL_SECONDS },
-  );
-}
-```
+The `Link` import is present in the current route but is not used. Point it out as a small cleanup opportunity, but do not turn this documentation-only restructuring into an implementation change.
 
 What to explain:
 
-- `GetObjectCommand` requests a private object.
-- `getSignedUrl()` adds a temporary cryptographic signature.
-- `expiresIn` limits access to five minutes.
-- `inline` lets the browser display the PDF.
-- `server-only` prevents this service and its credentials from entering a client bundle.
-
-Do not save the generated URL in MongoDB:
-
-```txt
-candidateResumeKey -> durable, store it
-signed URL         -> temporary, generate it when needed
-```
+- The page remains a Server Component.
+- Next.js 16 provides dynamic route params as a promise.
+- The service returns a `ServiceResult`, so the page handles both failure and missing data.
+- `AdminPageHeader` keeps the title, subtitle, and back action consistent with the rest of the dashboard.
+- The page passes the repository-mapped, serializable `Application` object to presentational components.
+- Each component has one visual responsibility and can evolve independently.
 
 ---
 
-## Step 5 - Create the Admin-Only Resume Route
+## Step 6 - Verify the Lecture
 
-Create:
-
-```txt
-app/api/applications/[applicationId]/resume/route.ts
-```
-
-Add:
-
-```ts
-import { NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/current-user";
-import { getApplicationById } from "@/services/applications/applications.service";
-import { createResumeDownloadUrl } from "@/services/uploads/uploads.service";
-
-type RouteContext = {
-  params: Promise<{ applicationId: string }>;
-};
-
-export async function GET(_request: Request, { params }: RouteContext) {
-  const currentUser = await getCurrentUser();
-
-  if (!currentUser) {
-    return NextResponse.json(
-      { message: "Authentication required" },
-      { status: 401 },
-    );
-  }
-
-  if (currentUser.role !== "ADMIN") {
-    return NextResponse.json(
-      { message: "Admin access required" },
-      { status: 403 },
-    );
-  }
-
-  const { applicationId } = await params;
-  const result = await getApplicationById(applicationId);
-
-  if (!result.success || !result.data?.candidateResumeKey) {
-    return NextResponse.json(
-      { message: "Resume not found" },
-      { status: 404 },
-    );
-  }
-
-  const application = result.data;
-
-  const downloadUrl = await createResumeDownloadUrl(
-    application.candidateResumeKey,
-    application.candidateResumeFileName,
-  );
-
-  return NextResponse.redirect(downloadUrl);
-}
-```
-
-What to explain:
-
-1. Authentication asks: “Who is making this request?”
-2. Authorization asks: “Is this user allowed to open resumes?”
-3. The application ID is resolved on the server.
-4. The browser never sends an arbitrary storage key to be signed.
-5. The route redirects only after all checks pass.
-
-Why not accept a key in the query string?
-
-```txt
-Bad:
-/api/resume?key=anything-the-user-wants
-
-Better:
-/api/applications/{applicationId}/resume
-```
-
-The server loads the trusted key that belongs to that application.
-
-Important:
-
-> The dashboard page and the API route are separate entry points. Each entry point needs its own authorization.
-
----
-
-## Step 6 - Replace the Raw URL With the Protected Route
-
-Return to:
-
-```txt
-app/(admin)/dashboard/applications/[applicationId]/page.tsx
-```
-
-First remove the temporary variable:
-
-```tsx
-const rawResumeUrl =
-  process.env.DO_SPACES_PUBLIC_URL && application.candidateResumeKey
-    ? `${process.env.DO_SPACES_PUBLIC_URL.replace(/\/$/, "")}/${application.candidateResumeKey}`
-    : null;
-```
-
-Then replace the temporary raw-link button:
-
-```tsx
-{rawResumeUrl && (
-  <Button asChild variant="outline" size="sm">
-    <a href={rawResumeUrl} target="_blank" rel="noopener noreferrer">
-      OPEN RESUME
-      <ExternalLink />
-    </a>
-  </Button>
-)}
-```
-
-with:
-
-```tsx
-<Button asChild variant="outline" size="sm">
-  <a
-    href={`/api/applications/${application.id}/resume`}
-    target="_blank"
-    rel="noopener noreferrer"
-  >
-    OPEN RESUME
-    <ExternalLink />
-  </a>
-</Button>
-```
-
-The final browser flow is now:
-
-```txt
-/api/applications/{applicationId}/resume
-  -> authorization
-  -> signed URL
-  -> temporary redirect
-  -> private PDF
-```
-
-The browser receives the temporary URL, but it never receives Spaces access credentials.
-
----
-
-## Step 7 - Stop Displaying a Fake AI Score
-
-The application is created with:
-
-```ts
-aiScore: 0,
-screeningStatus: "PENDING",
-```
-
-That makes the applications table show `0.0/10`, even though screening has not happened. A missing result is different from a real score of zero.
-
-### 7.1 Make `aiScore` Optional in the Type
-
-Open:
-
-```txt
-types/Application.ts
-```
-
-Change:
-
-```ts
-aiScore: number;
-```
-
-to:
-
-```ts
-aiScore?: number;
-```
-
-### 7.2 Make `aiScore` Optional in Mongoose
-
-Open:
-
-```txt
-lib/models/application.model.ts
-```
-
-Change:
-
-```ts
-aiScore: { type: Number, required: true },
-```
-
-to:
-
-```ts
-aiScore: { type: Number },
-```
-
-### 7.3 Stop Saving the Placeholder Score
-
-Open:
-
-```txt
-services/applications/applications.service.ts
-```
-
-Remove:
-
-```ts
-aiScore: 0, //TODO: Removed after AI screening is implemented
-```
-
-The creation object should now include:
-
-```ts
-const newApplication = await saveNewApplication({
-  ...validated.data,
-  candidateId: currentUser.id,
-  candidateResumeKey: resume.key,
-  candidateResumeFileName: resume.fileName,
-  candidateResumeSize: resume.fileSize,
-  candidateResumeContentType: resume.contentType,
-  jobTitle: job.title,
-  role: job.title,
-  jobCompany: job.company,
-  screeningStatus: "PENDING",
-  status: "SUBMITTED",
-});
-```
-
-### 7.4 Update the Applications Table
-
-In:
-
-```txt
-components/applications/ApplicationsTable.tsx
-```
-
-Replace:
-
-```tsx
-<AiScore score={app.aiScore} size="sm" />
-```
-
-with:
-
-```tsx
-{app.screeningStatus === "COMPLETED" &&
-app.aiScore !== undefined ? (
-  <AiScore score={app.aiScore} size="sm" />
-) : (
-  <span className="font-mono text-xs text-muted-foreground">
-    {app.screeningStatus}
-  </span>
-)}
-```
-
-### 7.5 Update the Details Page Score Condition
-
-In the details page, replace:
-
-```tsx
-{application.screeningStatus === "COMPLETED" ? (
-  <div className="mt-2">
-    <AiScore score={application.aiScore} />
-  </div>
-) : (
-  <p className="mt-2 font-mono text-sm">
-    NOT AVAILABLE UNTIL SCREENING COMPLETES
-  </p>
-)}
-```
-
-with:
-
-```tsx
-{application.screeningStatus === "COMPLETED" &&
-application.aiScore !== undefined ? (
-  <div className="mt-2">
-    <AiScore score={application.aiScore} />
-  </div>
-) : (
-  <p className="mt-2 font-mono text-sm">
-    NOT AVAILABLE UNTIL SCREENING COMPLETES
-  </p>
-)}
-```
-
-Now the UI communicates the truth:
-
-```txt
-PENDING    -> no score yet
-PROCESSING -> no score yet
-COMPLETED  -> show the real score
-FAILED     -> no score available
-```
-
-Existing applications that already contain the temporary value `0` will still hide it unless their screening status is `COMPLETED`.
-
----
-
-## Step 8 - Verify the Complete Lesson
-
-### Application navigation
+### Navigation
 
 1. Visit `/dashboard/applications`.
-2. Click the eye icon.
-3. Confirm the URL is:
+2. Click the eye icon for an application.
+3. Confirm the browser opens:
 
 ```txt
 /dashboard/applications/{applicationId}
 ```
 
-4. Confirm the page shows:
-   - candidate name
-   - candidate email
-   - LinkedIn URL
-   - job title and company
-   - applied date
-   - cover letter
-   - resume filename and size
-   - application status
-   - screening status
+4. Click **← BACK** and confirm it returns to `/dashboard/applications`.
 
-### Private resume behavior
+### Candidate details
 
-1. Open the raw CDN/object URL.
-2. Confirm it returns `403 AccessDenied`.
-3. Click **OPEN RESUME** from the application details page.
-4. Confirm the PDF opens in a new tab.
-5. Inspect the redirected URL and identify the signed query parameters.
-6. Confirm the signed URL expires after five minutes.
+Confirm the page shows the application snapshot:
 
-### Authorization
+- candidate name
+- candidate email
+- candidate LinkedIn value
+- job title
+- company
 
-1. Open the protected route while logged in as an admin.
-2. Confirm the resume opens.
-3. Open it without a session and confirm `401`.
-4. Open it as a candidate and confirm `403`.
-5. Confirm an application without `candidateResumeKey` returns `404`.
+Open the email and LinkedIn links and confirm they use the submitted snapshot values.
 
-### Screening state
+### Workflow details
 
-1. Confirm a `PENDING` application does not show `0.0/10`.
-2. Confirm it shows `PENDING` or `WAITING`.
-3. Confirm the details page says the score is not available yet.
+Confirm the page shows:
+
+- application status
+- screening status
+- current transitional AI score
+- applied date
+
+### Failure and missing data
+
+1. Use a valid application ID and confirm the page renders.
+2. Use an unknown ID and confirm the page renders `Application not found`.
+3. Temporarily force a failed service result only if needed while recording, then confirm the page renders `Something went wrong`.
 
 ---
 
 ## Common Mistakes
 
-- Making the Space public to remove the `403`.
-- Keeping the raw CDN URL in the final UI.
-- Storing signed URLs in MongoDB.
-- Signing a storage key supplied directly by the browser.
-- Checking the admin role only in the page.
-- Linking the eye icon to the candidate instead of the application.
-- Replacing snapshot fields with current profile data.
-- Showing `0` before screening has run.
-- Forgetting to handle old applications that have no resume key.
+- Linking the eye action to the candidate instead of the application.
+- Adding `/admin` to a dashboard URL even though host-based routing already owns the admin surface.
+- Fetching data separately inside each details component.
+- Refetching the current candidate profile instead of displaying the application snapshot.
+- Putting the details markup directly into one large route component.
+- Adding cover-letter or resume access work before the application details foundation is complete.
+- Claiming the fake AI score has been removed when the current code still stores and renders it.
 
 ## Key Teaching Lines
 
-> The application details page shows what the candidate submitted at that moment.
+> The route loads the application; focused components explain its snapshot and workflow.
 
-> `403 AccessDenied` proves the resume is private; it is not evidence that the upload failed.
+> Application details are historical submission data, not a live candidate profile.
 
-> The object key is permanent. The signed URL is temporary permission.
-
-> We authorize an application ID, then the server resolves its trusted object key.
-
-> A score of zero and a score that does not exist are two different states.
+> Build the review screen first; add secure access to the submitted private file in the next lecture.
 
 ## Next
 
-Lecture 118 reads the same private PDF from Spaces on the server and extracts its text for automated screening.
+Lecture 118 adds the cover letter and resume metadata to this details page, demonstrates why the private object URL returns `403`, and creates an admin-only signed resume access route.

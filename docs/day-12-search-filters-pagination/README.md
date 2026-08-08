@@ -10,21 +10,21 @@ This day is planned, not implemented yet.
 
 ## Udemy Lectures Reflected
 
-Day 12 starts at Lecture 125 in the Udemy curriculum.
+Day 12 starts at Lecture 126 in the Udemy curriculum.
 
-- Lecture 125 - Day (12) Plan | خطة اليوم الثاني عشر
-- Lecture 126 - Query Params, Validation, and Pagination Model | نموذج البحث والتحقق وتقسيم الصفحات
-- Lecture 127 - Paginating Jobs in the Repository | تقسيم الوظائف من قاعدة البيانات
-- Lecture 128 - Public Jobs Search UI | واجهة البحث في الوظائف
-- Lecture 129 - Admin Applications Filtering and Pagination | فلترة وتقسيم طلبات التقديم
-- Lecture 130 - Admin Applications Filter UI | واجهة فلاتر طلبات التقديم
-- Lecture 131 - Replacing Mock Candidates With Users | استبدال المرشحين الوهميين بالمستخدمين
-- Lecture 132 - Admin Users Search and Pagination | البحث وتقسيم المستخدمين في الأدمن
-- Lecture 133 - Sorting and Default Ordering | الترتيب الافتراضي للنتائج
-- Lecture 134 - Empty States and Reset Filters | حالات عدم وجود نتائج وإعادة الفلاتر
-- Lecture 135 - MongoDB Indexes for Search and Filters | فهارس MongoDB للبحث والفلاتر
-- Lecture 136 - Feature Branch for Day (12) | برانش جيتهاب لليوم الثاني عشر
-- Lecture 137 - Recap Day (12) | ملخص اليوم الثاني عشر
+- Lecture 126 - Day (12) Plan | خطة اليوم الثاني عشر
+- Lecture 127 - Query Params, Validation, and Pagination Model | نموذج البحث والتحقق وتقسيم الصفحات
+- Lecture 128 - Paginating Jobs in the Repository | تقسيم الوظائف من قاعدة البيانات
+- Lecture 129 - Public Jobs Search UI | واجهة البحث في الوظائف
+- Lecture 130 - Admin Applications Filtering and Pagination | فلترة وتقسيم طلبات التقديم
+- Lecture 131 - Admin Applications Filter UI | واجهة فلاتر طلبات التقديم
+- Lecture 132 - Replacing Mock Candidates With Users | استبدال المرشحين الوهميين بالمستخدمين
+- Lecture 133 - Admin Users Search and Pagination | البحث وتقسيم المستخدمين في الأدمن
+- Lecture 134 - Sorting and Default Ordering | الترتيب الافتراضي للنتائج
+- Lecture 135 - Empty States and Reset Filters | حالات عدم وجود نتائج وإعادة الفلاتر
+- Lecture 136 - MongoDB Indexes for Search and Filters | فهارس MongoDB للبحث والفلاتر
+- Lecture 137 - Feature Branch for Day (12) | برانش جيتهاب لليوم الثاني عشر
+- Lecture 138 - Recap Day (12) | ملخص اليوم الثاني عشر
 
 ## Course Position
 
@@ -39,7 +39,7 @@ The current pain to show first:
 
 ## Proposed Lessons
 
-### Lecture 125 - Day (12) Plan
+### Lecture 126 - Day (12) Plan
 
 Introduce the day as the move from "load everything" to query-driven lists across both the public app and admin dashboard.
 
@@ -69,7 +69,7 @@ Teaching point:
 
 > Day 12 is about moving from "load all data" to query-driven lists.
 
-### Lecture 126 - Query Params, Validation, and Pagination Model
+### Lecture 127 - Query Params, Validation, and Pagination Model
 
 Introduce the full model for query-driven lists: the URL stores the list state, schemas validate it, and services receive a clean query object.
 
@@ -122,7 +122,7 @@ Teaching point:
 
 > The URL is the source of truth for list state, but schemas decide what values the server actually trusts.
 
-### Lecture 127 - Paginating Jobs in the Repository
+### Lecture 128 - Paginating Jobs in the Repository
 
 Start with the public jobs list because it is the simplest and most visible list. Update the jobs repository/service to support query filters and pagination.
 
@@ -146,7 +146,7 @@ Teaching point:
 
 > Pagination must happen in MongoDB, not after loading all jobs into memory.
 
-### Lecture 128 - Public Jobs Search UI
+### Lecture 129 - Public Jobs Search UI
 
 Update the public jobs page:
 
@@ -170,7 +170,7 @@ Teaching point:
 
 > Public search should be shareable. A filtered jobs URL should be copy/paste friendly.
 
-### Lecture 129 - Admin Applications Filtering and Pagination
+### Lecture 130 - Admin Applications Filtering and Pagination
 
 Start by designing the admin applications query, then implement repository/service/page support for it.
 
@@ -204,7 +204,7 @@ Teaching point:
 
 > Public filters help candidates discover jobs. Admin filters help teams operate, so the admin page should ask MongoDB for exactly the slice it needs.
 
-### Lecture 130 - Admin Applications Filter UI
+### Lecture 131 - Admin Applications Filter UI
 
 Build the admin filter controls.
 
@@ -227,7 +227,7 @@ Teaching point:
 
 > Filters are only useful if users can see and reset them clearly.
 
-### Lecture 131 - Replacing Mock Candidates With Users
+### Lecture 132 - Replacing Mock Candidates With Users
 
 This is a good place to retire:
 
@@ -249,7 +249,7 @@ Teaching point:
 
 > Once auth exists, candidate identity should come from users, not old mock data.
 
-### Lecture 132 - Admin Users Search and Pagination
+### Lecture 133 - Admin Users Search and Pagination
 
 Update admin users/candidates page with the same query-driven list pattern.
 
@@ -274,7 +274,7 @@ Teaching point:
 
 > Admin user management needs the same list patterns as jobs and applications.
 
-### Lecture 133 - Sorting and Default Ordering
+### Lecture 134 - Sorting and Default Ordering
 
 Add stable default ordering and optional explicit sort choices.
 
@@ -295,7 +295,7 @@ Teaching point:
 
 > Pagination without stable sorting creates confusing results.
 
-### Lecture 134 - Empty States and Reset Filters
+### Lecture 135 - Empty States and Reset Filters
 
 Handle no-result states across public and admin lists:
 
@@ -308,7 +308,7 @@ Teaching point:
 
 > "No results" is not an error. It is a state.
 
-### Lecture 135 - MongoDB Indexes for Search and Filters
+### Lecture 136 - MongoDB Indexes for Search and Filters
 
 Add indexes based on the queries introduced throughout the day.
 
@@ -324,7 +324,7 @@ Teaching point:
 
 > Filters are only production-ready when the database can answer them efficiently.
 
-### Lecture 136 - Feature Branch for Day (12)
+### Lecture 137 - Feature Branch for Day (12)
 
 Create the Day 12 branch, validate the feature, open the PR, and merge into the development flow.
 
@@ -332,7 +332,7 @@ Teaching point:
 
 > A production feature is not done until it is reviewed, merged, and tested in the deployment workflow.
 
-### Lecture 137 - Recap Day (12)
+### Lecture 138 - Recap Day (12)
 
 Recap:
 

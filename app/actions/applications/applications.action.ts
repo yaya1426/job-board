@@ -2,6 +2,8 @@
 
 import { applyToJob } from "@/services/applications/applications.service";
 import { ApplyToJobInput } from "@/services/applications/applications.validation";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 export type ApplyToJobState =
   | {
@@ -24,4 +26,7 @@ export async function handleApplyToJob(
   if (!result.success) {
     return { errors: result.errors };
   }
+
+  revalidatePath(`/jobs/${data.jobId}`);
+  redirect(`/jobs/${data.jobId}`);
 }

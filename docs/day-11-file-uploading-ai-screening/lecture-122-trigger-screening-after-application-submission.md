@@ -1,0 +1,347 @@
+# Lecture 122 - Trigger Screening After Application Submission | تشغيل التقييم بعد إرسال الطلب
+
+## Goal
+
+Connect the proven Lecture 121 operation to the real apply flow with the smallest functional architecture:
+
+```txt
+save application as PENDING
+  -> mark PROCESSING
+  -> analyze resume during the same request
+  -> persist COMPLETED or FAILED
+  -> return application submission success
+```
+
+There is no separate delivery system in this version. The candidate's request remains open while Spaces and OpenAI run. That makes the flow easy to understand and fully functional, but it also adds latency, timeout, burst, and concurrency limits. Day 16 begins by measuring those problems before changing the architecture.
+
+The most important business rule is:
+
+> Once the application is saved, screening failure must never tell the candidate that the application failed.
+
+Otherwise the candidate may submit again and create a duplicate application.
+
+## Step 1 - Extend the Application Contract
+
+Update `types/Application.ts`. Make `aiScore` optional, then add the structured result, safe failure message, and completion time:
+
+```ts
+import type { ScreeningStatus } from "./ScreeningStatus";
+
+export interface Application {
+  id: string;
+  candidateId: string;
+  candidateName: string;
+  candidateEmail: string;
+  candidateLinkedin: string;
+  candidateCoverLetter: string;
+  candidateResumeKey?: string;
+  candidateResumeFileName?: string;
+  candidateResumeSize?: number;
+  candidateResumeContentType?: string;
+  jobId: string;
+  jobTitle: string;
+  jobCompany: string;
+  role: string;
+  aiScore?: number;
+  aiSummary?: string;
+  aiStrengths?: string[];
+  aiRisks?: string[];
+  screeningError?: string;
+  screeningStatus: ScreeningStatus;
+  screenedAt?: string;
+  status: "SUBMITTED" | "REVIEW" | "SHORTLIST" | "INTERVIEW" | "REJECTED";
+  appliedDate: string;
+  coverLetter?: string;
+}
+```
+
+An absent score means “there is no completed result.” It does not mean zero.
+
+## Step 2 - Extend the Mongoose Schema
+
+In `lib/models/application.model.ts`, replace the required score field and add the result fields:
+
+```ts
+aiScore: { type: Number, min: 0, max: 10 },
+aiSummary: { type: String },
+aiStrengths: [{ type: String }],
+aiRisks: [{ type: String }],
+screeningError: { type: String },
+screeningStatus: {
+  type: String,
+  enum: ["PENDING", "PROCESSING", "COMPLETED", "FAILED"],
+  default: "PENDING",
+  required: true,
+},
+screenedAt: { type: Date },
+```
+
+Keep hiring `status` separate. `screeningStatus` describes the external analysis workflow; `status` describes the human hiring workflow.
+
+## Step 3 - Convert `screenedAt` in the Repository Mapper
+
+Dates and ObjectIds must not leave the repository. Update the lean type and mapper in `repositories/applications.repository.ts`:
+
+```ts
+type ApplicationLean = Omit<
+  Application,
+  "id" | "appliedDate" | "screenedAt"
+> & {
+  _id: { toString(): string };
+  __v?: number;
+  appliedDate: string | Date;
+  screenedAt?: string | Date;
+};
+
+function toApplication(doc: ApplicationLean): Application {
+  const {
+    _id,
+    __v,
+    candidateId,
+    jobId,
+    appliedDate,
+    screenedAt,
+    ...rest
+  } = doc;
+
+  return {
+    id: _id.toString(),
+    candidateId: candidateId.toString(),
+    jobId: jobId.toString(),
+    appliedDate:
+      appliedDate instanceof Date
+        ? appliedDate.toISOString().split("T")[0]
+        : String(appliedDate),
+    ...(screenedAt
+      ? {
+          screenedAt:
+            screenedAt instanceof Date
+              ? screenedAt.toISOString()
+              : String(screenedAt),
+        }
+      : {}),
+    ...rest,
+  };
+}
+```
+
+Also ensure `saveNewApplication` returns the mapped entity rather than a Mongoose document:
+
+```ts
+export async function saveNewApplication(
+  application: Omit<Application, "id" | "appliedDate">,
+): Promise<Application> {
+  await dbConnect();
+
+  const newApplication = await ApplicationModel.create({
+    ...application,
+    candidateId: new ObjectId(application.candidateId),
+    jobId: new ObjectId(application.jobId),
+  });
+
+  return toApplication(newApplication.toObject() as ApplicationLean);
+}
+```
+
+## Step 4 - Add One Screening Update Function
+
+The repository does not need a separate function for every status. Add one focused update type and one function to `repositories/applications.repository.ts`:
+
+```ts
+type ApplicationScreeningUpdate = {
+  screeningStatus: Application["screeningStatus"];
+  aiScore?: number;
+  aiSummary?: string;
+  aiStrengths?: string[];
+  aiRisks?: string[];
+  screeningError?: string;
+  screenedAt?: Date;
+};
+
+export async function updateApplicationScreening(
+  applicationId: string,
+  update: ApplicationScreeningUpdate,
+): Promise<Application | null> {
+  await dbConnect();
+
+  const application = await ApplicationModel.findByIdAndUpdate(
+    applicationId,
+    { $set: update },
+    { new: true },
+  ).lean<ApplicationLean>();
+
+  return application ? toApplication(application) : null;
+}
+```
+
+This function is still focused: callers may update screening fields, but they cannot accidentally change candidate, job, or hiring-status fields.
+
+The service decides whether the update represents `PROCESSING`, `COMPLETED`, or `FAILED`. Never pass raw provider errors as `screeningError`; choose a safe application message first.
+
+## Step 5 - Create the Synchronous Orchestration Service
+
+Create `services/screening/screening.service.ts`:
+
+```ts
+import "server-only";
+import type { Application, Job } from "@/types";
+import { updateApplicationScreening } from "@/repositories/applications.repository";
+import { analyzeApplicationResume } from "./openai-screening.service";
+
+const SAFE_SCREENING_ERROR =
+  "Screening could not be completed. The application was still submitted.";
+
+type ScreeningInput = {
+  application: Application;
+  job: Job;
+};
+
+export async function screenApplication({
+  application,
+  job,
+}: ScreeningInput): Promise<void> {
+  const processing = await updateApplicationScreening(application.id, {
+    screeningStatus: "PROCESSING",
+  });
+
+  if (!processing) {
+    throw new Error("Application was not found before screening");
+  }
+
+  try {
+    const result = await analyzeApplicationResume({
+      application: processing,
+      job,
+    });
+
+    const completed = await updateApplicationScreening(application.id, {
+      screeningStatus: "COMPLETED",
+      aiScore: result.score,
+      aiSummary: result.summary,
+      aiStrengths: result.strengths,
+      aiRisks: result.risks,
+      screenedAt: new Date(),
+    });
+
+    if (!completed) {
+      throw new Error("Application disappeared while saving screening result");
+    }
+  } catch (error) {
+    await updateApplicationScreening(application.id, {
+      screeningStatus: "FAILED",
+      screeningError: SAFE_SCREENING_ERROR,
+    });
+
+    throw error;
+  }
+}
+```
+
+`analyzeApplicationResume` uploads through Lecture 120's helper, so every temporary OpenAI file receives the one-hour `expires_after` policy. Do not persist the temporary OpenAI file ID.
+
+## Step 6 - Trigger Screening After Persistence
+
+In `services/applications/applications.service.ts`, import the orchestrator:
+
+```ts
+import { screenApplication } from "@/services/screening/screening.service";
+```
+
+Remove `aiScore: 0` from the object passed to `saveNewApplication`. The final save-and-screen block inside `applyToJob` is:
+
+```ts
+const newApplication = await saveNewApplication({
+  ...validated.data,
+  candidateId: currentUser.id,
+  candidateResumeKey: resume.key,
+  candidateResumeFileName: resume.fileName,
+  candidateResumeSize: resume.fileSize,
+  candidateResumeContentType: resume.contentType,
+  jobTitle: job.title,
+  jobCompany: job.company,
+  role: job.title,
+  screeningStatus: "PENDING",
+  status: "SUBMITTED",
+});
+
+try {
+  await screenApplication({
+    application: newApplication,
+    job, // reuse the job already loaded near the start of applyToJob
+  });
+} catch (error) {
+  console.error("Application screening failed after submission", {
+    applicationId: newApplication.id,
+    message: error instanceof Error ? error.message : "Unknown error",
+  });
+}
+
+return { success: true, data: newApplication };
+```
+
+The ordering is deliberate:
+
+1. Upload the resume.
+2. Persist the application as `PENDING`.
+3. Start screening.
+4. Catch screening failure.
+5. Return application success.
+
+Do not return `errors.resume`, `errors.application`, or a generic submission failure after step 2. The application exists and the duplicate check should prevent a second submission.
+
+## Request Timeline
+
+```mermaid
+sequenceDiagram
+  actor Candidate
+  participant Apply as applyToJob
+  participant DB as MongoDB
+  participant Screening as screenApplication
+  participant OpenAI
+
+  Candidate->>Apply: Submit application + PDF
+  Apply->>DB: Save PENDING
+  Apply->>Screening: Screen saved application
+  Screening->>DB: Mark PROCESSING
+  Screening->>OpenAI: Files + Responses
+  alt analysis succeeds
+    Screening->>DB: Save COMPLETED result
+  else analysis fails
+    Screening->>DB: Save FAILED + safe message
+  end
+  Apply-->>Candidate: Application submitted
+```
+
+The response waits for the entire diagram. This is the known limitation, not an accidental claim of scalability.
+
+## Verification
+
+Run:
+
+```bash
+npx tsc --noEmit
+npm run lint
+```
+
+Then test:
+
+1. Successful screening moves `PENDING -> PROCESSING -> COMPLETED`.
+2. `aiScore` is between 0 and 10 and result fields are present.
+3. `screenedAt` is stored as a date and returned as a string.
+4. The temporary OpenAI file reports an `expires_at` about one hour after creation and expires automatically.
+5. With an invalid OpenAI key or controlled provider failure, the application remains saved and becomes `FAILED`.
+6. The candidate still reaches the submitted state after that failure.
+7. A repeated submission is rejected as a duplicate rather than encouraged by a false submission error.
+8. No document stores a fake `aiScore: 0`.
+
+## Design Caveats
+
+- The candidate waits for OpenAI, so submission latency rises.
+- Platform request timeouts can interrupt the request.
+- Bursts consume application-server and provider concurrency.
+- A process interruption can leave a record in `PENDING` or `PROCESSING`.
+- Day 11 accepts these limits to teach one complete flow. Day 16 adds durable delivery, atomic claims, retries, and reconciliation after reproducing the pain safely.
+
+## Next
+
+Lecture 123 renders the four states and reveals completed results only when they really exist.

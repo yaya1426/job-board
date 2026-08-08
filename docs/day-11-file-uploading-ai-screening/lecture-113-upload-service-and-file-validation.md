@@ -2,7 +2,7 @@
 
 ## Goal
 
-One small win: take an uploaded PDF, validate it on the server, and store it privately in DigitalOcean Spaces. That's the whole lesson. (Admin *downloads* come later, in Lecture 117, exactly when we build the screen that needs them.)
+One small win: take an uploaded PDF, validate it on the server, and store it privately in DigitalOcean Spaces. That's the whole lesson. (Admin *downloads* come later, in Lecture 118, after the application details foundation exists.)
 
 ## Explain It Simply (For Beginners)
 
@@ -22,7 +22,7 @@ For this app (a 5 MB resume cap, course-scale traffic) that complexity isn't wor
 
 > Teaching line: *We trade a little scalability for a lot of simplicity — and we say so out loud.*
 
-> Note: the bucket is **private**, so there's no public link to a resume. We don't need to solve "how does an admin open it?" yet — that's Lecture 117's job. This lesson stops at "the file is safely stored."
+> Note: the bucket is **private**, so there's no public link to a resume. We don't need to solve "how does an admin open it?" yet — that's Lecture 118's job. This lesson stops at "the file is safely stored."
 
 
 
@@ -98,7 +98,7 @@ export const spacesClient = new S3Client({
 
 Create `services/uploads/uploads.validation.ts`.
 
-For the first version, accept PDF only because Lecture 118 extracts PDF text.
+For the first version, accept PDF only because Lectures 120–121 send the PDF directly through OpenAI Files and Responses APIs.
 
 ```ts
 import { z } from "zod";
@@ -169,7 +169,7 @@ export async function uploadResume(file: File) {
 
 Two teaching points: the server generates the key (so a malicious filename can't control the storage path), and the upload reuses the same zod schema as validation so there is exactly one source of truth for "what counts as a valid resume."
 
-> We'll add a `createResumeDownloadUrl` helper to this same file later, in Lecture 117, when the admin screen actually needs to open a resume. No need to write it now.
+> We'll add a `createResumeDownloadUrl` helper to this same file later, in Lecture 118, when the admin screen actually needs to open a resume. No need to write it now.
 
 
 
@@ -233,7 +233,7 @@ Even though uploads now go through our server, the security rules are the same:
 - The **server** is the only thing holding Spaces credentials; they never reach the browser.
 - Only an authenticated candidate can trigger an upload (the apply action checks this in Lecture 115).
 
-(How admins later *read* a private file is a Lecture 117 concern — we don't touch it here.)
+(How admins later *read* a private file is a Lecture 118 concern — we don't touch it here.)
 
 ## Step 6 - Verify
 
@@ -260,7 +260,7 @@ Log only the returned key—never the file contents or credentials—then remove
 
 ## End State
 
-The backend can validate a resume and store it privately. The apply form still does not upload yet, and reading files back (admin downloads) is not built until Lecture 117.
+The backend can validate a resume and store it privately. The apply form still does not upload yet, and reading files back (admin downloads) is not built until Lecture 118.
 
 ## Next
 

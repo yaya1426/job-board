@@ -254,13 +254,13 @@ Important details:
 - Authentication happens **before** upload, so guests cannot store files.
 - Upload validation errors are mapped to `errors.resume`, which the form displays.
 - The `File` itself is removed before saving. MongoDB receives only the returned metadata.
-- `aiScore: 0` remains temporarily so existing score-based UI keeps compiling. Lecture 116 introduces `PENDING`; Lecture 117 removes the fake score when it updates the UI.
+- `aiScore: 0` remains temporarily so existing score-based UI keeps compiling. Lecture 116 introduces `PENDING`; Lecture 122 removes the fake score while wiring real results, and Lecture 123 updates the admin UI.
 
 ## Step 5 - Final `components/jobs/JobApplyForm.tsx`
 
 Replace the fake resume area with a real file input and render `resume`/`auth` errors. Keep the existing `useActionState` flow:
 
-> Recording note: use the plain native input here so learners can focus on the upload pipeline. Tell them we will return to the original dashed mockup in Lecture 127 and make clicking + drag-and-drop functional after the backend is complete.
+> Recording note: use the plain native input here so learners can focus on the upload pipeline. Visual drag-and-drop enhancement is optional UI polish and is not required for Day 11's functional outcome.
 
 ```tsx
 "use client";

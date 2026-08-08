@@ -3,8 +3,8 @@ import { Job } from "@/types";
 import { Card } from "../ui/card";
 
 type Props = {
-    job: Job;
-}
+  job: Job;
+};
 
 function JobDescription({ job }: Props) {
   return (
@@ -47,7 +47,7 @@ function JobDescription({ job }: Props) {
           ))}
         </ul>
       </div>
-
+      {/* 
       <div className="mt-8 border-t-3 border-foreground pt-6">
         <Card className="bg-accent/10">
           <div className="flex items-center gap-4">
@@ -64,7 +64,7 @@ function JobDescription({ job }: Props) {
             </div>
           </div>
         </Card>
-      </div>
+      </div> */}
     </div>
   );
 }

@@ -17,17 +17,17 @@ PENDING -> PROCESSING -> COMPLETED
                      -> FAILED
 ```
 
-A brand-new application is `PENDING`: it has been saved, but no worker has claimed it yet.
+A brand-new application is `PENDING`: it has been saved, but screening has not started yet.
 
-We're not building the worker or AI yet. The page should say only what is true: the application exists and screening is waiting.
+We're not triggering AI yet. The page should say only what is true: the application exists and screening is waiting. Lecture 122 will run screening during the same apply request.
 
 The `YOUR AI MATCH SCORE: 7.8` box in the screenshot is hard-coded inside `JobDescription`; it is not the application's `aiScore`. Remove that mock now. Real AI results appear later in the authorized admin application UI.
 
-### Why `aiScore: 0` is removed in Lecture 117, not here
+### Why `aiScore: 0` remains transitional
 
 The current dashboard, application table, candidate list, and statistics all assume `aiScore` is always a number. Making it optional here would break several screens at once.
 
-Keep `aiScore: 0` for this one transitional lesson. `screeningStatus` is now the source of truth: `PENDING` means the zero is **not a real score**. Lecture 117 updates the UI to understand pending applications and removes the fake score safely.
+Keep `aiScore: 0` as a transitional value so the existing score-based UI remains runnable. `screeningStatus` is now the source of truth: `PENDING` means the zero is **not a real score**. Lecture 117 displays the current workflow without claiming the placeholder is real; Lecture 122 makes the score optional and persists real screening results, and Lecture 123 updates the admin UI.
 
 ### Jargon decoder
 
@@ -70,7 +70,7 @@ Then add `screeningStatus` beside `aiScore`:
 export interface Application {
   // ...existing candidate/job fields
 
-  aiScore: number; // removed safely in Lecture 117
+  aiScore: number; // transitional until real screening results are wired
   screeningStatus: ScreeningStatus;
   status: "SUBMITTED" | "REVIEW" | "SHORTLIST" | "INTERVIEW" | "REJECTED";
 
@@ -128,7 +128,7 @@ const newApplication = await saveNewApplication({
   jobTitle: job.title,
   jobCompany: job.company,
   role: job.title,
-  aiScore: 0, // transitional; removed in Lecture 117
+  aiScore: 0, // transitional until real screening results are wired
   screeningStatus: "PENDING",
   status: "SUBMITTED",
 });
@@ -360,7 +360,7 @@ Candidate submits application
   -> job page re-renders
   -> apply form becomes APPLICATION SUBMITTED
   -> fake public AI score is gone
-  -> no worker runs yet
+  -> no screening operation runs yet
 ```
 
 
@@ -414,7 +414,7 @@ npm run lint
 
 > Application status and screening status are two separate workflows.
 
-> Async work needs a status field from day one, even before the async work exists.
+> External work needs a status field from day one, even before the integration exists.
 
 > Change the data contract in small, runnable steps; remove the fake score when the UI is ready to handle its absence.
 
@@ -422,4 +422,4 @@ npm run lint
 
 ## Next
 
-Lecture 117 lets admins open the private resume, displays the screening state, and safely removes the stored fake `aiScore: 0`.
+Lecture 117 builds the application details page and displays its current screening state. Lecture 118 then adds the submitted cover letter, resume metadata, and secure admin resume access.

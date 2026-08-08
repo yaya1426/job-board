@@ -5,6 +5,8 @@ import JobApplyForm from "@/components/jobs/JobApplyForm";
 import { getJob } from "@/services/jobs/jobs.service";
 import { getCurrentUserProfile } from "@/services/users/users.service";
 import ApplyAuthPrompt from "@/components/jobs/ApplyAuthPrompt";
+import { getCurrentUserApplicationForJob } from "@/services/applications/applications.service";
+import ApplicationSubmitted from "@/components/jobs/ApplicationSubmitted";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -14,6 +16,12 @@ async function JobDetailsPage({ params }: Props) {
   const { id } = await params;
   const result = await getJob(id);
   const userProfileResult = await getCurrentUserProfile();
+  const applicationResult = await getCurrentUserApplicationForJob(id);
+  const hasApplied = applicationResult.success;
+
+  const application = applicationResult.success
+  ? applicationResult.data
+  : undefined;
 
   if (!result.success) {
     return <JobNotFound />;
@@ -56,7 +64,11 @@ async function JobDetailsPage({ params }: Props) {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 mt-6">
         <JobDescription job={job} />
-        <JobApplyForm userProfile={userProfile} />
+        {hasApplied && application ? (
+          <ApplicationSubmitted application={application} />
+        ) : (
+          <JobApplyForm userProfile={userProfile} />
+        )}
       </div>
     </div>
   );
