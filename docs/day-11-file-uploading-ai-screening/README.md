@@ -30,6 +30,7 @@ Build the simplest fully functional resume-screening flow: upload a PDF through 
 - [Lecture 122 - Trigger Screening After Application Submission](./lecture-122-trigger-screening-after-application-submission.md)
 - [Lecture 123 - Display Screening Results in Admin](./lecture-123-display-screening-results-in-admin.md)
 - [Lecture 124 - Feature Branch for Day (11)](./lecture-124-feature-branch-for-day-11.md)
+- [Lecture 124.1 - Docker Build Environment Variables](./lecture-124-1-docker-build-environment-variables.md)
 - [Lecture 125 - Recap Day (11)](./lecture-125-recap-day-11.md)
 
 ## Teaching Order
@@ -44,6 +45,7 @@ Build the simplest fully functional resume-screening flow: upload a PDF through 
 122: save PENDING, then run screening synchronously in the apply service
 123: render PENDING, PROCESSING, COMPLETED, and FAILED honestly
 124: verify and ship through the branch workflow
+124.1: fix Docker build-time environment-variable access on DigitalOcean
 125: perform the complete verification recap
 ```
 
@@ -92,9 +94,9 @@ Remove the fake score, save the application first as `PENDING`, mark it `PROCESS
 
 Show all four screening states. Render score, summary, strengths, risks, and screening time only for `COMPLETED`; never display a fake zero.
 
-### 124–125: Delivery and Recap
+### 124–125: Delivery, Docker Environment Fix, and Recap
 
-Run full checks, verify private download and the OpenAI expiration metadata/lifecycle, ship through the branch workflow, and document why Day 16 is needed.
+Run full checks, verify private download and the OpenAI expiration metadata/lifecycle, ship through the branch workflow, fix custom-Dockerfile build-variable access when needed in Lecture 124.1, and document why Day 16 is needed.
 
 ## Environment Contract by End of Day
 

@@ -107,4 +107,6 @@ Promote only after staging succeeds. Never generate load against production.
 
 ## Next
 
-Lecture 125 verifies and recaps the complete Day 11 flow and records its intentional scaling limits.
+If the DigitalOcean Docker build cannot read the new Spaces/OpenAI variables, continue with complementary Lecture 124.1. It explains Docker build arguments, DigitalOcean variable scopes, secret rotation, and build/runtime verification.
+
+Lecture 125 then verifies and recaps the complete Day 11 flow and records its intentional scaling limits.
