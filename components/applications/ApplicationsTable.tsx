@@ -58,7 +58,7 @@ function ApplicationsTable() {
                 </p>
               </div>
               <p className="font-mono text-xs">{app.appliedDate}</p>
-              <AiScore score={app.aiScore} size="sm" />
+              <AiScore score={app.aiScore ?? 0} size="sm" />
               <Badge variant={statusVariant}>{app.status}</Badge>
               <div className="flex gap-1 justify-end">
                 <Link href={`/dashboard/applications/${app.id}`}>
