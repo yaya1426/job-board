@@ -23,7 +23,7 @@ function RecentApplications({ applications }: Props) {
             </div>
             <div className="flex items-center gap-4">
               <span className="font-mono text-sm font-bold text-accent">
-                {c.aiScore.toFixed(1)}
+                {c.aiScore ? c.aiScore.toFixed(1) : "—"}
               </span>
               <span
                 className={`${
