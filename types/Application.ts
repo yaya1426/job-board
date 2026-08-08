@@ -15,7 +15,7 @@ export interface Application {
   jobTitle: string;
   jobCompany: string;
   role: string;
-  aiScore?: number;
+  aiScore: number;
   aiSummary?: string;
   aiStrengths?: string[];
   aiRisks?: string[];
