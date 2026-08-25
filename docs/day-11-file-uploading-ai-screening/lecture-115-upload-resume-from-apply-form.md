@@ -4,6 +4,19 @@
 
 Replace the fake drop area with a real PDF input, and let the apply Server Action upload the file to private Spaces — all in one submission, keeping the existing `useActionState` pattern.
 
+## Implementation Status
+**Partial** — Real file input and server-side upload path exist; some lecture UI polish differs.
+
+## Key Files (as implemented today)
+- `components/jobs/JobApplyForm.tsx`
+- `app/actions/applications/applications.action.ts`
+- `services/applications/applications.validation.ts`
+- `services/applications/applications.service.ts`
+
+## Gaps vs This Lecture (if any)
+- Form uses a plain file input, not the styled dashed drop zone (drop zone code is commented in `JobApplyForm.tsx`).
+- Server Action must receive `FormData` with the `File`; confirm `Object.fromEntries` + zod `instanceof File` path works in your Next.js version when demoing.
+
 ## Explain It Simply (For Beginners)
 
 This is where the front-end finally does something real — and pleasantly, it stays **simple**. When the candidate hits **Submit**, the file rides along with the rest of the form in a single request. On the server, our apply action:

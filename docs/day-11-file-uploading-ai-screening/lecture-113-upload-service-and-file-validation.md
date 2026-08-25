@@ -4,6 +4,18 @@
 
 One small win: take an uploaded PDF, validate it on the server, and store it privately in DigitalOcean Spaces. That's the whole lesson. (Admin *downloads* come later, in Lecture 118, after the application details foundation exists.)
 
+## Implementation Status
+**Implemented** — PDF validation and private PutObject upload are wired.
+
+## Key Files (as implemented today)
+- `services/uploads/uploads.service.ts`
+- `services/uploads/uploads.validation.ts`
+- `lib/storage.ts`
+
+## Gaps vs This Lecture (if any)
+- `createResumeDownloadUrl` uses a 15-minute TTL (lecture 118 teaches five minutes).
+- Missing `import "server-only"` on `uploads.service.ts` (lecture adds it in 118).
+
 ## Explain It Simply (For Beginners)
 
 We use the plain, familiar **backend/frontend** model here:

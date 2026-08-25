@@ -1,4 +1,8 @@
-# Lecture 5 — Why Next.js for Production Apps? | لماذا نختار Next.js لتطبيقات الإنتاج؟
+# Lecture 3 — Why Next.js for Production Apps? | لماذا نختار Next.js لتطبيقات الإنتاج؟
+
+## Implementation Status
+
+Orientation lecture — no code changes. Grounded in course product `wazifa.app`.
 
 ## Recommended duration
 
@@ -257,9 +261,9 @@ URL segments → layouts/pages → server by default → client where interactio
 - TypeScript and the ecosystem improve delivery, while runtime validation and security still require deliberate work.
 - A separate backend or another framework can be the better choice under different product, team, or runtime constraints.
 
-## Exact transition into Lecture 6 / Create Next.js App
+## Exact transition into the next lecture
 
-> “الآن أصبحت الصورة كاملة: نعرف المنتج، ونعرف طريقة التعلّم والنشر، ونعرف لماذا Next.js مناسب لهذه المرحلة. في Lecture 6 — Create Next.js App سنحوّل الكلام إلى أول خطوة عملية: سننشئ تطبيق Next.js باستخدام TypeScript وApp Router، ثم نبدأ طريق أول Deployment من اليوم الأول.”
+> “اختيار Next.js مناسب لهذه المرحلة، لكن كيف سنتعلم كل هذه الجوانب بدون أن نغرق في شهور من النظرية قبل أول نتيجة؟ في المحاضرة التالية سأشرح منهج الكورس: Spiral Learning مع قاعدة واضحة جداً—Ship من اليوم الأول.”
 
 ## Recording checklist
 
@@ -272,4 +276,4 @@ URL segments → layouts/pages → server by default → client where interactio
 - [ ] Cover framework, caching, runtime, coupling, and upgrade tradeoffs.
 - [ ] Give clear cases for a separate backend or another framework.
 - [ ] Avoid implementation and command details.
-- [ ] Use the exact transition into Lecture 6.
+- [ ] Use the exact transition into Spiral + Ship.

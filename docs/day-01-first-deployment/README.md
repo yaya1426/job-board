@@ -4,13 +4,23 @@
 
 Get the project from zero to a deployable Next.js application. This day establishes the repo, the initial Next.js App Router project, and the deployment-oriented Docker/standalone foundation.
 
-## Lectures Covered
+## Complete Lecture Sequence
 
-- Lecture 6 - Create Next.js App (TypeScript + App Router)
-- Lecture 7 - Create a Simple Page
-- Lecture 8 - GitHub Repo Setup
-- Lecture 9 - Deploy to DigitalOcean (First Release)
-- Lecture 10 - Recap Day 1
+- [Lecture 6 - Create Next.js App | إنشاء تطبيق Next.js](./lecture-006-create-nextjs-app.md)
+- [Lecture 7 - Create a Simple Page | إنشاء صفحة بسيطة](./lecture-007-create-a-simple-page.md)
+- [Lecture 8 - GitHub Repo Setup | إعداد مستودع GitHub](./lecture-008-github-repo-setup.md)
+- [Lecture 9 - Deploy to DigitalOcean (First Release) | النشر على DigitalOcean](./lecture-009-deploy-to-digitalocean-first-release.md)
+- [Lecture 10 - Recap Day 1 | ملخص اليوم الأول](./lecture-010-recap-day-1.md)
+
+## Teaching Order
+
+```txt
+006: scaffold Next.js 16 + TypeScript + App Router
+007: customize the home page (simple branded content)
+008: git init, .gitignore, push to GitHub
+009: standalone output + Dockerfile + DigitalOcean App Platform deploy
+010: recap the zero-to-deployed loop
+```
 
 ## Commit Evidence
 
@@ -40,7 +50,7 @@ By the end of the day, the project has:
 ## Key Files
 
 - `app/layout.tsx`
-- `app/page.tsx`
+- `app/page.tsx` (later moved to `app/(client)/page.tsx` on Day 4)
 - `app/globals.css`
 - `package.json`
 - `tsconfig.json`
@@ -57,3 +67,9 @@ The important teaching point is that deployment is not saved for the end. The ap
 
 - The typo in commit message `Cahnge tilte in page.tsx` is historical and left as-is in git.
 - The README was later deleted in the branch history, but it was part of the Day 1 setup.
+- `app/layout.tsx` gained `SessionProvider` on Day 10; Day 1 layout was fonts + children only.
+- Home page evolved from simple `app/page.tsx` to full landing at `app/(client)/page.tsx` (Days 4 and 6).
+
+## Day 2 handoff
+
+Day 1 ends with a live App Platform URL. Day 2 connects `wazifa.app` and `admin.wazifa.app` with DNS, Cloudflare, and HTTPS.

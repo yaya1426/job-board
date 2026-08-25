@@ -14,6 +14,16 @@ Introduce a safer release workflow with development/staging environments, branch
 - Lecture 64 - Tagging Production Releases
 - Lecture 65 - Recap Day 7
 
+## Lecture Files
+
+- [Lecture 059 - Day 7 Plan](./lecture-059-day-7-plan.md)
+- [Lecture 060 - Why We Need Staging](./lecture-060-why-we-need-staging.md)
+- [Lecture 061 - Setup Development Branch & App Dev Environment](./lecture-061-setup-development-branch-and-app-dev-environment.md)
+- [Lecture 062 - Setup Admin Environment + Proxy](./lecture-062-setup-admin-environment-and-proxy.md)
+- [Lecture 063 - Branch Rules for develop and main](./lecture-063-branch-rules-for-develop-and-main.md)
+- [Lecture 064 - Tagging Production Releases](./lecture-064-tagging-production-releases.md)
+- [Lecture 065 - Recap Day 7](./lecture-065-recap-day-7.md)
+
 ## Commit Evidence
 
 Commits found for this day:

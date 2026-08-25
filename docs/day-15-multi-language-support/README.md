@@ -6,7 +6,18 @@ Add a clear path for English and Arabic support, including route strategy, trans
 
 ## Planning Status
 
-This day is planned, not implemented yet.
+**Planned — not in codebase.** No locale routing, no dictionaries, no RTL, no i18n validation messages.
+
+## Lecture Index (155–162)
+
+- [Lecture 155 - Decide the Locale Strategy](./lecture-155-decide-the-locale-strategy.md)
+- [Lecture 156 - Add Locale Routing](./lecture-156-add-locale-routing.md)
+- [Lecture 157 - Create Dictionaries](./lecture-157-create-dictionaries.md)
+- [Lecture 158 - Translate Public Pages](./lecture-158-translate-public-pages.md)
+- [Lecture 159 - RTL Support](./lecture-159-rtl-support.md)
+- [Lecture 160 - Localized Validation Messages](./lecture-160-localized-validation-messages.md)
+- [Lecture 161 - Localized Metadata and SEO](./lecture-161-localized-metadata-and-seo.md)
+- [Lecture 162 - Language Switcher](./lecture-162-language-switcher.md)
 
 ## Course Position
 

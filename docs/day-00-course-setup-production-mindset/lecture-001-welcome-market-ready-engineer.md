@@ -8,6 +8,10 @@
 
 Students understand who the course is for, what “market-ready engineer” means, what prior knowledge is expected, how the repository and course documents support the lessons, and what the course can realistically promise.
 
+## Implementation Status
+
+Orientation lecture — no code changes. Grounded in course product `wazifa.app`.
+
 ## Opening hook
 
 > “إنهاء كورسات كثيرة لا يعني تلقائياً أنك أصبحت جاهزاً لبناء منتج حقيقي. في هذا الكورس سنغلق الفجوة بين كتابة كود يعمل في فيديو، وبين اتخاذ قرارات هندسية وتشغيل تطبيق يستطيع الناس استخدامه.”

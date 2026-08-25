@@ -1,4 +1,8 @@
-# Lecture 4 — Project Overview | نظرة شاملة على مشروع وظيفة
+# Lecture 5 — Project Overview | نظرة شاملة على مشروع وظيفة
+
+## Implementation Status
+
+Orientation lecture — no code changes. Grounded in course product `wazifa.app`.
 
 ## Recommended duration
 
@@ -231,7 +235,7 @@ Admin host ──┘
 
 ## Exact transition into the next lecture
 
-> “أصبح لدينا الآن صورة واضحة للمنتج وحدوده. بقي سؤال تقني أساسي قبل أن نبدأ: لماذا اخترنا Next.js لهذا النوع من التطبيقات؟ في المحاضرة التالية سنشرح أسباب الاختيار بصدق، مع المزايا والتكاليف والحالات التي قد نختار فيها حلاً آخر.”
+> “الآن أصبحت الصورة كاملة: نعرف المنتج، ونعرف طريقة التعلّم والنشر، ونعرف لماذا Next.js مناسب لهذه المرحلة. في Lecture 6 — Create Next.js App سنحوّل الكلام إلى أول خطوة عملية: سننشئ تطبيق Next.js باستخدام TypeScript وApp Router، ثم نبدأ طريق أول Deployment من اليوم الأول.”
 
 ## Recording checklist
 
@@ -244,4 +248,4 @@ Admin host ──┘
 - [ ] Group the roadmap by capabilities.
 - [ ] State that AI assists rather than replaces human judgment.
 - [ ] Avoid folder-level or implementation detail.
-- [ ] End with the exact transition to why Next.js.
+- [ ] End with the exact transition to Lecture 6.

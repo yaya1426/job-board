@@ -1,0 +1,77 @@
+# Lecture 090 - Applications: Using Aggregates for Queries | الاستعلامات التجميعية
+
+## Goal
+
+Compute `applicants` count per job at query time using `$lookup` and `$size`, keeping job documents free of denormalized counters.
+
+## Explain It Simply (For Beginners)
+
+The jobs list shows how many people applied. Two ways to get that number:
+
+1. **Store** `applicants: 7` on the job document and increment it on every apply — fast reads, easy to get wrong.
+2. **Compute** it when reading jobs — count matching applications each time.
+
+Day 9 chooses option 2 with an **aggregation pipeline**:
+
+```txt
+jobs collection
+  -> $lookup applications where application.jobId == job._id
+  -> $addFields applicants: { $size: "$applications" }
+  -> $project hide the applications array
+```
+
+If someone deletes an application or data is fixed manually, the count stays correct automatically.
+
+## Files
+
+- `repositories/jobs.repository.ts` — `findAllJobs`, `findJobById`
+
+## Pipeline Sketch
+
+```js
+JobModel.aggregate([
+  {
+    $lookup: {
+      from: "applications",
+      localField: "_id",
+      foreignField: "jobId",
+      as: "applications",
+    },
+  },
+  {
+    $addFields: {
+      applicants: { $size: "$applications" },
+    },
+  },
+  {
+    $project: {
+      applications: 0,
+    },
+  },
+]);
+```
+
+`findJobById` adds `$match: { _id: new ObjectId(id) }` at the start.
+
+## Recording Steps
+
+1. Show a job document in Atlas — confirm there is no `applicants` field stored.
+2. Apply to a job twice (or insert two application docs).
+3. Step through the pipeline on a whiteboard.
+4. Update `findAllJobs` and `findJobById` to use aggregation.
+5. Refresh public job list and job details; verify count updates.
+6. Briefly mention indexes on `applications.jobId` as a future performance topic (Day 14).
+
+## Key Teaching Lines
+
+> Derived data beats duplicated data when correctness matters more than micro-optimizing reads.
+
+> Aggregation lives in the repository because it is a database read strategy.
+
+## End State
+
+Job cards and detail pages show accurate applicant counts without write-time counter maintenance.
+
+## Next
+
+Lecture 091 follows the project's feature-branch workflow for Day 9.

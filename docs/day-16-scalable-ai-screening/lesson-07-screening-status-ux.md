@@ -4,6 +4,10 @@
 
 Update copy and controls now that application submission returns before screening finishes.
 
+## Implementation Status
+
+**Planned — not in codebase** (QStash worker, atomic claims, async screening UX)
+
 ## Step 1 - Pass the Saved Application to Candidate UI
 
 In `app/(client)/jobs/[id]/page.tsx`, keep the existing application query and pass the result:

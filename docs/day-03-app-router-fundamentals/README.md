@@ -4,19 +4,19 @@
 
 Introduce the Next.js App Router mental model and build the first meaningful routes for the product.
 
-## Lectures Covered
+## Lecture Index
 
-- Lecture 19 - Day 3 Plan
-- Lecture 20 - App Router Mental Model
-- Lecture 21 - App Router vs Pages Router
-- Lecture 22 - Root Layout (Entrypoint)
-- Lecture 23 - Nested Routes
-- Lecture 24 - Dynamic Routes
-- Lecture 25 - Route Params
-- Lecture 26 - Link and Navigation
-- Lecture 27 - Project Milestone: Core Routes
-- Lecture 28 - Ship It: Deploy Checkpoint
-- Lecture 29 - Recap Day 3
+- [Lecture 19 - Day 3 Plan](./lecture-019-day-3-plan.md)
+- [Lecture 20 - App Router Mental Model](./lecture-020-app-router-mental-model.md)
+- [Lecture 21 - App Router vs Pages Router](./lecture-021-app-router-vs-pages-router.md)
+- [Lecture 22 - Root Layout (Entrypoint)](./lecture-022-root-layout.md)
+- [Lecture 23 - Nested Routes](./lecture-023-nested-routes.md)
+- [Lecture 24 - Dynamic Routes](./lecture-024-dynamic-routes.md)
+- [Lecture 25 - Route Params](./lecture-025-route-params.md)
+- [Lecture 26 - Link and Navigation](./lecture-026-link-and-navigation.md)
+- [Lecture 27 - Project Milestone: Core Routes](./lecture-027-project-milestone-core-routes.md)
+- [Lecture 28 - Ship It: Deploy Checkpoint](./lecture-028-ship-it-deploy-checkpoint.md)
+- [Lecture 29 - Recap Day 3](./lecture-029-recap-day-3.md)
 
 ## Commit Evidence
 

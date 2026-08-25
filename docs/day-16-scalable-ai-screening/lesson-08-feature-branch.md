@@ -4,6 +4,10 @@
 
 Verify and ship the durable background-screening architecture without committing secrets, load-test artifacts, synthetic resumes, or disposable routes.
 
+## Implementation Status
+
+**Planned — not in codebase** (QStash worker, atomic claims, async screening UX)
+
 ## Step 1 - Recheck Current Provider APIs
 
 Before recording and before the final build, compare installed package types with current official QStash documentation:

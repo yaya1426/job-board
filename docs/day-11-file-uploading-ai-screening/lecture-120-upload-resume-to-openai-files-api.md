@@ -4,6 +4,17 @@
 
 Read a trusted private resume from DigitalOcean Spaces on the server, validate the downloaded object, convert its bytes with `toFile`, and upload a temporary PDF with Files API purpose `"user_data"`.
 
+## Implementation Status
+**Implemented** — Spaces GetObject → toFile → OpenAI Files with one-hour expiration.
+
+## Key Files (as implemented today)
+- `services/screening/openai-files.service.ts`
+- `lib/storage.ts`
+- `lib/openai.ts`
+
+## Gaps vs This Lecture (if any)
+- Temporary OpenAI file IDs are not persisted (by design).
+
 ## Final Server-to-Server Flow
 
 ```txt

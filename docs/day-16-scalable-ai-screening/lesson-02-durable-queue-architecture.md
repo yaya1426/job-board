@@ -27,6 +27,10 @@ sequenceDiagram
 
 The application ID is a durable pointer. The worker reloads trusted application and job data from MongoDB.
 
+## Implementation Status
+
+**Planned — not in codebase** (QStash worker, atomic claims, async screening UX)
+
 ## Step 1 - Create the Payload Schema
 
 Create `services/screening/screening-job.validation.ts`:

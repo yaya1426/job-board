@@ -6,6 +6,10 @@ Measure the Day 11 synchronous design before replacing it. The candidate request
 
 Run this only against local development or an isolated staging environment with synthetic resumes and test accounts. Never load-test production or use real candidate data.
 
+## Implementation Status
+
+**Planned — not in codebase** (QStash worker, atomic claims, async screening UX)
+
 ## Step 1 - Capture a Single-Request Baseline
 
 In browser DevTools, submit one synthetic resume and record:

@@ -4,6 +4,26 @@
 
 Extend the application details page with the submitted cover letter and resume metadata, prove that the raw private object URL correctly returns `403`, and let authorized admins open resumes through a short-lived signed URL.
 
+## Implementation Status
+**Partial** — Secure admin resume download works; route path and UI differ from the lecture.
+
+## Key Files (as implemented today)
+- `app/(admin)/dashboard/applications/[applicationId]/resume/route.ts`
+- `components/applications/details/ApplicationSubmissionDetails.tsx`
+- `services/uploads/uploads.service.ts`
+- `app/(admin)/dashboard/applications/[applicationId]/page.tsx`
+
+## Gaps vs This Lecture (if any)
+- **Resume route path:** implemented at `app/(admin)/dashboard/applications/[applicationId]/resume/route.ts`, **not** `app/api/applications/[applicationId]/resume/route.ts`.
+- UI link uses `/dashboard/applications/${application.id}/resume` and currently displays the storage key — not filename/size + Button from the lecture.
+- Signed URL TTL is 15 minutes in code vs five minutes in the lecture.
+- Raw private URL 403 demonstration step may need manual setup; final UI skips the temporary raw-link teaching step.
+
+## As Implemented Today
+
+The protected GET handler lives under the **admin dashboard route tree**, not `/api/applications/...`. When updating `ApplicationSubmissionDetails`, point the OPEN RESUME link at `/dashboard/applications/${application.id}/resume`. Authorization still checks `getCurrentUser()` + `role === "ADMIN"`, loads the trusted key from MongoDB, and redirects to a presigned Spaces URL.
+
+
 ## Starting Point
 
 Lecture 117 created:

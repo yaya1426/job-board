@@ -8,6 +8,30 @@ Make the job page honest after submission:
 2. A candidate who already applied sees a submitted state instead of the apply form.
 3. The hard-coded public `7.8` AI score disappears until real screening results exist.
 
+## Implementation Status
+**Partial** — Screening status and post-apply UX exist; duplicate guard and service return shape differ from the lecture.
+
+## Key Files (as implemented today)
+- `types/Application.ts`
+- `types/ScreeningStatus.ts`
+- `lib/models/application.model.ts`
+- `services/applications/applications.service.ts`
+- `repositories/applications.repository.ts`
+- `app/(client)/jobs/[id]/page.tsx`
+- `components/jobs/ApplicationSubmitted.tsx`
+- `app/actions/applications/applications.action.ts`
+
+## Gaps vs This Lecture (if any)
+- **Duplicate application check is still TODO** in `applyToJob` (`// TODO: check if candidate already applied to this job`). Lecture Step 5 is not implemented.
+- `getCurrentUserApplicationForJob` returns `{ success: false, errors: { jobId: ["Application not found"] } }` when no application exists — not `{ success: true, data: null }` as the lecture teaches. The job page uses `applicationResult.success` as `hasApplied`, which still works but differs from the documented contract.
+- `aiScore: 0` transitional placeholder remains (Lecture 122 should remove it).
+- `ApplicationSubmitted` receives the application prop and shows dynamic `screeningStatus` (partial Lecture 123 overlap).
+
+## As Implemented Today
+
+`findApplicationByCandidateAndJob` exists in the repository and is used by both `applyToJob` (read path only today) and `getCurrentUserApplicationForJob`. The duplicate rejection block from Step 5 is **not** in `applyToJob` yet — call that out when recording. When demoing the post-apply page, note that a missing application returns a service error, not `data: null`.
+
+
 ## Explain It Simply (For Beginners)
 
 The application needs a separate field that tracks where the AI review is:

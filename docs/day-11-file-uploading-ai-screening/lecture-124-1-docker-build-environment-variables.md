@@ -56,6 +56,16 @@ OPENAI_API_KEY is required
 
 because `lib/openai.ts` also validates its variables during module evaluation.
 
+## Implementation Status
+**Partial** — Dockerfile build-arg pattern exists for `MONGO_URI`; Spaces/OpenAI build-time access may still need App Platform scope fixes.
+
+## Key Files (as implemented today)
+- `Dockerfile`
+- `next.config.ts`
+
+## Gaps vs This Lecture (if any)
+- Confirm `DO_SPACES_*` and `OPENAI_*` variables have **Run and build time** scope on DigitalOcean if imported during `next build`.
+
 ## Step 1 - Explain Why `.env.local` Does Not Help Deployment
 
 `.env.local` belongs to the developer machine and should remain ignored by Git.

@@ -4,6 +4,10 @@
 
 Retry temporary failures, stop retrying permanent failures, recover stale `PROCESSING` records, republish old `PENDING` records, and preserve Lecture 120's one-hour automatic expiration for every temporary OpenAI file.
 
+## Implementation Status
+
+**Planned — not in codebase** (QStash worker, atomic claims, async screening UX)
+
 ## Step 1 - Track When Processing Started
 
 Add optional `screeningStartedAt?: string` to `Application`, add `screeningStartedAt: { type: Date }` to the Mongoose schema, and map it from `Date` to ISO string exactly like `screenedAt`.

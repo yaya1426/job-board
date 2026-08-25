@@ -14,9 +14,9 @@ Students do not need prior experience with Next.js production deployments, Mongo
 
 1. [Lecture 1 — Welcome: Market-Ready Engineer | أهلاً بك: من متابع شروحات إلى مهندس جاهز لسوق العمل](./lecture-001-welcome-market-ready-engineer.md)
 2. [Lecture 2 — What is Production Ready? | ما معنى أن يكون التطبيق جاهزاً للإنتاج؟](./lecture-002-what-is-production-ready.md)
-3. [Lecture 3 — Course Method: Spiral + Ship | منهج الكورس: تعلّم حلزوني وانشر باستمرار](./lecture-003-course-method-spiral-and-ship.md)
-4. [Lecture 4 — Project Overview | نظرة شاملة على مشروع وظيفة](./lecture-004-project-overview.md)
-5. [Lecture 5 — Why Next.js for Production Apps? | لماذا نختار Next.js لتطبيقات الإنتاج؟](./lecture-005-why-nextjs-for-production-apps.md)
+3. [Lecture 3 — Why Next.js for Production Apps? | لماذا نختار Next.js لتطبيقات الإنتاج؟](./lecture-003-why-nextjs-for-production-apps.md)
+4. [Lecture 4 — Course Method: Spiral + Ship | منهج الكورس: تعلّم حلزوني وانشر باستمرار](./lecture-004-course-method-spiral-and-ship.md)
+5. [Lecture 5 — Project Overview | نظرة شاملة على مشروع وظيفة](./lecture-005-project-overview.md)
 
 ## Suggested total recording time
 
@@ -24,9 +24,9 @@ Approximately **55–65 minutes**:
 
 - Lecture 1: 10–12 minutes
 - Lecture 2: 12–14 minutes
-- Lecture 3: 12–14 minutes
-- Lecture 4: 10–12 minutes
-- Lecture 5: 11–13 minutes
+- Lecture 3: 11–13 minutes
+- Lecture 4: 12–14 minutes
+- Lecture 5: 10–12 minutes
 
 ## Day 0 narrative arc
 
@@ -34,9 +34,9 @@ The day moves from the student’s goal to the course’s working method:
 
 1. Define the difference between completing tutorials and becoming a market-ready engineer.
 2. Replace the vague phrase “production ready” with practical, repeatable engineering habits.
-3. Explain how spiral learning and frequent shipping make those habits visible.
-4. Introduce `wazifa.app` as the product through which every concept will be practiced.
-5. Explain why Next.js is a good fit for this product while acknowledging its tradeoffs.
+3. Explain why Next.js is a good fit for this product while acknowledging its tradeoffs.
+4. Explain how spiral learning and frequent shipping make those habits visible.
+5. Introduce `wazifa.app` as the product through which every concept will be practiced.
 
 Day 0 previews the destination without teaching implementation. The student finishes with a clear mental map and is ready to create and deploy the first version immediately.
 
@@ -46,13 +46,13 @@ By the end of Day 0, the student can:
 
 - Explain “market-ready” without treating it as a job guarantee.
 - Describe production readiness as a spectrum rather than perfection.
+- Explain why Next.js fits this course and when another architecture could be better.
 - Name the course loop: build a vertical slice, review, verify, deploy, and revisit.
 - Describe the candidate and admin journeys in `wazifa.app`.
 - Explain why the public app and admin dashboard begin as one modular monolith.
 - Name the major technologies as a roadmap, without expecting to know them yet.
-- Explain why Next.js fits this course and when another architecture could be better.
 - State that Day 1 begins with a real deployment, not weeks of local-only setup.
 
 ## Day 1 handoff
 
-Day 0 ends immediately before **Lecture 6 — Create Next.js App (TypeScript + App Router)**. Lecture 6 begins Day 1 and turns the mindset into action by creating the application that will be deployed in the first day. Existing Day 1 lecture numbers remain unchanged.
+Day 0 ends immediately before **Lecture 6 — Create Next.js App (TypeScript + App Router)**. Lecture 6 begins Day 1 and turns the mindset into action by creating the application that will be deployed in the first day.

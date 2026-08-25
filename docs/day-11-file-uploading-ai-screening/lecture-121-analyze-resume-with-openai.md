@@ -6,6 +6,18 @@ Build one orchestration operation that uploads a temporary OpenAI file, passes i
 
 PDF file inputs are processed as extracted text **and page images** by vision-capable models. More image detail means more tokens and cost. For resumes, use explicit `"low"` detail first: typography is usually secondary to content, while text extraction is still included. Evaluate `"high"` only when small visual details materially affect your documents.
 
+## Implementation Status
+**Implemented** — Responses API structured screening operation exists.
+
+## Key Files (as implemented today)
+- `services/screening/openai-screening.service.ts`
+- `services/screening/screening.validation.ts`
+- `types/ScreeningResult.ts`
+- `lib/openai.ts`
+
+## Gaps vs This Lecture (if any)
+- Standalone probe/route from the lecture may have been removed after verification.
+
 ## Step 1 - Create the Shared Result Type
 
 Create `types/ScreeningResult.ts`:

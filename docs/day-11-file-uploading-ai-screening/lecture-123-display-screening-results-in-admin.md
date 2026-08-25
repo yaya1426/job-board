@@ -63,6 +63,27 @@ After restarting:
 
 Restarting does not backfill a document that was already saved without those fields. The screening update must run again after the correct schema is compiled.
 
+## Implementation Status
+**Partial** — Screening states render in admin/candidate UI; score optional guard and `screenedAt` display are incomplete.
+
+## Key Files (as implemented today)
+- `components/applications/details/ApplicationWorkflowDetails.tsx`
+- `components/applications/ApplicationsTable.tsx`
+- `components/jobs/ApplicationSubmitted.tsx`
+- `app/(client)/jobs/[id]/page.tsx`
+- `app/actions/applications/applications.action.ts`
+
+## Gaps vs This Lecture (if any)
+- **`screenedAt` is not shown** in `ApplicationWorkflowDetails` or `ApplicationSubmitted` even though the repository maps it.
+- **`aiScore ?? 0` is still used** in admin workflow, applications table, candidate submitted view, and dashboard stats — not the lecture's `aiScore !== undefined` guard.
+- `ApplicationSubmitted` shows summary on COMPLETED but omits strengths/risks/`screenedAt` from the lecture template.
+- Revalidate + redirect after apply **is** implemented in `applications.action.ts`.
+
+## As Implemented Today
+
+Admin COMPLETED state uses `<AiScore score={aiScore ?? 0} />`, so a not-yet-screened or legacy `0` placeholder can look like a real zero score. The lecture's `screenedAt` block and table `completedScore` guard are not fully landed. Database may store `screenedAt` after successful screening even when the UI hides it.
+
+
 ## Step 1 - Replace `ApplicationWorkflowDetails`
 
 Replace `components/applications/details/ApplicationWorkflowDetails.tsx` with:

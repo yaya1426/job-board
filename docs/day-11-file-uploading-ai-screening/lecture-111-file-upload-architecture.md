@@ -4,6 +4,17 @@
 
 Map the resume lifecycle and assign one responsibility to each layer before implementation.
 
+## Implementation Status
+**Implemented** — Server-proxied private upload architecture matches the codebase.
+
+## Key Files (as implemented today)
+- `services/uploads/uploads.service.ts`
+- `lib/storage.ts`
+- `services/applications/applications.service.ts`
+
+## Gaps vs This Lecture (if any)
+- Presigned direct browser upload remains a documented future upgrade only (not built).
+
 ## Explain It Simply (For Beginners)
 
 There are two ways to get a file from the browser into cloud storage:

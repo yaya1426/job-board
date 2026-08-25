@@ -69,17 +69,19 @@ The goal is not just coding features, but teaching:
 
 # Day 0 — Course Setup & Production Mindset
 
-Covered:
+Covered (orientation order):
 
 - Lecture 1 — Welcome: Market-Ready Engineer
 - Lecture 2 — What is Production Ready?
-- Lecture 3 — Course Method: Spiral + Ship
-- Lecture 4 — Project Overview
-- Lecture 5 — Why Next.js for Production Apps?
+- Lecture 3 — Why Next.js for Production Apps?
+- Lecture 4 — Course Method: Spiral + Ship
+- Lecture 5 — Project Overview
+
+Docs: `docs/day-00-course-setup-production-mindset/` (one file per lecture).
 
 Outcome:
 
-- Students understand the production-first mindset, the `wazifa.app` product, the spiral-and-ship method, and why Next.js fits this modular-monolith course.
+- Students understand the production-first mindset, why Next.js fits this course, the spiral-and-ship method, and the `wazifa.app` product map.
 - Day 1 starts at Lecture 6 with creating and deploying the application.
 
 ---

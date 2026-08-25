@@ -4,6 +4,17 @@
 
 One small win: prepare the application data model to remember a resume's key, name, size, and type. The actual form upload comes next, in Lecture 115.
 
+## Implementation Status
+**Implemented** — Application types/model store resume metadata fields.
+
+## Key Files (as implemented today)
+- `types/Application.ts`
+- `lib/models/application.model.ts`
+- `repositories/applications.repository.ts`
+
+## Gaps vs This Lecture (if any)
+- Legacy `candidateResume` string placeholder is gone; optional resume metadata fields are in place.
+
 ## Explain It Simply (For Beginners)
 
 Before the form can save a real upload, the application needs fields ready to receive its details. We first replace the vague `candidateResume` placeholder with a clear **snapshot contract**.

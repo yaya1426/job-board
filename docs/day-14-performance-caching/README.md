@@ -6,7 +6,18 @@ Make the app faster and more predictable under real usage by reviewing rendering
 
 ## Planning Status
 
-This day is planned, not implemented yet.
+**Planned — not in codebase.** App still uses broad `force-dynamic`; no performance pass, no index rollout beyond what Day 12 may add later.
+
+## Lecture Index (147–154)
+
+- [Lecture 147 - Measure Before Optimizing](./lecture-147-measure-before-optimizing.md)
+- [Lecture 148 - Review Rendering Strategy](./lecture-148-review-rendering-strategy.md)
+- [Lecture 149 - Avoid Overfetching](./lecture-149-avoid-overfetching.md)
+- [Lecture 150 - MongoDB Indexes](./lecture-150-mongodb-indexes.md)
+- [Lecture 151 - Cache Invalidation and Mutations](./lecture-151-cache-invalidation-and-mutations.md)
+- [Lecture 152 - Split Server and Client Components](./lecture-152-split-server-and-client-components.md)
+- [Lecture 153 - Loading and Error States](./lecture-153-loading-and-error-states.md)
+- [Lecture 154 - Production Performance Checklist](./lecture-154-production-performance-checklist.md)
 
 ## Course Position
 

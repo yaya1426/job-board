@@ -10,6 +10,10 @@ Before recording, recheck the current `@upstash/qstash` package documentation an
 Client.publishJSON({ url, body, retries })
 ```
 
+## Implementation Status
+
+**Planned — not in codebase** (QStash worker, atomic claims, async screening UX)
+
 ## Step 1 - Install the SDK
 
 ```bash

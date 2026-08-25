@@ -18,6 +18,10 @@ both call OpenAI
 
 The status check and update must be one MongoDB operation.
 
+## Implementation Status
+
+**Planned — not in codebase** (QStash worker, atomic claims, async screening UX)
+
 ## Step 1 - Add ObjectId Validation and Atomic Claim
 
 In `repositories/applications.repository.ts`, add:

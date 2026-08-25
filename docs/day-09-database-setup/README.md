@@ -4,21 +4,21 @@
 
 Move the app from mock data to MongoDB using Mongoose, introduce the repository layer, and complete the end-to-end "apply to a job" flow with persisted applications.
 
-## Lectures Covered
+## Complete Lecture Sequence
 
-- Lecture 81 - Day 9 Plan
-- Lecture 82 - SQL vs NoSQL: What to Choose?
-- Lecture 83 - Setting Up MongoDB Atlas
-- Lecture 84 - Connection in Next.js using Mongoose
-- Lecture 85 - Job Model & Schema
-- Lecture 86 - Repository Layer to Avoid Abstraction Leak
-- Lecture 87 - Applications: Model & Repository Logic
-- Lecture 88 - Applications: Create New Application Logic
-- Lecture 89 - Applications: Cleanup Test Data
-- Lecture 90 - Applications: Using Aggregates for Queries
-- Lecture 91 - Feature Branch for Day 9
-- Lecture 92 - Caching issues in Next.js
-- Lecture 93 - Recap Day 9
+- [Lecture 081 - Day 9 Plan](./lecture-081-day-9-plan.md)
+- [Lecture 082 - SQL vs NoSQL: What to Choose?](./lecture-082-sql-vs-nosql.md)
+- [Lecture 083 - Setting Up MongoDB Atlas](./lecture-083-mongodb-atlas-setup.md)
+- [Lecture 084 - Connection in Next.js using Mongoose](./lecture-084-mongoose-connection.md)
+- [Lecture 085 - Job Model & Schema](./lecture-085-job-model-schema.md)
+- [Lecture 086 - Repository Layer to Avoid Abstraction Leak](./lecture-086-repository-layer.md)
+- [Lecture 087 - Applications: Model & Repository Logic](./lecture-087-applications-model-repository.md)
+- [Lecture 088 - Applications: Create New Application Logic](./lecture-088-create-application.md)
+- [Lecture 089 - Applications: Cleanup Test Data](./lecture-089-cleanup-test-data.md)
+- [Lecture 090 - Applications: Using Aggregates for Queries](./lecture-090-aggregates-for-queries.md)
+- [Lecture 091 - Feature Branch for Day 9](./lecture-091-feature-branch-day-9.md)
+- [Lecture 092 - Caching issues in Next.js](./lecture-092-caching-force-dynamic.md)
+- [Lecture 093 - Recap Day 9](./lecture-093-recap-day-9.md)
 
 ## Commit Evidence
 

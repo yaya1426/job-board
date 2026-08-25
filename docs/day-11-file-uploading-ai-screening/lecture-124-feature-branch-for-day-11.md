@@ -4,6 +4,15 @@
 
 Review, verify, and ship the completed private-upload and synchronous-screening workflow without committing secrets, test resumes, or disposable probes.
 
+## Implementation Status
+**Planned** — Git workflow documentation; verify against actual branch state when recording.
+
+## Key Files (as implemented today)
+- `docs/day-11-file-uploading-ai-screening/`
+
+## Gaps vs This Lecture (if any)
+- Several Lecture 122/123 gaps above should be closed or documented before calling Day 11 "complete" in recap.
+
 ## Step 1 - Inspect the Working Tree
 
 ```bash

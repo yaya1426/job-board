@@ -20,6 +20,33 @@ The most important business rule is:
 
 Otherwise the candidate may submit again and create a duplicate application.
 
+## Implementation Status
+**Partial** — Screening orchestration exists but apply flow differs from the lecture's synchronous await design.
+
+## Key Files (as implemented today)
+- `services/screening/screening.service.ts`
+- `services/applications/applications.service.ts`
+- `repositories/applications.repository.ts`
+- `types/Application.ts`
+- `lib/models/application.model.ts`
+
+## Gaps vs This Lecture (if any)
+- **Fire-and-forget:** `applyToJob` calls `screenApplication({ application, job })` **without `await`**. Screening runs in the background; the candidate response does not wait for OpenAI (unlike the lecture's synchronous timeline).
+- **`aiScore: 0` TODO remains** on new applications (`//TODO: Removed after AI screening is implemented`). Lecture removes this and makes `aiScore` optional.
+- `types/Application.ts` still has `aiScore: number` required; Mongoose schema still has `aiScore: { required: true }`.
+- No try/catch logging block around awaited screening in `applyToJob` — failures are handled inside `screenApplication` but the HTTP response may return before screening finishes.
+
+## As Implemented Today
+
+```ts
+// services/applications/applications.service.ts (actual)
+screenApplication({ application: newApplication, job });
+return { success: true, data: newApplication };
+```
+
+The lecture teaches `await screenApplication(...)` inside a try/catch so the same request waits for COMPLETED/FAILED. Today screening still runs, but the apply response can return while status is still `PENDING`/`PROCESSING`, and the returned `newApplication` object will not include updated screening fields. Keep the lecture's synchronous design as the target; note this gap when recording.
+
+
 ## Step 1 - Extend the Application Contract
 
 Update `types/Application.ts`. Make `aiScore` optional, then add the structured result, safe failure message, and completion time:

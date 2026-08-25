@@ -35,6 +35,19 @@ repositories/applications.repository.ts       -> findApplicationById()
 
 ---
 
+## Implementation Status
+**Implemented** — Admin application details route and workflow/candidate components exist.
+
+## Key Files (as implemented today)
+- `app/(admin)/dashboard/applications/[applicationId]/page.tsx`
+- `components/applications/details/ApplicationCandidateDetails.tsx`
+- `components/applications/details/ApplicationWorkflowDetails.tsx`
+- `components/applications/ApplicationsTable.tsx`
+
+## Gaps vs This Lecture (if any)
+- Cover letter/resume presentation and secure download belong to Lecture 118 (partially wired with a simplified UI).
+- `ApplicationWorkflowDetails` already renders COMPLETED AI fields (Lecture 123 overlap) but uses `aiScore ?? 0`.
+
 ## Step 1 - Fix the Applications Table VIEW Link
 
 Open:

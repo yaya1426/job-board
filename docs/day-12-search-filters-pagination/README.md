@@ -6,25 +6,23 @@ Make public and admin lists scale beyond tiny demo data by adding URL-based sear
 
 ## Planning Status
 
-This day is planned, not implemented yet.
+**Planned — not in codebase.** No URL pagination, no query schemas, no `PaginatedResult<T>`. Candidates still come from mock data (`services/candidates/candidates.service.ts` → `data/CandidateData.ts`).
 
-## Udemy Lectures Reflected
+## Lecture Index (126–138)
 
-Day 12 starts at Lecture 126 in the Udemy curriculum.
-
-- Lecture 126 - Day (12) Plan | خطة اليوم الثاني عشر
-- Lecture 127 - Query Params, Validation, and Pagination Model | نموذج البحث والتحقق وتقسيم الصفحات
-- Lecture 128 - Paginating Jobs in the Repository | تقسيم الوظائف من قاعدة البيانات
-- Lecture 129 - Public Jobs Search UI | واجهة البحث في الوظائف
-- Lecture 130 - Admin Applications Filtering and Pagination | فلترة وتقسيم طلبات التقديم
-- Lecture 131 - Admin Applications Filter UI | واجهة فلاتر طلبات التقديم
-- Lecture 132 - Replacing Mock Candidates With Users | استبدال المرشحين الوهميين بالمستخدمين
-- Lecture 133 - Admin Users Search and Pagination | البحث وتقسيم المستخدمين في الأدمن
-- Lecture 134 - Sorting and Default Ordering | الترتيب الافتراضي للنتائج
-- Lecture 135 - Empty States and Reset Filters | حالات عدم وجود نتائج وإعادة الفلاتر
-- Lecture 136 - MongoDB Indexes for Search and Filters | فهارس MongoDB للبحث والفلاتر
-- Lecture 137 - Feature Branch for Day (12) | برانش جيتهاب لليوم الثاني عشر
-- Lecture 138 - Recap Day (12) | ملخص اليوم الثاني عشر
+- [Lecture 126 - Day (12) Plan](./lecture-126-day-12-plan.md)
+- [Lecture 127 - Query Params, Validation, and Pagination Model](./lecture-127-query-params-validation-and-pagination-model.md)
+- [Lecture 128 - Paginating Jobs in the Repository](./lecture-128-paginating-jobs-in-the-repository.md)
+- [Lecture 129 - Public Jobs Search UI](./lecture-129-public-jobs-search-ui.md)
+- [Lecture 130 - Admin Applications Filtering and Pagination](./lecture-130-admin-applications-filtering-and-pagination.md)
+- [Lecture 131 - Admin Applications Filter UI](./lecture-131-admin-applications-filter-ui.md)
+- [Lecture 132 - Replacing Mock Candidates With Users](./lecture-132-replacing-mock-candidates-with-users.md)
+- [Lecture 133 - Admin Users Search and Pagination](./lecture-133-admin-users-search-and-pagination.md)
+- [Lecture 134 - Sorting and Default Ordering](./lecture-134-sorting-and-default-ordering.md)
+- [Lecture 135 - Empty States and Reset Filters](./lecture-135-empty-states-and-reset-filters.md)
+- [Lecture 136 - MongoDB Indexes for Search and Filters](./lecture-136-mongodb-indexes-for-search-and-filters.md)
+- [Lecture 137 - Feature Branch for Day (12)](./lecture-137-feature-branch-for-day-12.md)
+- [Lecture 138 - Recap Day (12)](./lecture-138-recap-day-12.md)
 
 ## Course Position
 

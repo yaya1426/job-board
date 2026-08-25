@@ -6,6 +6,10 @@ Accept only signed QStash deliveries, validate their JSON payload, and hand proc
 
 Before recording, recheck the current `verifySignatureAppRouter` import and wrapper signature in the installed `@upstash/qstash` version.
 
+## Implementation Status
+
+**Planned — not in codebase** (QStash worker, atomic claims, async screening UX)
+
 ## Step 1 - Add Signing Keys
 
 Add to local/staging/production server environments:

@@ -4,6 +4,27 @@
 
 Introduce Day 11 as one connected first-version workflow: upload a private resume, save its metadata, screen it synchronously with OpenAI after the application is persisted, and show the result to admins.
 
+## Implementation Status
+**Partial** — Most Day 11 layers exist in the repo; this lecture's "Current State" section still describes the pre-upload starting point.
+
+## Key Files (as implemented today)
+- `components/jobs/JobApplyForm.tsx`
+- `services/applications/applications.service.ts`
+- `services/uploads/uploads.service.ts`
+- `services/screening/screening.service.ts`
+- `lib/storage.ts`
+- `lib/openai.ts`
+
+## Gaps vs This Lecture (if any)
+- Lecture still says the apply form has only a fake drop zone; the repo already has a real `<input type="file" name="resume">` (the dashed drop zone is commented out).
+- Upload, OpenAI Files/Responses, and screening orchestration code now exist — not "do not exist yet".
+- `aiScore: 0` placeholder and fire-and-forget `screenApplication()` remain; synchronous await + optional score are still pending (Lecture 122).
+
+## As Implemented Today
+
+When recording Lecture 110 against the current repo, open `JobApplyForm` and show the working PDF `<input type="file">` instead of claiming there is no file input. Then walk the partially wired pipeline (Spaces upload → MongoDB snapshot → background screening trigger) and call out the remaining Lecture 122/123 gaps.
+
+
 ## Explain It Simply (For Beginners)
 
 Right now our apply form has a *pretty box that pretends to accept a file* but does nothing. By the end of Day 11, a candidate can attach a real PDF resume, and an AI quietly reads it and gives admins a helpful summary and score.

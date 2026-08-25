@@ -4,6 +4,17 @@
 
 Finish and verify the infrastructure needed for private, direct resume uploads.
 
+## Implementation Status
+**Partial** — Spaces client/env wiring is in code; bucket provisioning is manual infrastructure.
+
+## Key Files (as implemented today)
+- `lib/storage.ts`
+- `Dockerfile`
+
+## Gaps vs This Lecture (if any)
+- Space creation, keys, and DigitalOcean dashboard steps are off-repo.
+- Verify all five `DO_SPACES_*` variables exist locally and on App Platform before recording upload demos.
+
 ## Explain It Simply (For Beginners)
 
 Before we write any upload code, the "cloud filing cabinet" needs to exist and be configured correctly. This lecture is pure setup — no app code — and it's mostly about **safety** and **matching names**.

@@ -6,7 +6,18 @@ Make the public job board discoverable and shareable by adding proper metadata, 
 
 ## Planning Status
 
-This day is planned, not implemented yet.
+**Planned — not in codebase.** No `generateMetadata` on job details, no `app/robots.ts` / `app/sitemap.ts`, no JobPosting JSON-LD, no Open Graph per job.
+
+## Lecture Index (139–146)
+
+- [Lecture 139 - Why SEO Matters for a Job Board](./lecture-139-why-seo-matters-for-a-job-board.md)
+- [Lecture 140 - Static Metadata for Core Pages](./lecture-140-static-metadata-for-core-pages.md)
+- [Lecture 141 - Dynamic Metadata for Job Details](./lecture-141-dynamic-metadata-for-job-details.md)
+- [Lecture 142 - Open Graph and Social Sharing](./lecture-142-open-graph-and-social-sharing.md)
+- [Lecture 143 - Canonical URLs and Domain Strategy](./lecture-143-canonical-urls-and-domain-strategy.md)
+- [Lecture 144 - Robots and Sitemap](./lecture-144-robots-and-sitemap.md)
+- [Lecture 145 - JobPosting Structured Data](./lecture-145-jobposting-structured-data.md)
+- [Lecture 146 - Metadata QA Checklist](./lecture-146-metadata-qa-checklist.md)
 
 ## Course Position
 

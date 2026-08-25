@@ -17,7 +17,9 @@ It changes **when and where** that operation runs.
 
 ## Planning Status
 
-This day is planned. Final Udemy lecture numbers remain TBD until Days 13–15 receive numbers, so files use `lesson-01` naming.
+**Planned — not in codebase.** No QStash, no protected screening worker route, no atomic claims, no async screening UX. Day 11 screening still runs via fire-and-forget `screenApplication()` from `applyToJob` (not the lecture's synchronous await).
+
+Files use `lesson-01` naming until Udemy numbers are assigned. Each lesson includes `## Implementation Status: **Planned — not in codebase**`.
 
 Before recording, recheck the current `@upstash/qstash` package documentation and types. The planned patterns are:
 
@@ -31,17 +33,19 @@ and:
 verifySignatureAppRouter(handler)
 ```
 
-## Lesson Sequence
+## Lesson Index
 
-1. [The Burst and Timeout Problem](./lesson-01-burst-and-timeout-problem.md)
-2. [Durable Queue Architecture](./lesson-02-durable-queue-architecture.md)
-3. [Publish Screening Jobs with QStash](./lesson-03-publish-screening-jobs-with-qstash.md)
-4. [Protected Screening Worker Route](./lesson-04-protected-screening-worker-route.md)
-5. [Idempotent Worker and Atomic Claim](./lesson-05-idempotent-worker-and-atomic-claim.md)
-6. [Retries and Failure Recovery](./lesson-06-retries-and-failure-recovery.md)
-7. [Screening Status UX Under Background Processing](./lesson-07-screening-status-ux.md)
-8. [Feature Branch for Day 16](./lesson-08-feature-branch.md)
-9. [Recap Day 16](./lesson-09-recap.md)
+| # | Lesson | File | Status |
+|---|--------|------|--------|
+| 01 | The Burst and Timeout Problem | [lesson-01-burst-and-timeout-problem.md](./lesson-01-burst-and-timeout-problem.md) | **Planned** |
+| 02 | Durable Queue Architecture | [lesson-02-durable-queue-architecture.md](./lesson-02-durable-queue-architecture.md) | **Planned** |
+| 03 | Publish Screening Jobs with QStash | [lesson-03-publish-screening-jobs-with-qstash.md](./lesson-03-publish-screening-jobs-with-qstash.md) | **Planned** |
+| 04 | Protected Screening Worker Route | [lesson-04-protected-screening-worker-route.md](./lesson-04-protected-screening-worker-route.md) | **Planned** |
+| 05 | Idempotent Worker and Atomic Claim | [lesson-05-idempotent-worker-and-atomic-claim.md](./lesson-05-idempotent-worker-and-atomic-claim.md) | **Planned** |
+| 06 | Retries and Failure Recovery | [lesson-06-retries-and-failure-recovery.md](./lesson-06-retries-and-failure-recovery.md) | **Planned** |
+| 07 | Screening Status UX Under Background Processing | [lesson-07-screening-status-ux.md](./lesson-07-screening-status-ux.md) | **Planned** |
+| 08 | Feature Branch for Day 16 | [lesson-08-feature-branch.md](./lesson-08-feature-branch.md) | **Planned** |
+| 09 | Recap Day 16 | [lesson-09-recap.md](./lesson-09-recap.md) | **Planned** |
 
 ## Target Architecture
 

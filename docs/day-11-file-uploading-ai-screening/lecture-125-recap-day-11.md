@@ -23,6 +23,19 @@ Candidate form
 
 There is no local PDF parser or extraction service. OpenAI processes PDF text and page images from the file input.
 
+## Implementation Status
+**Partial** — Recap describes target end-to-end flow; codebase still has fire-and-forget screening and placeholder score UI gaps.
+
+## Key Files (as implemented today)
+- `services/applications/applications.service.ts`
+- `services/screening/screening.service.ts`
+- `components/applications/details/ApplicationWorkflowDetails.tsx`
+- `app/(admin)/dashboard/applications/[applicationId]/resume/route.ts`
+
+## Gaps vs This Lecture (if any)
+- Recap assumes synchronous await screening and honest optional scores — see Lectures 122–123 gaps.
+- Duplicate-application guard still TODO.
+
 ## Step 1 - Verify Static Quality
 
 ```bash

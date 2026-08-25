@@ -28,6 +28,10 @@ signed background delivery
 
 The PDF analysis itself did not need rewriting. Architecture changed around the already-proven operation.
 
+## Implementation Status
+
+**Planned — not in codebase** (QStash worker, atomic claims, async screening UX)
+
 ## Step 1 - Verify the Complete Flow
 
 ```bash

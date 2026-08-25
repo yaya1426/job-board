@@ -4,25 +4,45 @@
 
 Add real authentication using NextAuth.js v4, create identity-only users, hash passwords, support signup/login, expose session `id` and `role`, and replace the temporary application `candidateId` with the authenticated user's id.
 
+## Complete Lecture Sequence
+
+- [Lecture 096 - Installing and Configuring NextAuth.js](./lecture-096-nextauth-install.md)
+- [Lecture 097 - Creating User Model and Roles](./lecture-097-user-model-roles.md)
+- [Lecture 098 - Signup and Password Hashing](./lecture-098-signup-bcrypt.md)
+- [Lecture 099 - Login Flow and Sessions](./lecture-099-login-sessions.md)
+- [Lecture 100 - Signup Success Redirect Cleanup](./lecture-100-signup-redirect-cleanup.md)
+- [Lecture 101 - Getting Current Logged User](./lecture-101-current-user.md)
+- [Lecture 102 - Adding User Profile](./lecture-102-user-profile.md)
+- [Lecture 103 - Showing Auth State in the Navbar](./lecture-103-navbar-auth.md)
+- [Lecture 104 - Protecting Server Actions & Enhance UX](./lecture-104-protect-server-actions-ux.md)
+- [Lecture 105 - Protecting Admin Pages with Proxy](./lecture-105-proxy-admin-protection.md)
+- [Lecture 106 - Clean Layout for Auth Pages](./lecture-106-clean-auth-layout.md) — **implemented**
+- [Lecture 107 - Role-Based Access Control (RBAC)](./lecture-107-rbac.md) — **partial** (ad-hoc role checks only)
+- [Lecture 108 - Admin vs Candidate Access Rules](./lecture-108-admin-vs-candidate-rules.md) — **partial**
+- [Lecture 109 - Feature Branch for Day 10](./lecture-109-feature-branch-day-10.md)
+- [Lecture 110 - Recap Day 10](./lecture-110-recap-day-10.md) — **partial** (full summary in this README)
+
 ## Lectures Covered
 
-This day is represented in project context as Lectures 96-110. Lectures 96-105 are implemented so far.
+Lectures 096–106 are implemented. Lectures 107–110 are documented; 107–108 and 110 are partial.
 
-- Lecture 96 - Installing and Configuring NextAuth.js
-- Lecture 97 - Creating User Model and Roles
-- Lecture 98 - Signup and Password Hashing
-- Lecture 99 - Login Flow and Sessions
-- Lecture 100 - Signup Success Redirect Cleanup
-- Lecture 101 - Getting Current Logged User
-- Lecture 102 - Adding User Profile
-- Lecture 103 - Showing Auth State in the Navbar
-- Lecture 104 - Protecting Server Action & Enhance UX | حماية السيرفر أكشن وتحسين تجربة المستخدم
-- Lecture 105 - Protecting Admin Pages with Proxy | حماية صفحات الأدمن باستخدام البروكسي
-- Lecture 106 - Clean Layout for Auth Pages | صفحات بسيطة لتسجيل الدخول وإنشاء حساب (planned)
-- Lecture 107 - Role-Based Access Control (RBAC) | التحكم في الصلاحيات حسب الدور (planned)
-- Lecture 108 - Admin vs Candidate Access Rules | صلاحيات الإدارة والمستخدمين (planned)
-- Lecture 109 - Feature Branch for Day (10) | برانش جيتهاب لليوم العاشر (planned)
-- Lecture 110 - Recap Day (10) | ملخص اليوم العاشر (planned)
+| Lecture | Topic | Status |
+|---------|-------|--------|
+| 096 | NextAuth install | ✅ |
+| 097 | User model + roles | ✅ |
+| 098 | Signup + bcrypt | ✅ |
+| 099 | Login + sessions | ✅ |
+| 100 | Signup redirect cleanup | ✅ |
+| 101 | Current user | ✅ |
+| 102 | User profile | ✅ |
+| 103 | Navbar auth | ✅ |
+| 104 | Protect Server Actions + UX | ✅ |
+| 105 | Proxy admin protection | ✅ |
+| 106 | Clean auth layout | ✅ **implemented** |
+| 107 | RBAC | ⚠️ partial |
+| 108 | Admin vs candidate rules | ⚠️ partial |
+| 109 | Feature branch | 📋 process |
+| 110 | Recap | ⚠️ partial |
 
 ## Commit Evidence
 
@@ -42,8 +62,9 @@ At the time this doc was written, Day 10 exists as working-tree changes plus `AG
 - `services/users/users.service.ts`
 - `app/actions/auth/auth.action.ts`
 - `app/api/auth/[...nextauth]/route.ts`
-- `app/(client)/signup/page.tsx`
-- `app/(client)/login/page.tsx`
+- `app/(auth)/layout.tsx`
+- `app/(auth)/login/page.tsx`
+- `app/(auth)/signup/page.tsx`
 - `app/(admin)/not-authorized/page.tsx`
 - `components/auth/SignupForm.tsx`
 - `components/auth/LoginForm.tsx`
@@ -63,7 +84,7 @@ At the time this doc was written, Day 10 exists as working-tree changes plus `AG
 
 ## Final State
 
-Day 10 authentication is in progress. So far it includes:
+Day 10 authentication is in progress. Implemented through Lecture 106:
 
 - NextAuth.js v4 installed and configured.
 - JWT session strategy.
@@ -78,14 +99,16 @@ Day 10 authentication is in progress. So far it includes:
 - Login with `CredentialsProvider`.
 - NextAuth callbacks that copy `id` and `role` into the token/session.
 - Module augmentation for typed `session.user.id` and `session.user.role`.
-- `/login` and `/signup` redirect away when already signed in.
+- `/login` and `/signup` under `app/(auth)/` redirect away when already signed in.
+- Dedicated `(auth)` layout: branded split on public host, centered form on admin host.
+- No `/signup` on admin host — `proxy.ts` only allows `/login` and `/not-authorized` as public admin paths.
 - `lib/current-user.ts` server helper for `getCurrentUser()`.
 - `hooks/useCurrentUser.ts` client hook for UI-only access to the same user shape.
 - `services/users/users.service.ts` server use case for `getCurrentUserProfile()`, returning combined `UserProfile & User` data.
 - `JobApplyForm` prefills candidate name/email/LinkedIn from server-provided combined profile data.
 - `applyToJob` uses `getCurrentUser().id` instead of a hardcoded candidate id.
 - Navbar auth state with a server account component, client active-link component, and client sign-out button.
-- Guest users on the job details page now see an apply CTA that sends them to login/signup instead of `USER PROFILE NOT FOUND`.
+- Guest users on the job details page see an apply CTA that sends them to login/signup instead of `USER PROFILE NOT FOUND`.
 - Auth forms accept `callbackUrl`, so users can return to the job page or dashboard after login/signup.
 - Admin mutations are protected at the Server Action layer, starting with `handleCreateJob`.
 - Admin dashboard access is protected in `proxy.ts` using `getToken()` and the JWT `role`.
@@ -109,6 +132,16 @@ Day 10 authentication is in progress. So far it includes:
 - `session` callback
 
 It does not import repositories or password helpers directly. The provider's `authorize` delegates to the auth service.
+
+### Auth pages and layout (Lecture 106)
+
+- `app/(auth)/layout.tsx` — host-aware shell; admin host gets centered form only
+- `app/(auth)/login/page.tsx` — server page + `LoginForm`
+- `app/(auth)/signup/page.tsx` — server page + `SignupForm`
+
+URLs remain `/login` and `/signup`. Auth pages are **not** under `app/(client)/`.
+
+On admin hosts (`admin.wazifa.app`, `dev-admin.wazifa.app`), `proxy.ts` redirects `/signup` to `/dashboard` because `isAllowedAdminPublicPath` permits only `/login` and `/not-authorized`.
 
 ### User identity
 
@@ -163,7 +196,7 @@ Services use the wrapper. UI/config files do not call bcrypt directly.
 - `services/auth/auth.service.ts`
 - `app/actions/auth/auth.action.ts`
 - `components/auth/SignupForm.tsx`
-- `app/(client)/signup/page.tsx`
+- `app/(auth)/signup/page.tsx`
 
 The service:
 
@@ -188,7 +221,7 @@ This means the user enters the app immediately after signup instead of logging i
 ### Login
 
 - `components/auth/LoginForm.tsx`
-- `app/(client)/login/page.tsx`
+- `app/(auth)/login/page.tsx`
 - `services/auth/auth.service.ts`
 - `lib/auth.ts`
 
@@ -232,8 +265,8 @@ It uses `extends DefaultUser` and `extends DefaultJWT` so default fields remain 
 
 - `lib/current-user.ts`
 - `hooks/useCurrentUser.ts`
-- `app/(client)/login/page.tsx`
-- `app/(client)/signup/page.tsx`
+- `app/(auth)/login/page.tsx`
+- `app/(auth)/signup/page.tsx`
 - `components/jobs/JobApplyForm.tsx`
 - `services/applications/applications.service.ts`
 
@@ -356,6 +389,20 @@ admin route + ADMIN token
 
 For testing, one user role is changed manually in MongoDB from `CANDIDATE` to `ADMIN`. After changing the role, the user must log out and log back in so the JWT receives the updated role.
 
+### Clean auth layout (Lecture 106 — implemented)
+
+- `app/(auth)/layout.tsx`
+- `app/(auth)/login/page.tsx`
+- `app/(auth)/signup/page.tsx`
+
+Auth pages moved out of `(client)` into `(auth)` so they no longer inherit the public navbar/footer.
+
+Public host layout: two-column grid with branding panel + centered form.
+
+Admin host layout: single centered column — no marketing panel, no public chrome.
+
+Signup is not available on admin hosts; `proxy.ts` `isAllowedAdminPublicPath` lists only `/login` and `/not-authorized`.
+
 ## Auth Flow Summary
 
 Login request:
@@ -437,6 +484,7 @@ Day 10 is a sequence:
 14. Improve the logged-out apply experience with a login/signup prompt and callback return.
 15. Protect sensitive Server Actions, starting with admin job creation.
 16. Protect admin routes with proxy-level JWT role checks and dashboard-layout defense in depth.
+17. Move auth pages to `(auth)` with host-aware layout; block signup on admin host.
 
 The key teaching line:
 
@@ -444,8 +492,9 @@ The key teaching line:
 
 ## Known Remaining Work
 
-- Auth pages still render inside the regular client layout with navbar/footer. Lecture 106 will introduce a cleaner auth-only layout that can serve both public and admin login/signup flows.
+- **Lecture 107 RBAC** — ad-hoc `role === "ADMIN"` checks only; no centralized permission helper.
+- **Lecture 108 access rules** — documented in lecture file; not every future admin mutation may be gated yet.
 - Admin seeding is not implemented. For now, an existing user's role is changed manually in MongoDB for testing.
 - `services/candidates/candidates.service.ts` still returns mock `CandidateData`.
 - The admin candidates page has not migrated to `User` + `UserProfile` yet.
-- Resume upload is not implemented.
+- Resume upload is not implemented (Day 11).

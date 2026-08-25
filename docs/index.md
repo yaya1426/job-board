@@ -4,6 +4,13 @@ This folder holds the longer day-by-day course history for the Wazifa job board 
 
 `AGENTS.md` stays the compact operational guide for agents. These docs preserve the teaching narrative, commit evidence, important implementation decisions, and handoff notes for each day.
 
+Each day folder contains:
+
+- `README.md` — day goal, lecture index, commit evidence, end state
+- `lecture-NNN-*.md` or `lesson-NN-*.md` — one file per Udemy lecture
+
+Lecture files for **Days 0–11** are grounded in the **current codebase** (`Implementation Status`, `Key Files`, `Gaps`). Days **12–16** are marked **Planned — not in codebase**.
+
 ## Days
 
 - [Day 0 - Course Setup & Production Mindset](./day-00-course-setup-production-mindset/)

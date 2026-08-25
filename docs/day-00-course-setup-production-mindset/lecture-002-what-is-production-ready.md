@@ -8,6 +8,10 @@
 
 Students can explain production readiness as a spectrum of repeatable engineering habits and evaluate a simple feature across deployment, security, validation, debuggability, maintainability, recovery, and performance awareness.
 
+## Implementation Status
+
+Orientation lecture — no code changes. Grounded in course product `wazifa.app`.
+
 ## Opening hook
 
 > “هل التطبيق يصبح Production Ready بمجرد أن نرفعه على الإنترنت؟ لا. وهل يجب أن يكون بحجم أنظمة الشركات العملاقة قبل أول مستخدم؟ أيضاً لا.”
@@ -214,7 +218,7 @@ Students can explain production readiness as a spectrum of repeatable engineerin
 
 ## Exact transition into the next lecture
 
-> “أصبح لدينا الآن تعريف عملي لـ Production Ready، لكن كيف سنتعلم كل هذه الجوانب بدون أن نغرق في شهور من النظرية قبل أول نتيجة؟ في المحاضرة التالية سأشرح منهج الكورس: Spiral Learning مع قاعدة واضحة جداً—Ship من اليوم الأول.”
+> “أصبح لدينا الآن تعريف عملي لـ Production Ready. بقي سؤال تقني أساسي قبل أن نبدأ: لماذا اخترنا Next.js لهذا النوع من التطبيقات؟ في المحاضرة التالية سنشرح أسباب الاختيار بصدق، مع المزايا والتكاليف والحالات التي قد نختار فيها حلاً آخر.”
 
 ## Recording checklist
 
@@ -226,4 +230,4 @@ Students can explain production readiness as a spectrum of repeatable engineerin
 - [ ] Connect optional AI failure to preserving the application.
 - [ ] Describe the repeatable verify/deploy/improve habit.
 - [ ] Avoid implementation details for future days.
-- [ ] End with the exact transition to Spiral + Ship.
+- [ ] End with the exact transition to Why Next.js.

@@ -4,6 +4,32 @@
 
 Build the simplest fully functional resume-screening flow: upload a PDF through the Next.js server to private DigitalOcean Spaces, save the application as `PENDING`, screen it synchronously during the same apply request, temporarily upload the PDF to OpenAI Files with one-hour automatic expiration, analyze it with Responses API structured output, and persist a human-reviewable result.
 
+## Implementation Status Summary
+
+| Lecture | Status | Notes (as implemented today) |
+|---------|--------|------------------------------|
+| 110 Plan | **Partial** | Pipeline mostly wired; lecture "Current State" still describes pre-upload UI |
+| 111 Architecture | **Implemented** | Server-proxied private upload matches code |
+| 112 Spaces setup | **Partial** | `lib/storage.ts` wired; bucket provisioning is manual |
+| 113 Upload service | **Implemented** | PDF validation + PutObject |
+| 114 Resume snapshot | **Implemented** | Application resume metadata fields |
+| 115 Apply form upload | **Partial** | Real file input exists; drop zone commented out |
+| 116 Pending/post-apply | **Partial** | Status UX wired; duplicate check TODO; service null-shape differs |
+| 117 Admin details | **Implemented** | Details route + workflow/candidate components |
+| 118 Secure resume access | **Partial** | Route at `dashboard/.../resume/route.ts`, not `/api/...` |
+| 119 OpenAI setup | **Implemented** | `lib/openai.ts` |
+| 120 OpenAI Files | **Implemented** | `openai-files.service.ts` + 1h expiration |
+| 121 Analyze resume | **Implemented** | Responses API + zod structured output |
+| 122 Trigger screening | **Partial** | Fire-and-forget `screenApplication`; `aiScore: 0` TODO |
+| 123 Admin results UI | **Partial** | States render; `screenedAt` hidden; `aiScore ?? 0` |
+| 124 Feature branch | **Planned** | Workflow doc |
+| 124.1 Docker env | **Partial** | `MONGO_URI` build-arg exists; verify Spaces/OpenAI scope |
+| 125 Recap | **Partial** | Target flow documented; gaps in 122–123 remain |
+
+**Not yet matching lecture target:** synchronous `await screenApplication`, optional `aiScore`, duplicate-application guard, resume route under `/api/...`, full admin/candidate result UI (`screenedAt`, no fake zero).
+
+Each lecture file includes `## Implementation Status`, `## Key Files (as implemented today)`, and `## Gaps vs This Lecture (if any)` near the top.
+
 ## Current Starting State
 
 - DigitalOcean Space is provisioned.

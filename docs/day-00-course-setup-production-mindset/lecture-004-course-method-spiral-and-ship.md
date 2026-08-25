@@ -1,4 +1,8 @@
-# Lecture 3 — Course Method: Spiral + Ship | منهج الكورس: تعلّم حلزوني وانشر باستمرار
+# Lecture 4 — Course Method: Spiral + Ship | منهج الكورس: تعلّم حلزوني وانشر باستمرار
+
+## Implementation Status
+
+Orientation lecture — no code changes. Grounded in course product `wazifa.app`.
 
 ## Recommended duration
 

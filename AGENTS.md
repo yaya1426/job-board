@@ -19,7 +19,7 @@ This project is also the basis of a long-form course. Pedagogical narrative matt
 
 ## Detailed Course Docs
 
-Longer day-by-day implementation notes live in `docs/`. Keep `AGENTS.md` compact and operational; use these docs for teaching narrative, commit evidence, and historical detail.
+Longer day-by-day implementation notes live in `docs/`. Each day has a `README.md` plus one markdown file per Udemy lecture (`lecture-NNN-*.md`). Days 0–11 lecture files include implementation status grounded in the repo; Days 12–16 are planned-only. Keep `AGENTS.md` compact and operational; use these docs for teaching narrative, commit evidence, and historical detail.
 
 - Day 0 - Course Setup & Production Mindset: `docs/day-00-course-setup-production-mindset/`
 - Day 1 - First Deployment: `docs/day-01-first-deployment/`

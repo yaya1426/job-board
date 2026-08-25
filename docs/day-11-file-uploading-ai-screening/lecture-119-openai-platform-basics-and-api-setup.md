@@ -4,6 +4,17 @@
 
 Tour the OpenAI developer platform, install the current JavaScript SDK, create a server-only client, and prove the API key/model configuration with a disposable text smoke test.
 
+## Implementation Status
+**Implemented** — Server-only OpenAI client and env vars are wired.
+
+## Key Files (as implemented today)
+- `lib/openai.ts`
+- `package.json`
+
+## Gaps vs This Lecture (if any)
+- Disposable smoke-test API route from the lecture may not remain in the repo — verify before recording.
+- `OPENAI_API_KEY` and `OPENAI_MODEL` must be set locally and on App Platform (runtime + build if referenced at build time).
+
 ## Platform Tour
 
 1. Open the OpenAI Platform, not the ChatGPT consumer app.
