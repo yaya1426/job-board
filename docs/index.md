@@ -6,6 +6,7 @@ This folder holds the longer day-by-day course history for the Wazifa job board 
 
 ## Days
 
+- [Day 0 - Course Setup & Production Mindset](./day-00-course-setup-production-mindset/)
 - [Day 1 - First Deployment](./day-01-first-deployment/)
 - [Day 2 - Domain, DNS and HTTPS](./day-02-domain-dns-https/)
 - [Day 3 - App Router Fundamentals](./day-03-app-router-fundamentals/)

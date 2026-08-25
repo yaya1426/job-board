@@ -21,6 +21,7 @@ This project is also the basis of a long-form course. Pedagogical narrative matt
 
 Longer day-by-day implementation notes live in `docs/`. Keep `AGENTS.md` compact and operational; use these docs for teaching narrative, commit evidence, and historical detail.
 
+- Day 0 - Course Setup & Production Mindset: `docs/day-00-course-setup-production-mindset/`
 - Day 1 - First Deployment: `docs/day-01-first-deployment/`
 - Day 2 - Domain, DNS and HTTPS: `docs/day-02-domain-dns-https/`
 - Day 3 - App Router Fundamentals: `docs/day-03-app-router-fundamentals/`
