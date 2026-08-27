@@ -1,11 +1,9 @@
-# Lecture 104 - Protecting Server Actions & Enhance UX | حماية السيرفر أكشن وتحسين التجربة
+# Lecture 104 - Protecting Server Actions | حماية السيرفر أكشن وتحسين التجربة
 
 ## Goal
-
 Protect sensitive mutations at the Server Action layer, replace the confusing guest apply state with `ApplyAuthPrompt`, and support `callbackUrl` on login/signup so users return to the job they were viewing.
 
-## Explain It Simply (For Beginners)
-
+## Background
 Two problems:
 
 1. **Security** — Guests could not apply anyway (service checks auth), but admins could hit create-job actions if we only hid the button.
@@ -14,7 +12,6 @@ Two problems:
 Lecture 104 fixes both.
 
 ## Files
-
 - `components/jobs/ApplyAuthPrompt.tsx`
 - `app/(client)/jobs/[id]/page.tsx`
 - `components/auth/LoginForm.tsx`
@@ -24,7 +21,6 @@ Lecture 104 fixes both.
 - `services/applications/applications.service.ts`
 
 ## Guest Apply UX
-
 ```txt
 JobDetailsPage
   -> getCurrentUserProfile()
@@ -40,7 +36,6 @@ JobDetailsPage
 Forms accept `callbackUrl` and navigate there after success + `router.refresh()`.
 
 ## Server Action Protection
-
 `handleCreateJob`:
 
 ```ts
@@ -52,24 +47,29 @@ if (!currentUser || currentUser.role !== "ADMIN") {
 
 `applyToJob` already checks `getCurrentUser()` in the service — the page prompt guides users; the service enforces.
 
-## Recording Steps
+## Implementation steps
+1. Create `components/jobs/ApplyAuthPrompt.tsx` — links to `/login?callbackUrl=/jobs/[id]` and `/signup?callbackUrl=/jobs/[id]`.
+2. Update job details page — guests see `ApplyAuthPrompt` instead of confusing `USER PROFILE NOT FOUND`.
+3. Thread `callbackUrl` through `LoginForm` and `SignupForm`; navigate there after auth + `router.refresh()`.
+4. Protect `handleCreateJob` in `app/actions/jobs/jobs.action.ts`:
 
-1. Show the bad guest experience before the prompt.
-2. Build `ApplyAuthPrompt` with callback links.
-3. Thread `callbackUrl` through auth pages and forms.
-4. Add admin check to `handleCreateJob`; surface `errors.auth` in `CreateJobForm`.
-5. Test: guest → prompt → login → return to job → prefilled apply form.
+```ts
+const currentUser = await getCurrentUser();
+if (!currentUser || currentUser.role !== "ADMIN") {
+  return { errors: { auth: ["You are not allowed to create jobs"] } };
+}
+```
 
-## Key Teaching Lines
+5. Surface `errors.auth` in `CreateJobForm` with `isPending` on submit button.
+6. `applyToJob` auth check stays in the **service** layer (`errors.auth`).
 
+## Key points
 > Friendly UI guides honest users. Server checks stop everyone else.
 
 > Never rely on hiding a button as your only authorization.
 
 ## End State
-
 Guests get clear CTAs; admin mutations and apply ownership are enforced server-side.
 
 ## Next
-
-Lecture 105 protects admin routes in `proxy.ts`.
+[Lecture 105 — Protecting Admin Pages with Proxy](./lecture-105-proxy-admin-protection.md) protects admin routes in `proxy.ts`.

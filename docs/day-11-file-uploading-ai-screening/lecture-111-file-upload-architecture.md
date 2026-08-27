@@ -1,7 +1,6 @@
 # Lecture 111 - File Upload Architecture | معمارية رفع الملفات
 
 ## Goal
-
 Map the resume lifecycle and assign one responsibility to each layer before implementation.
 
 ## Implementation Status
@@ -15,8 +14,15 @@ Map the resume lifecycle and assign one responsibility to each layer before impl
 ## Gaps vs This Lecture (if any)
 - Presigned direct browser upload remains a documented future upgrade only (not built).
 
-## Explain It Simply (For Beginners)
+## Implementation steps
+1. Choose **server-proxied upload**: browser → Server Action → `uploadResume` → Spaces `PutObject`.
+2. MongoDB stores object **key** + metadata; never file bytes.
+3. Admin downloads use short-lived signed GET URLs (Lecture 118) — bucket stays private.
+4. Screening runs in the apply service after save (Lecture 122) — same request in the lecture target; **as implemented today** screening may return before OpenAI finishes (no `await`).
+5. Follow the layer diagram: Form → Action → Upload service → Application service → Repository → Screening service.
+6. Name presigned direct upload as the Day-16-scale upgrade, not Day 11 scope.
 
+## Background
 There are two ways to get a file from the browser into cloud storage:
 
 1. **Through our server** (the way we choose): browser → our server → storage. The apply form submits the file like any other field; our server validates it and uploads it to DigitalOcean Spaces.
@@ -37,7 +43,6 @@ The cost of our choice: the file's bytes flow through our server, using a little
 - **Layer** = one part of the code with one job. Keeping jobs separate makes each piece easy to understand and test.
 
 ## Architecture Decision
-
 Use a **private Space with server-proxied uploads**:
 
 - The apply Server Action authenticates the candidate, validates the file, and uploads it to Spaces.
@@ -47,7 +52,6 @@ Use a **private Space with server-proxied uploads**:
 We deliberately send the file through our server (not a presigned direct upload) because it keeps the flow to a single request, reuses the existing Server Action pattern, and needs no bucket CORS. The trade-off is server memory/bandwidth per upload plus raising the Server Action `bodySizeLimit`. **Presigned direct upload is the scaling upgrade to reach for later**, when server bandwidth becomes the real pain point.
 
 ## Architecture Diagram
-
 ```mermaid
 flowchart TD
   A[JobApplyForm] -->|form fields + PDF file| E[Apply Server Action]
@@ -68,7 +72,6 @@ flowchart TD
 ```
 
 ## Sequence Diagram
-
 ```mermaid
 sequenceDiagram
   actor Candidate
@@ -104,7 +107,6 @@ sequenceDiagram
 ```
 
 ## Layer Responsibilities
-
 ```txt
 JobApplyForm
   -> collect file
@@ -138,19 +140,7 @@ Screening service
   -> persist status/result
 ```
 
-## Recording Steps
-
-1. Revisit the fake upload UI from Lecture 110.
-2. Draw the architecture diagram.
-3. Compare server-proxied upload and direct presigned upload.
-4. Choose server-proxied upload for simplicity; name presigned as the scaling upgrade.
-5. Walk through each layer’s responsibility.
-6. Walk through the sequence diagram.
-7. Connect the stored object key to admin downloads and AI processing.
-8. Name the deliberate limitation: the candidate request waits for OpenAI. Day 16 introduces durable background processing after students can observe why it is needed.
-
-## Key Teaching Lines
-
+## Key points
 > The file flows through our server; the server validates, uploads, and owns the object key.
 
 > The browser never holds storage credentials, and downloads use short-lived signed GET URLs.
@@ -160,5 +150,4 @@ Screening service
 > Presigned direct upload is the scaling upgrade for later, not a requirement now.
 
 ## Next
-
 Lecture 112 verifies the private Space, credentials, endpoints, and local/deployment environment variables (bucket CORS is only needed if you later switch to direct browser upload).

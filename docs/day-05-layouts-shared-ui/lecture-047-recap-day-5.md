@@ -1,4 +1,4 @@
-# Lecture 47 - Recap Day 5 | ملخص اليوم الخامس
+# Lecture 47 - Recap Day (5) | ملخص اليوم الخامس
 
 ## Goal
 
@@ -20,25 +20,53 @@ Implemented (Day 5 deliverables); Partial (auth-aware navbar, DB-backed pages co
 
 Day 5 delivered a cohesive visual and structural foundation: utility-first styling with semantic tokens, owned shadcn primitives, brutalist art direction, and route-group layouts that make the client vs admin split obvious in the browser — not just in folder names.
 
-## Recording Outline
+## Implementation steps
 
-- Recap Tailwind v4 CSS-first config in `globals.css`.
-- Recap shadcn: owned components + `cn()` helper.
-- Recap design tokens vs arbitrary colors.
-- Recap brutalist choices: borders, mono type, high contrast.
-- Recap layout nesting: root → client/admin → page.
-- Recap commits: shadcn install, brutal DS, client nav/footer, admin layout.
-- Recap `(app)` → `(client)` rename context from Day 4–5.
-- Name what's still placeholder: mock job/application content (Day 6), auth UI (Day 10).
-- Preview Day 6: full product UI pages wired to `CandidateData` and richer components.
-- Point to Day 6 documentation when available.
+### Step 1: Recap Tailwind v4 CSS-first config
 
-## Verify in Repo
+- `@import "tailwindcss"` in `globals.css`
+- `@tailwindcss/postcss` in `postcss.config.mjs`
+- No `tailwind.config.js`
 
+### Step 2: Recap shadcn/ui
+
+- `components.json` + owned `components/ui/*`
+- `cn()` helper in `lib/utils.ts`
+- Components you edit, not a locked npm kit
+
+### Step 3: Recap design tokens + brutalist direction
+
+- `:root` HSL variables → `@theme inline` → `bg-background`, `text-accent`, etc.
+- `.brutal-border`, `.brutal-shadow`, zero radius, uppercase headings
+
+### Step 4: Recap layout nesting
+
+```
+Root → (client) layout → page     (navbar + footer)
+Root → (admin)/dashboard layout → page     (sidebar + main)
+```
+
+### Step 5: Recap Day 5 commits + preview Day 6
+
+| Commit | What |
+|--------|------|
+| `81878e0` | shadcn install |
+| `c4ac5e0` | brutal design system |
+| `51db732` | client navigation |
+| `a812be8` | client footer |
+| `0e46b8a` | admin layout |
+
+Day 6: full product UI with mock data (`CandidateData`, richer components).
+
+## Verify
 - Public and admin surfaces look visually distinct on staging.
 - Theme tokens drive shadcn components consistently.
+- You can explain why layouts live in route groups, not root layout only.
 - Lecture index in `docs/day-05-layouts-shared-ui/README.md` is complete.
-- Student can explain why layouts live in route groups, not root layout only.
+
+## Outcome
+
+Summarize Tailwind v4, shadcn/ui, brutalist tokens, nested layouts, and the client/admin shells — then preview Day 6 product UI with mock data.
 
 ## Notes / Gaps
 
@@ -48,4 +76,4 @@ Day 5 delivered a cohesive visual and structural foundation: utility-first styli
 
 ## Next
 
-Day 6 — Product UI with Mock Data (`docs/day-06-product-ui-mock-data/` when lecture files exist)
+[Lecture 48 - Day (6) Plan](../day-06-product-ui-mock-data/lecture-048-day-6-plan.md)

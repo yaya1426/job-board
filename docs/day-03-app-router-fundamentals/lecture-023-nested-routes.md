@@ -2,7 +2,7 @@
 
 ## Goal
 
-Show how folder nesting creates URL nesting: `/jobs` is a child of `/` in the filesystem and in the browser path.
+Folder nesting creates URL nesting: `/jobs` is a child of `/` in the filesystem and in the browser path.
 
 ## Implementation Status
 
@@ -17,25 +17,86 @@ Implemented
 
 ## What Was Built
 
-Students created a `jobs` folder under the app router with its own `page.tsx`, producing the `/jobs` URL without a separate router config file. Nesting `jobs/[id]/page.tsx` adds a second segment. The root layout wraps every nested page automatically.
+A `jobs` folder under the app router with its own `page.tsx`, producing the `/jobs` URL without a separate router config file. Nesting `jobs/[id]/page.tsx` adds a second segment. The root layout wraps every nested page automatically.
 
-## Recording Outline
+## Implementation steps
 
-- Draw the folder tree: `app` → `(client)` → `jobs` → `[id]` → `page.tsx`.
-- Map each level to a URL segment (skip route group names in the URL).
-- Create `app/jobs/page.tsx` (historical path) and confirm `/jobs` works locally.
-- Explain that nested routes inherit parent layouts — root layout always applies.
-- Contrast flat URLs: there is no `app/jobs.tsx`; the folder + `page.tsx` pattern is required.
-- Show `index` behavior: `page.tsx` at a folder is the index for that segment (no `/page` in URL).
-- Discuss colocation: related routes live together in one subtree.
-- Preview dynamic child `[id]` as the next nesting level.
-- Mention admin nested routes as future parallel tree: `dashboard/jobs/...` (Day 4).
+### Step 1: Map the nested folder tree
 
-## Verify in Repo
+```
+app/
+├── layout.tsx
+├── page.tsx                 → /
+└── jobs/
+    ├── page.tsx             → /jobs
+    └── [id]/
+        └── page.tsx         → /jobs/:id   (next lecture)
+```
 
+Today's repo equivalent: `app/(client)/jobs/page.tsx` (route group added Day 4).
+
+### Step 2: Create home page — `app/page.tsx`
+
+On Day 3, create at `app/page.tsx` (now `app/(client)/page.tsx`). Start with a minimal Server Component:
+
+```tsx
+function Home() {
+  return (
+    <main className="p-8">
+      <h1>WAZIFA_</h1>
+      <p>Find your next role.</p>
+    </main>
+  );
+}
+
+export default Home;
+```
+
+Today's file fetches jobs via `getJobs()` — that wiring comes in Day 8.
+
+### Step 3: Create jobs listing — `app/jobs/page.tsx`
+
+```bash
+mkdir -p app/jobs
+```
+
+```tsx
+// app/jobs/page.tsx — Day 3 placeholder
+function JobsPage() {
+  return (
+    <main className="p-8">
+      <h1>ALL POSITIONS</h1>
+      <p>Jobs listing coming soon.</p>
+    </main>
+  );
+}
+
+export default JobsPage;
+```
+
+Current repo (`app/(client)/jobs/page.tsx`) uses `JobsListingWrapper` and `getJobs()`.
+
+### Step 4: Confirm URL nesting
+
+- `/` → `app/page.tsx` (one segment).
+- `/jobs` → `app/jobs/page.tsx` (two segments: root + `jobs`).
+- No `app/jobs.tsx` file — folder + `page.tsx` is required.
+
+### Step 5: Verify inheritance from root layout
+
+Navigate to `/jobs` — same `<html>`, fonts, and `globals.css` as home. Nested routes inherit parent `layout.tsx` automatically.
+
+## Verify
+- `app/jobs/page.tsx` exists (or `app/(client)/jobs/page.tsx` after Day 4 move).
+- Browser `/jobs` renders the jobs page.
+- Parent `app/layout.tsx` still wraps the jobs page.
 - `app/(client)/jobs/page.tsx` exists.
 - Browser `/jobs` renders the jobs listing.
 - Parent `app/layout.tsx` still wraps the jobs page (shared html/body).
+
+## Outcome
+
+Nested folders produce nested URLs: `/jobs` and `/jobs/[id]` inherit the root layout without a separate router config file.
 
 ## Notes / Gaps
 

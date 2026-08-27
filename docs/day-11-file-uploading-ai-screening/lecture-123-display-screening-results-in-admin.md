@@ -1,7 +1,6 @@
 # Lecture 123 - Display Screening Results in Admin | عرض نتائج التقييم في لوحة الإدارة
 
 ## Goal
-
 Make the admin UI tell the truth for every screening state:
 
 ```txt
@@ -14,7 +13,6 @@ FAILED      -> safe failure state; no score
 The candidate experience remains **APPLICATION SUBMITTED**. Candidates do not need provider errors or internal recovery details.
 
 ## Step 0 - Restart After Changing the Mongoose Schema
-
 Before testing the new result fields, fully stop and restart the development server:
 
 ```bash
@@ -80,12 +78,22 @@ Restarting does not backfill a document that was already saved without those fie
 - Revalidate + redirect after apply **is** implemented in `applications.action.ts`.
 
 ## As Implemented Today
-
 Admin COMPLETED state uses `<AiScore score={aiScore ?? 0} />`, so a not-yet-screened or legacy `0` placeholder can look like a real zero score. The lecture's `screenedAt` block and table `completedScore` guard are not fully landed. Database may store `screenedAt` after successful screening even when the UI hides it.
 
+## Implementation steps
+See steps below (Step 0–6). Summary:
+
+1. Restart dev server after Mongoose schema changes (Step 0).
+2. Replace `ApplicationWorkflowDetails` — render score only when `screeningStatus === "COMPLETED"` and `aiScore !== undefined` (not `?? 0`).
+3. Update `ApplicationsTable` — honest screening column per state.
+4. After apply action: `revalidatePath` + `redirect` so client page sees updated screening state.
+5. Pass application to `ApplicationSubmitted` on job page — show status-appropriate messaging.
+6. **As implemented today — gaps**:
+   - `aiScore ?? 0` still used in workflow, table, and candidate submitted views.
+   - `screenedAt`, strengths, and risks may be stored but not fully displayed.
+   - Fire-and-forget screening (Lecture 122) means UI may show `PENDING` until refresh.
 
 ## Step 1 - Replace `ApplicationWorkflowDetails`
-
 Replace `components/applications/details/ApplicationWorkflowDetails.tsx` with:
 
 ```tsx
@@ -231,7 +239,6 @@ There is no status-label `Record` because the stored values are already readable
 The `completed` guard protects the whole result section. Optional checks inside it also keep legacy or partially migrated documents from crashing.
 
 ## Step 2 - Update the Applications Table
-
 Replace `components/applications/ApplicationsTable.tsx` with:
 
 ```tsx
@@ -346,7 +353,6 @@ export default ApplicationsTable;
 The table uses the status as the primary value. It adds `/10` only when a completed application has a real optional score. `0/10` remains valid if OpenAI genuinely returned zero; the important check is `!== undefined`, not truthiness.
 
 ## Step 3 - Understand Why the Client Page Looks Stale
-
 The job details page is a Server Component. It fetched:
 
 ```ts
@@ -372,7 +378,6 @@ We need to:
 3. Render status and completed result fields from the database.
 
 ## Step 4 - Refresh the Route After the Server Action
-
 Update:
 
 ```txt
@@ -420,7 +425,6 @@ Why use both:
 Call `redirect()` only after the failure check. Do not place it inside a `try/catch`, because Next.js implements redirects by throwing a framework-controlled response.
 
 ## Step 5 - Pass the Application to the Submitted Component
-
 Update:
 
 ```txt
@@ -464,7 +468,6 @@ with:
 The candidate page now renders the application returned by the service instead of only using a boolean.
 
 ## Step 6 - Display the Real Candidate Screening State
-
 Replace:
 
 ```txt
@@ -585,7 +588,6 @@ export default ApplicationSubmitted;
 The component displays only safe application data. It does not expose `screeningError`, provider responses, prompts, or internal failures to the candidate.
 
 ## Verification
-
 Run:
 
 ```bash
@@ -607,9 +609,7 @@ Verify one document for each state:
 - Candidate-facing failure UI confirms submission without exposing provider errors.
 
 ## Responsible-Use Reminder
-
 The result assists a human reviewer. It must not automatically reject a candidate, infer protected traits, or be presented as objective truth.
 
 ## Next
-
 Lecture 124 verifies the synchronous architecture and ships Day 11 through the feature-branch workflow.

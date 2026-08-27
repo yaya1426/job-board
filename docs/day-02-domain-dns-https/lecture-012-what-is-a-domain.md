@@ -18,21 +18,49 @@ External/ops only (conceptual lecture; hostname constants codified in `proxy.ts`
 - Product naming decision: `wazifa.app` as the primary public hostname.
 - Admin surface planned at `admin.wazifa.app` (subdomain of the same registrable domain).
 
-## Recording Outline
+## Implementation steps
 
-- Define domain vs URL vs IP address with a simple browser example.
-- Explain registrable domain (`wazifa.app`) vs subdomain (`admin.wazifa.app`).
-- Show how users type a hostname; DNS resolves it to the hosting provider.
-- Contrast App Platform default URL vs branded domain—trust and memorability.
-- Introduce TLD choice (`.app` implies HTTPS expectations).
-- Map hostnames to product surfaces: public candidate app vs admin dashboard.
-- Preview that code will later read `request.headers.get("host")` in `proxy.ts`.
-- Avoid deep DNS record types yet—that is Lecture 14.
+### Step 1 — Define domain, URL, and IP *(external ops — conceptual)*
+- Define:
+  - **IP address** — numeric location of a server on the internet.
+  - **Domain name** — human-readable label (e.g. `wazifa.app`) that DNS resolves to an IP or alias.
+  - **URL** — full address including protocol and path (e.g. `https://wazifa.app/jobs`).
+- Browser flow: user types `wazifa.app` → DNS lookup → hosting provider.
 
-## Verify in Repo
+### Step 2 — Registrable domain vs subdomain
+- Registrable domain: `wazifa.app` (purchased once).
+- Subdomain: `admin.wazifa.app` (configured in DNS, not purchased separately).
+- Map to product surfaces:
+  - `wazifa.app` → public candidate experience.
+  - `admin.wazifa.app` → internal admin dashboard.
 
-- Open `proxy.ts` lines 5–6 and read `ADMIN_HOSTS` and `PUBLIC_HOSTS`.
-- Confirm no Day 2 commits in `git log` for domain-related code.
+### Step 3 — Branded domain vs App Platform default URL
+- Contrast: the Day 1 App Platform URL (e.g. `https://<app>.ondigitalocean.app`) with `wazifa.app`.
+- Reasons for a branded domain: trust, memorability, consistent product identity.
+- .app TLD implies HTTPS expectations (Google enforces HTTPS for `.app` zones).
+
+### Step 4 — Preview hostname routing in code
+- Inspect `proxy.ts` and confirm the host constants the app will eventually enforce (Day 4):
+
+```5:6:proxy.ts
+const ADMIN_HOSTS = ["admin.wazifa.app", "dev-admin.wazifa.app"];
+const PUBLIC_HOSTS = ["wazifa.app", "dev.wazifa.app"];
+```
+
+- later, `request.headers.get("host")` drives which product surface a request enters.
+- DNS record types are covered in Lecture 14.
+
+## Verify
+- [ ] You can define domain vs URL vs IP.
+- [ ] You can explain `wazifa.app` vs `admin.wazifa.app`.
+- [ ] `proxy.ts` lines 5–6 show intended production hostnames.
+- [ ] No Day 2 commits exist in `git log` for domain-related code.
+- [ ] `dev.wazifa.app` / `dev-admin.wazifa.app` are noted as Day 7 additions.
+
+## Outcome
+
+- Conceptual foundation for Day 2 operational work: `wazifa.app` as public identity, `admin.wazifa.app` as admin surface.
+- No repository changes on this lecture.
 
 ## Notes / Gaps
 

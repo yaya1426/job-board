@@ -1,19 +1,22 @@
-# Day 2 - Domain, DNS and HTTPS
+# Day (2) Domain, DNS & HTTPS Setup
 
 ## Goal
 
 Teach the infrastructure side of launching a real app: domains, DNS records, Cloudflare nameservers, DigitalOcean hosting connection, and HTTPS verification.
 
+
+Lecture files in this folder are **implementation reference guides** aligned with the repository—not video recording scripts. Each lecture documents goal, key files, build steps, verification, and gaps as they appear in the codebase.
+
 ## Complete Lecture Sequence
 
-- [Lecture 11 - Day 2 Plan | خطة اليوم الثاني](./lecture-011-day-2-plan.md)
-- [Lecture 12 - What is a Domain | ما هو النطاق (الدومين)](./lecture-012-what-is-a-domain.md)
-- [Lecture 13 - Buy Domain: Best Options | شراء النطاق: أفضل الخيارات](./lecture-013-buy-domain-best-options.md)
-- [Lecture 14 - DNS Records | سجلات DNS](./lecture-014-dns-records.md)
-- [Lecture 15 - Connect Cloudflare Nameservers | ربط خوادم أسماء Cloudflare](./lecture-015-connect-cloudflare-nameservers.md)
-- [Lecture 16 - Connect Domain to DigitalOcean Hosting | ربط النطاق مع استضافة DigitalOcean](./lecture-016-connect-domain-to-digitalocean-hosting.md)
-- [Lecture 17 - HTTPS / SSL Verify Setup | إعداد HTTPS والتحقق من SSL](./lecture-017-https-ssl-verify-setup.md)
-- [Lecture 18 - Recap Day 2 | ملخص اليوم الثاني](./lecture-018-recap-day-2.md)
+- [Lecture 11 - Day (2) Plan](./lecture-011-day-2-plan.md)
+- [Lecture 12 - What is a Domain](./lecture-012-what-is-a-domain.md)
+- [Lecture 13 - Buy Domain: Best Options](./lecture-013-buy-domain-best-options.md)
+- [Lecture 14 - DNS Records](./lecture-014-dns-records.md)
+- [Lecture 15 - Connect Cloudflare Nameservers](./lecture-015-connect-cloudflare-nameservers.md)
+- [Lecture 16 - Connect Domain to DigitalOcean Hosting](./lecture-016-connect-domain-to-digitalocean-hosting.md)
+- [Lecture 17 - HTTPS / SSL Verify Setup](./lecture-017-https-ssl-verify-setup.md)
+- [Lecture 18 - Recap Day (2)](./lecture-018-recap-day-2.md)
 
 ## Teaching Order
 
@@ -65,7 +68,7 @@ const PUBLIC_HOSTS = ["wazifa.app", "dev.wazifa.app"];
 
 ## Teaching Narrative
 
-This day is mostly conceptual and operational. Students learn that a production app is more than code: DNS, hosting, and TLS are part of the product.
+This day is mostly conceptual and operational. A production app is more than code: DNS, hosting, and TLS are part of the product.
 
 The value is in demystifying the path from a local app to a real URL with HTTPS.
 

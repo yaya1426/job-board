@@ -8,7 +8,7 @@ Build the admin dashboard overview at `/dashboard` with headline stats and a rec
 
 **Complete.** Dashboard page and stat components exist. Data now comes from `getJobs()` and `getApplications()` services.
 
-## Key Files
+## Key Files (as implemented today)
 
 - `app/(admin)/dashboard/page.tsx`
 - `components/dashboard/DashboardStats.tsx`
@@ -21,26 +21,43 @@ Build the admin dashboard overview at `/dashboard` with headline stats and a rec
 - `RecentApplications` table/list from application mock data (Day 6).
 - Uses admin layout with sidebar from Day 5.
 
-## Recording Outline
+## Implementation steps
 
-1. Open admin route group and `/dashboard` page.
-2. Compute simple aggregates from mock jobs + applications arrays.
-3. Build `DashboardStats` four-up stat cards.
-4. Build `RecentApplications` with status badges and links.
-5. Navigate via `dev-admin.wazifa.app/dashboard` (or local with host header).
+### Step 1: Open the dashboard page
 
-## Verify in Repo
+Inspect `app/(admin)/dashboard/page.tsx` inside the admin route group. On Day 6, import `JobsData` and `ApplicationsData` directly.
 
+### Step 2: Compute overview aggregates
+
+Compute aggregates: `activeJobs = jobs.length`, `totalCandidates = applications.length`, `interviews = applications.filter(c => c.status === "INTERVIEW").length`, `avgScore = (sum of aiScore / count).toFixed(1)`.
+
+### Step 3: Build DashboardStats
+
+Build `components/dashboard/DashboardStats.tsx` — four stat cards receiving `activeJobs`, `totalCandidates`, `avgScore`, `interviews`.
+
+### Step 4: Build RecentApplications
+
+Build `components/dashboard/RecentApplications.tsx` — table or list of recent applications with status badges; accept `applications` prop.
+
+### Step 5: Confirm admin layout chrome
+
+Confirm `app/(admin)/dashboard/layout.tsx` from Day 5 provides sidebar chrome.
+
+## Verify
 - `app/(admin)/dashboard/page.tsx` imports `getJobs` and `getApplications`.
 - `DashboardStats` receives `activeJobs`, `totalCandidates`, `avgScore`, `interviews`.
 - `RecentApplications` receives `applications` array.
 - No standalone "Day 6: Dashboard" commit; likely shipped with adjacent admin pages.
 
-## Notes/Gaps
+## Outcome
+
+`/dashboard` shows overview stats and recent applications. Day 6 used mock arrays; **current repo** reads MongoDB via services. AI scores are real post–Day 11 screening; Day 6 values were static mock numbers.
+
+## Notes / Gaps
 
 - `avgScore` divides by `applications.length`; empty DB yields `NaN` — handle in demo or seed data.
 - AI scores are real post–Day 11 screening; Day 6 mock values were static.
 
 ## Next
 
-Lecture 053 — admin jobs management table.
+[Lecture 53 - Admin: Jobs Management Page](./lecture-053-admin-jobs-management-page.md)

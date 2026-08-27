@@ -1,12 +1,15 @@
-# Day 5 - Layouts and Shared UI
+# Day (5) Layouts
 
 ## Goal
 
 Set up the shared visual foundation: Tailwind CSS v4, shadcn/ui, a brutalist design language, public and admin layouts, and shared navigation.
 
+
+Lecture files in this folder are **implementation reference guides** aligned with the repository—not video recording scripts. Each lecture documents goal, key files, build steps, verification, and gaps as they appear in the codebase.
+
 ## Lecture Index
 
-- [Lecture 38 - Day 5 Plan](./lecture-038-day-5-plan.md)
+- [Lecture 38 - Day (5) Plan](./lecture-038-day-5-plan.md)
 - [Lecture 39 - Tailwind CSS v4: Utility-First Styling](./lecture-039-tailwind-v4.md)
 - [Lecture 40 - Installing & Configuring shadcn/ui](./lecture-040-shadcn-ui.md)
 - [Lecture 41 - Design System Fundamentals](./lecture-041-design-system-fundamentals.md)
@@ -15,7 +18,7 @@ Set up the shared visual foundation: Tailwind CSS v4, shadcn/ui, a brutalist des
 - [Lecture 44 - Next.js Layout Deep Dive](./lecture-044-layout-deep-dive.md)
 - [Lecture 45 - Project Milestone: Apply Layout for Client Pages](./lecture-045-client-layout-milestone.md)
 - [Lecture 46 - Project Milestone: Apply Layout for Admin Pages](./lecture-046-admin-layout-milestone.md)
-- [Lecture 47 - Recap Day 5](./lecture-047-recap-day-5.md)
+- [Lecture 47 - Recap Day (5)](./lecture-047-recap-day-5.md)
 
 ## Commit Evidence
 
@@ -67,7 +70,7 @@ By the end of the day, the project had:
 
 ## Teaching Narrative
 
-This day connects UI polish to architecture. Students learn that layouts are not just visual wrappers; they define the application shell for each surface.
+This day connects UI polish to architecture. Layouts are not just visual wrappers; they define the application shell for each surface.
 
 The admin/client split becomes visible to users, not just present in folder names.
 

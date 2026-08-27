@@ -1,36 +1,25 @@
-# Day 6 - Product UI with Mock Data
+# Day (6) Build Product UI with Mock Data
 
 ## Goal
 
 Build out the visible product experience using mock data: landing page, jobs list, job details, admin dashboard, job management, applications, and users.
 
-## Lectures Covered
 
-- Lecture 48 - Day 6 Plan
-- Lecture 49 - Home Page
-- Lecture 50 - Client: Jobs List Page
-- Lecture 51 - Client: Job Details Page
-- Lecture 52 - Admin: Dashboard Page
-- Lecture 53 - Admin: Jobs Management Page
-- Lecture 54 - Admin: Create New Job Page
-- Lecture 55 - Admin: Edit & Delete Job
-- Lecture 56 - Admin: Applications Page
-- Lecture 57 - Admin: Users Page
-- Lecture 58 - Recap Day 6
+Lecture files in this folder are **implementation reference guides** aligned with the repository—not video recording scripts. Each lecture documents goal, key files, build steps, verification, and gaps as they appear in the codebase.
 
-## Lecture Files
+## Lecture Index
 
-- [Lecture 048 - Day 6 Plan](./lecture-048-day-6-plan.md)
-- [Lecture 049 - Home Page](./lecture-049-home-page.md)
-- [Lecture 050 - Client: Jobs List Page](./lecture-050-client-jobs-list-page.md)
-- [Lecture 051 - Client: Job Details Page](./lecture-051-client-job-details-page.md)
-- [Lecture 052 - Admin: Dashboard Page](./lecture-052-admin-dashboard-page.md)
-- [Lecture 053 - Admin: Jobs Management Page](./lecture-053-admin-jobs-management-page.md)
-- [Lecture 054 - Admin: Create New Job Page](./lecture-054-admin-create-new-job-page.md)
-- [Lecture 055 - Admin: Edit & Delete Job](./lecture-055-admin-edit-delete-job.md)
-- [Lecture 056 - Admin: Applications Page](./lecture-056-admin-applications-page.md)
-- [Lecture 057 - Admin: Users Page](./lecture-057-admin-users-page.md)
-- [Lecture 058 - Recap Day 6](./lecture-058-recap-day-6.md)
+- [Lecture 48 - Day (6) Plan](./lecture-048-day-6-plan.md)
+- [Lecture 49 - Home Page](./lecture-049-home-page.md)
+- [Lecture 50 - Client: Jobs List Page](./lecture-050-client-jobs-list-page.md)
+- [Lecture 51 - Client: Job Details Page](./lecture-051-client-job-details-page.md)
+- [Lecture 52 - Admin: Dashboard Page](./lecture-052-admin-dashboard-page.md)
+- [Lecture 53 - Admin: Jobs Management Page](./lecture-053-admin-jobs-management-page.md)
+- [Lecture 54 - Admin: Create New Job Page](./lecture-054-admin-create-new-job-page.md)
+- [Lecture 55 - Admin: Edit & Delete Job](./lecture-055-admin-edit-delete-job.md)
+- [Lecture 56 - Admin: Applications Page](./lecture-056-admin-applications-page.md)
+- [Lecture 57 - Admin: Users Page](./lecture-057-admin-users-page.md)
+- [Lecture 58 - Recap Day (6)](./lecture-058-recap-day-6.md)
 
 ## Commit Evidence
 
@@ -100,7 +89,7 @@ State/data:
 
 ## Teaching Narrative
 
-This day is the "make it feel real" day. It is less about backend correctness and more about giving students a complete product surface they can later harden.
+This day is the "make it feel real" day. It is less about backend correctness and more about a complete product surface they can later harden.
 
 The teaching value is that backend architecture will be motivated by an existing UI that already needs data.
 

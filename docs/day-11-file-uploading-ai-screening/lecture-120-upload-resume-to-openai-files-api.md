@@ -1,7 +1,6 @@
 # Lecture 120 - Upload Resume to OpenAI Files API | رفع السيرة الذاتية إلى OpenAI Files API
 
 ## Goal
-
 Read a trusted private resume from DigitalOcean Spaces on the server, validate the downloaded object, convert its bytes with `toFile`, and upload a temporary PDF with Files API purpose `"user_data"`.
 
 ## Implementation Status
@@ -15,8 +14,15 @@ Read a trusted private resume from DigitalOcean Spaces on the server, validate t
 ## Gaps vs This Lecture (if any)
 - Temporary OpenAI file IDs are not persisted (by design).
 
-## Final Server-to-Server Flow
+## Implementation steps
+See steps below (Step 1–3). Summary:
 
+1. Create `services/screening/openai-files.service.ts` — `GetObjectCommand` from Spaces → `toFile` → `openai.files.create({ purpose: "user_data", expires_after: { anchor: "created_at", seconds: 3600 } })`.
+2. Validate downloaded object: body present, PDF content type, ≤ 5 MB.
+3. Do **not** persist temporary OpenAI `file_id` in MongoDB — rely on one-hour automatic expiration.
+4. Service is called from `analyzeApplicationResume` (Lecture 121), not from the apply form directly.
+
+## Final Server-to-Server Flow
 ```txt
 trusted candidateResumeKey
   -> GetObjectCommand against private Spaces bucket
@@ -30,7 +36,6 @@ trusted candidateResumeKey
 No signed browser URL is needed. The server-side screening service already has credentials for Spaces. Do not save the temporary OpenAI `fileId` in MongoDB.
 
 ## Step 1 - Create the Focused Service
-
 Create `services/screening/openai-files.service.ts`:
 
 ```ts
@@ -101,7 +106,6 @@ export async function uploadResumeToOpenAI({
 The second size check matters because metadata can be absent or inaccurate. Upload validation from Lecture 113 remains the first boundary; this service validates again at the external-provider boundary.
 
 ## Step 2 - Understand When This Service Is Called
-
 Do not call `uploadResumeToOpenAI()` inside the original `uploadResume()` function.
 
 The two uploads have different responsibilities:
@@ -139,7 +143,6 @@ Keeping these operations separate prevents temporary OpenAI files from being cre
 Do not accept an arbitrary Spaces key from the browser. The screening service receives the application object that the server just persisted and uses its trusted snapshot key.
 
 ## Step 3 - Verify the Service
-
 The end result of this lecture is:
 
 ```txt
@@ -250,16 +253,10 @@ npm run lint
 ```
 
 ## Privacy and Retention Notes
-
 - The durable original remains in private Spaces under your retention policy.
 - The one-hour `expires_after` policy is the chosen lifecycle mechanism for the temporary OpenAI file.
 - The file may remain available until `expires_at`; this is a deliberate simplicity/privacy tradeoff for the first implementation.
 - Application-level expiration does not promise provider zero retention beyond OpenAI project/data-control terms.
 
-## SDK Check Before Recording
-
-Confirm the installed `openai` SDK supports `toFile`, `purpose: "user_data"`, and the documented `expires_after` shape. These are current official patterns, but the repository does not install the SDK until Lecture 119 is followed.
-
 ## Next
-
 Lecture 121 sends this `file_id` to the Responses API, validates structured output, and returns the screening result. The temporary file remains governed by this one-hour automatic expiration policy.

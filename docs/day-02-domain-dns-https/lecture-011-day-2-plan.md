@@ -1,4 +1,4 @@
-# Lecture 11 - Day 2 Plan | خطة اليوم الثاني
+# Lecture 11 - Day (2) Plan | خطة اليوم الثاني
 
 ## Goal
 
@@ -21,21 +21,53 @@ External/ops only (no Day 2 repository commits; domain routing constants appear 
 - Cloudflare as DNS provider; DigitalOcean App Platform as compute host.
 - HTTPS termination verified after domain connection.
 
-## Recording Outline
+## Implementation steps
 
-- Recap Day 1: app is deployed on a default App Platform URL.
-- State Day 2 goal: users reach the app via a real branded domain with HTTPS.
-- Outline the lecture sequence: domain concept → purchase → DNS records → Cloudflare → DO connection → SSL verify → recap.
-- Show the target hostnames: `wazifa.app` and `admin.wazifa.app`.
-- Explain this is mostly outside the codebase—dashboards and DNS panels.
-- Mention `dev.wazifa.app` and `dev-admin.wazifa.app` arrive on Day 7 staging.
-- Preview `proxy.ts` (Day 4) as where hostname routing will be enforced in code.
-- Set expectation: verify in Cloudflare/DO dashboards, not only in git.
+### Step 1 — Recap Day 1 deployment
+- Review the default App Platform URL from Day 1 deployment.
+- The app is live, but users reach it via a platform-generated hostname—not a branded domain.
 
-## Verify in Repo
+### Step 2 — Define Day 2 goal
+- Day 2 goal: users reach the app via `wazifa.app` and `admin.wazifa.app` with HTTPS.
+- Important: this is mostly **external ops**—registrar, Cloudflare, and DigitalOcean dashboards—not codebase changes.
 
-- Open `proxy.ts` and note `PUBLIC_HOSTS` and `ADMIN_HOSTS` constants (added Day 4).
-- Confirm Day 2 README lists lectures 11–18 with no commit evidence.
+### Step 3 — Review the lecture sequence
+- Review the Day 2 arc:
+  1. Domain concept (Lecture 12)
+  2. Purchase (Lecture 13)
+  3. DNS records (Lecture 14)
+  4. Cloudflare nameservers (Lecture 15)
+  5. Connect to DigitalOcean (Lecture 16)
+  6. HTTPS verify (Lecture 17)
+  7. Recap (Lecture 18)
+
+### Step 4 — Review target hostnames and code preview
+- Target hostnames: `wazifa.app` (public) and `admin.wazifa.app` (admin).
+- Inspect `proxy.ts` briefly to preview where hostname constants will live (added Day 4):
+
+```5:6:proxy.ts
+const ADMIN_HOSTS = ["admin.wazifa.app", "dev-admin.wazifa.app"];
+const PUBLIC_HOSTS = ["wazifa.app", "dev.wazifa.app"];
+```
+
+- Note: `dev.wazifa.app` and `dev-admin.wazifa.app` are staging hosts added **Day 7**, not Day 2.
+
+### Step 5 — Set expectations and close
+- No git commits expected on Day 2—all work is registrar, Cloudflare, and DigitalOcean configuration.
+- Verification happens in DNS dashboards and browser, not in the repository.
+- Next: Lecture 12 (What is a Domain).
+
+## Verify
+- [ ] Day 2 scope is infrastructure, not application code.
+- [ ] Target hostnames `wazifa.app` and `admin.wazifa.app` are named.
+- [ ] `proxy.ts` host constants are previewed (enforcement arrives Day 4).
+- [ ] Staging subdomains are noted as a Day 7 addition.
+- [ ] Lecture sequence 12–18 is clear.
+
+## Outcome
+
+- Clear map of Day 2: domain purchase → DNS → Cloudflare → DigitalOcean → HTTPS.
+- No code changes; planning and orientation only.
 
 ## Notes / Gaps
 

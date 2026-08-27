@@ -16,26 +16,62 @@ Implemented
 
 ## What Was Built
 
-Students finalized the CSS variable palette, verified shadcn components pick up colors correctly, and deployed the theme (`c4ac5e0`). Every major surface class (`bg-background`, `text-accent`, `border-border`) resolves through the shared token layer.
+The CSS variable palette was finalized, verified shadcn components pick up colors correctly, and deployed the theme (`c4ac5e0`). Every major surface class (`bg-background`, `text-accent`, `border-border`) resolves through the shared token layer.
 
-## Recording Outline
+## Implementation steps
 
-- Audit `:root` variables for completeness (background, card, primary, accent, destructive, sidebar).
-- Confirm `@theme inline` maps every variable to `--color-*` utilities.
-- Test matrix: Button variants, Card, Input focus ring, Badge status colors.
-- Add or refine brutal utilities (`brutal-border`, heading/mono font classes).
-- Screenshot key pages for before/after documentation.
-- Run `npm run build` to catch missing token references.
-- Deploy theme milestone to staging.
-- Verify deployed CSS loads (hard refresh, check computed styles).
-- Document token naming for future contributors.
-- Transition to Next.js layout deep dive.
+### Step 1: Audit `:root` variables for completeness
 
-## Verify in Repo
+Confirm all semantic colors exist:
 
+- Core: `background`, `foreground`, `card`, `primary`, `secondary`, `muted`, `accent`, `destructive`
+- Borders: `border`, `input`, `ring`
+- Extra: `neon`, `warning`, `info`
+- Sidebar: `sidebar-background` through `sidebar-ring`
+
+### Step 2: Confirm `@theme inline` maps every variable
+
+```14:62:app/globals.css
+@theme inline {
+  --color-background: hsl(var(--background));
+  /* ... every --color-* maps to a :root variable ... */
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+}
+```
+
+### Step 3: Test component matrix
+
+| Component | Test |
+|-----------|------|
+| `Button` | All variants (`default`, `accent`, `outline`, `destructive`) |
+| `Card` | `bg-card text-card-foreground` |
+| `Input` | Focus ring uses `ring` token |
+| `Badge` | Status colors resolve |
+
+### Step 4: Run production build
+
+```bash
+npm run build
+```
+
+Catch missing token references before deploy.
+
+### Step 5: Deploy and verify on staging
+
+Hard-refresh `dev.wazifa.app` and `dev-admin.wazifa.app`. Inspect computed styles in DevTools — `background-color` should resolve through CSS variables.
+
+```bash
+git log --oneline | grep -i brutal
+```
+
+## Verify
 - `globals.css` has coherent light-theme tokens (dark optional).
 - shadcn components render with themed colors on `/` and `/dashboard`.
 - Git history includes `c4ac5e0` or equivalent brutal design commit.
+
+## Outcome
+
+Complete the Tailwind theme milestone: fonts, color tokens, shadcn mapping, and brutalist utilities committed and deployed.
 
 ## Notes / Gaps
 

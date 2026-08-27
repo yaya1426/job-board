@@ -1,7 +1,6 @@
 # Lecture 116 - Pending and Post-Apply State | حالة التقييم بعد التقديم
 
 ## Goal
-
 Make the job page honest after submission:
 
 1. Every new application starts as `screeningStatus: "PENDING"`.
@@ -28,12 +27,22 @@ Make the job page honest after submission:
 - `ApplicationSubmitted` receives the application prop and shows dynamic `screeningStatus` (partial Lecture 123 overlap).
 
 ## As Implemented Today
+`findApplicationByCandidateAndJob` exists in the repository and is used by both `applyToJob` (read path only today) and `getCurrentUserApplicationForJob`. The duplicate rejection block from Step 5 is **not** in `applyToJob` yet — call that out in this repository. When demoing the post-apply page, note that a missing application returns a service error, not `data: null`.
 
-`findApplicationByCandidateAndJob` exists in the repository and is used by both `applyToJob` (read path only today) and `getCurrentUserApplicationForJob`. The duplicate rejection block from Step 5 is **not** in `applyToJob` yet — call that out when recording. When demoing the post-apply page, note that a missing application returns a service error, not `data: null`.
+## Implementation steps
+See steps below (Step 1–9). Summary:
 
+1. Add `screeningStatus` enum (`PENDING` | `PROCESSING` | `COMPLETED` | `FAILED`) to types, model, and new applications (`screeningStatus: "PENDING"`).
+2. Add `getCurrentUserApplicationForJob` + `findApplicationByCandidateAndJob` repository query.
+3. Job page: show `ApplicationSubmitted` when user already applied; else `JobApplyForm`.
+4. `revalidatePath` after successful apply; action may `redirect` back to job page.
+5. Remove hard-coded public `7.8` AI score from job description UI.
+6. **As implemented today — gaps**:
+   - Duplicate-application guard in `applyToJob` is still `// TODO` (Step 5 not done).
+   - `aiScore: 0` placeholder remains until Lecture 122.
+   - `getCurrentUserApplicationForJob` returns `{ success: false }` when no application (lecture teaches `data: null`).
 
-## Explain It Simply (For Beginners)
-
+## Background
 The application needs a separate field that tracks where the AI review is:
 
 ```txt
@@ -59,10 +68,7 @@ Keep `aiScore: 0` as a transitional value so the existing score-based UI remains
 - **Default value** = what the database uses when we don't set the field (here, `PENDING`).
 - **Transitional state** = a short-lived intermediate version that keeps the app compiling while the next lesson updates dependent UI.
 
-
-
 ## Files Updated
-
 ```txt
 types/Application.ts
 lib/models/application.model.ts
@@ -77,7 +83,6 @@ components/jobs/JobDescription.tsx
 The type, model, and service add honest screening state. The repository and UI files create the post-apply page behavior and remove the fake public score.
 
 ## Step 1 - Update `types/Application.ts`
-
 Add a reusable status type above the interface:
 
 ```ts
@@ -105,7 +110,6 @@ export interface Application {
 Do not add `aiSummary`, `aiStrengths`, `aiRisks`, or failure fields yet. Introduce those only when the AI/result lessons need them.
 
 ## Step 2 - Update `lib/models/application.model.ts`
-
 Add the screening field immediately after `aiScore`:
 
 ```ts
@@ -135,10 +139,7 @@ status          -> hiring workflow (SUBMITTED, REVIEW, INTERVIEW...)
 screeningStatus -> AI workflow (PENDING, PROCESSING, COMPLETED, FAILED)
 ```
 
-
-
 ## Step 3 - Update `services/applications/applications.service.ts`
-
 Starting from the final `applyToJob` code in Lecture 115, add one property to `saveNewApplication`:
 
 ```ts
@@ -165,7 +166,6 @@ We set the value explicitly in the service even though Mongoose has a default. T
 The database default is defense in depth if another code path creates an application later.
 
 ## Step 4 - Add a Focused Repository Query
-
 The page needs to answer one question:
 
 > Does this logged-in candidate already have an application for this job?
@@ -191,7 +191,6 @@ export async function findApplicationByCandidateAndJob(
 This query is better than loading every application and filtering in JavaScript. MongoDB answers the exact relationship question.
 
 ## Step 5 - Protect Against Duplicate Applications in the Service
-
 Hiding the form is only UX. A user could still call the Server Action directly, so the service must enforce the same rule.
 
 Add the repository import in `services/applications/applications.service.ts`:
@@ -252,7 +251,6 @@ export async function getCurrentUserApplicationForJob(
 Both the mutation and page now use the same repository query.
 
 ## Step 6 - Revalidate the Job Page After Applying
-
 After a successful Server Action, Next.js must render the job page again so it can replace the form with the submitted state.
 
 Update `app/actions/applications/applications.action.ts`:
@@ -284,7 +282,6 @@ export async function handleApplyToJob(
 `revalidatePath` does not provide security. It only refreshes server-rendered data after the mutation.
 
 ## Step 7 - Create the Submitted State Component
-
 Create `components/jobs/ApplicationSubmitted.tsx`:
 
 ```tsx
@@ -315,7 +312,6 @@ export default ApplicationSubmitted;
 This component does not claim the AI has completed anything. It shows only the state we actually have.
 
 ## Step 8 - Render Form or Submitted State
-
 Update `app/(client)/jobs/[id]/page.tsx`.
 
 Add imports:
@@ -349,7 +345,6 @@ Then replace the unconditional form:
 The page is a Server Component, so this relationship check stays server-side and does not expose candidate identity to the browser.
 
 ## Step 9 - Remove the Fake Public AI Score
-
 In `components/jobs/JobDescription.tsx`:
 
 1. Remove the unused `Card` import.
@@ -371,10 +366,7 @@ COMPLETED            -> show real aiScore + explanation
 FAILED               -> failure state, no score
 ```
 
-
-
 ## Final State After This Lesson
-
 ```txt
 Candidate submits application
   -> resume is uploaded
@@ -387,10 +379,7 @@ Candidate submits application
   -> no screening operation runs yet
 ```
 
-
-
 ## Verification
-
 1. Run:
 
 ```bash
@@ -419,10 +408,7 @@ npm run lint
 8. Confirm the hard-coded `7.8` score no longer appears.
 9. Confirm existing application/admin pages still render.
 
-
-
 ## Common Mistakes
-
 - Replacing the existing hiring `status` field with `screeningStatus`. They represent different workflows.
 - Using lowercase values such as `"pending"` while the enum expects `"PENDING"`.
 - Adding future AI result/error fields before a lesson needs them.
@@ -432,18 +418,12 @@ npm run lint
 - Using client state alone to remember submission; it disappears on refresh.
 - Showing the hard-coded `7.8` because it “looks finished.”
 
-
-
-## Key Teaching Lines
-
+## Key points
 > Application status and screening status are two separate workflows.
 
 > External work needs a status field from day one, even before the integration exists.
 
 > Change the data contract in small, runnable steps; remove the fake score when the UI is ready to handle its absence.
 
-
-
 ## Next
-
 Lecture 117 builds the application details page and displays its current screening state. Lecture 118 then adds the submitted cover letter, resume metadata, and secure admin resume access.

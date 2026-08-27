@@ -1,19 +1,22 @@
-# Day 4 - Route Groups and Admin Setup
+# Day (4) Route Groups & Admin Setup
 
 ## Goal
 
 Introduce the admin surface, host-based routing, Next.js `proxy.ts`, and route groups as a way to organize multiple app surfaces inside one codebase.
 
+
+Lecture files in this folder are **implementation reference guides** aligned with the repository—not video recording scripts. Each lecture documents goal, key files, build steps, verification, and gaps as they appear in the codebase.
+
 ## Lecture Index
 
-- [Lecture 30 - Day 4 Plan](./lecture-030-day-4-plan.md)
+- [Lecture 30 - Day (4) Plan](./lecture-030-day-4-plan.md)
 - [Lecture 31 - Next.js Proxy](./lecture-031-nextjs-proxy.md)
 - [Lecture 32 - Ship it: Deploy proxy.ts](./lecture-032-ship-proxy-ts.md)
 - [Lecture 33 - Configure Admin Sub-domain](./lecture-033-configure-admin-sub-domain.md)
 - [Lecture 34 - Route Groups: Why + How?](./lecture-034-route-groups.md)
 - [Lecture 35 - Project Milestone: Admin Routes](./lecture-035-admin-routes-milestone.md)
 - [Lecture 36 - Ship It: Deploy Checkpoint](./lecture-036-ship-checkpoint.md)
-- [Lecture 37 - Recap Day 4](./lecture-037-recap-day-4.md)
+- [Lecture 37 - Recap Day (4)](./lecture-037-recap-day-4.md)
 
 ## Commit Evidence
 

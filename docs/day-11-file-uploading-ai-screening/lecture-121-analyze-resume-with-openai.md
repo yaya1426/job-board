@@ -1,7 +1,6 @@
 # Lecture 121 - Analyze Resume with OpenAI | تحليل السيرة الذاتية باستخدام OpenAI
 
 ## Goal
-
 Build one orchestration operation that uploads a temporary OpenAI file, passes its ID to the Responses API, validates the structured output, and returns the result directly.
 
 PDF file inputs are processed as extracted text **and page images** by vision-capable models. More image detail means more tokens and cost. For resumes, use explicit `"low"` detail first: typography is usually secondary to content, while text extraction is still included. Evaluate `"high"` only when small visual details materially affect your documents.
@@ -18,8 +17,19 @@ PDF file inputs are processed as extracted text **and page images** by vision-ca
 ## Gaps vs This Lecture (if any)
 - Standalone probe/route from the lecture may have been removed after verification.
 
-## Step 1 - Create the Shared Result Type
+## Implementation steps
+See steps below (Step 1–5). Summary:
 
+1. Create `types/ScreeningResult.ts` — `score`, `summary`, `strengths`, `risks`.
+2. Create `services/screening/screening.validation.ts` — zod schema for structured Responses output (score 0–10).
+3. Create `services/screening/openai-screening.service.ts` — `analyzeApplicationResume({ application, job })`:
+   - Call Lecture 120 upload helper for temporary `file_id`.
+   - Call Responses API with job context + cover letter + structured output schema.
+   - Validate and return `ScreeningResult`.
+4. Use `"low"` image detail for PDF page images unless testing proves `"high"` is needed.
+5. Remove disposable test routes before shipping.
+
+## Step 1 - Create the Shared Result Type
 Create `types/ScreeningResult.ts`:
 
 ```ts
@@ -38,7 +48,6 @@ export * from "./ScreeningResult";
 ```
 
 ## Step 2 - Create the Screening Validation Schema
-
 Create:
 
 ```txt
@@ -70,7 +79,6 @@ services/auth/auth.validation.ts
 Using `z.ZodType<ScreeningResult>` also makes TypeScript check that the schema and domain type remain aligned.
 
 ## Step 3 - Create the OpenAI Screening Service
-
 Create:
 
 ```txt
@@ -152,7 +160,6 @@ export async function analyzeApplicationResume({
 If this repository's `Job.requirements` is currently a string rather than `string[]`, replace `job.requirements.join("\n")` with `job.requirements`. Keep the prompt aligned with the actual domain type.
 
 ## Step 4 - Explain the Temporary File Lifecycle
-
 Lecture 120 creates the temporary file with:
 
 ```ts
@@ -165,7 +172,6 @@ expires_after: {
 That one-hour automatic expiration is the chosen file-lifecycle mechanism. The file may remain available until its expiration time; accepting that short window keeps this first implementation simple. Do not save `file.id` in MongoDB because it is temporary provider state. Do not use a signed browser URL, local PDF parser, extraction service, or OCR pipeline. OpenAI receives the PDF directly.
 
 ## Step 5 - Run a Controlled Service Test
-
 Use one controlled application/job from a temporary server-only caller, then verify:
 
 ```txt
@@ -185,16 +191,10 @@ npm run lint
 ```
 
 ## Responsible Use
-
 - AI screening is decision support, never automatic rejection.
 - Send only the resume, job context, and submitted cover letter needed for this task.
 - The one-hour expiration controls this application's temporary Files API lifecycle, but it does not promise provider zero retention beyond OpenAI's applicable terms and data controls.
 - Monitor model/version changes and evaluate scoring quality and bias with representative examples.
 
-## SDK Check Before Recording
-
-Recheck that the installed SDK/types accept `detail` on `input_file` in `responses.parse`. The official file-input guide documents `auto`, `low`, and `high`, but this field is the most version-sensitive snippet in these lessons.
-
 ## Next
-
 Lecture 122 calls this operation automatically after the application is saved, during the same apply-service request. Day 16 later moves the proven operation behind a durable queue and worker.

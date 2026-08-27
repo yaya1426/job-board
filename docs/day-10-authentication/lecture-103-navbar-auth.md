@@ -1,11 +1,9 @@
 # Lecture 103 - Showing Auth State in the Navbar | حالة المصادقة في الشريط
 
 ## Goal
-
 Make the navbar reflect session state: guest links vs signed-in name and sign-out, with server rendering for account area and small client islands only where browser APIs are required.
 
-## Explain It Simply (For Beginners)
-
+## Background
 Before this lecture, everyone saw the same header — logged in or not. That feels broken once auth exists.
 
 Split responsibilities:
@@ -20,14 +18,12 @@ NavbarHeader (server) — layout shell
 Guests see **LOGIN** and **SIGN UP**. Signed-in users see their name and sign out.
 
 ## Files
-
 - `components/navbar/NavbarHeader.tsx`
 - `components/navbar/NavbarLinks.tsx`
 - `components/navbar/NavbarAccount.tsx`
 - `components/navbar/SignOutButton.tsx`
 
 ## Why Each Piece's Layer
-
 | Component | Server/Client | Reason |
 |-----------|---------------|--------|
 | `NavbarHeader` | Server | Static shell |
@@ -37,25 +33,21 @@ Guests see **LOGIN** and **SIGN UP**. Signed-in users see their name and sign ou
 
 Use `pathname.startsWith("/jobs")` so `/jobs/[id]` keeps Jobs active.
 
-## Recording Steps
+## Implementation steps
+1. Keep `NavbarHeader.tsx` as server component (layout shell).
+2. Extract `NavbarLinks.tsx` as client component — `usePathname()` for active underline; use `pathname.startsWith("/jobs")`.
+3. Create `NavbarAccount.tsx` server component — `await getCurrentUser()` for guest vs signed-in branches.
+4. Create `SignOutButton.tsx` client component — `signOut()` on click.
+5. Guests: LOGIN + SIGN UP links. Signed-in: name + sign out.
+6. Remember: navbar visibility is UX only — security lives in services, actions, and proxy.
 
-1. Show static navbar problem.
-2. Extract `NavbarAccount` calling `getCurrentUser()`.
-3. Add guest vs authenticated branches.
-4. Implement `SignOutButton` with `signOut({ callbackUrl: "/" })` or similar.
-5. Refine link styling — underline active state, not brutal bordered nav buttons.
-6. Stress: **this is UX, not security.**
-
-## Key Teaching Lines
-
+## Key points
 > Hide links in the UI if you want. Protect data in the service, action, and proxy.
 
 > If navbar still shows LOG IN after login, you forgot `router.refresh()`.
 
 ## End State
-
 Navbar honestly reflects auth state on first paint and after navigation.
 
 ## Next
-
-Lecture 104 protects Server Actions and improves guest apply UX.
+[Lecture 104 — Protecting Server Actions](./lecture-104-protect-server-actions-ux.md) protects Server Actions and improves guest apply UX.

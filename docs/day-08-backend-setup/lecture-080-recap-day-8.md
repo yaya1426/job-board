@@ -1,15 +1,12 @@
-# Lecture 80 - Recap Day 8
+# Lecture 80 - Recap Day (8)
 
 ## Goal
-
 Consolidate Day 8: backend layers, Server Actions, zod, `useActionState`, `ServiceResult`, and service refactors — preparing for MongoDB repositories on Day 9.
 
 ## Implementation Status
-
 **Complete.** Architecture patterns are production-standard; data layer upgraded Day 9+.
 
 ## Key Files
-
 - `services/` — jobs, applications, candidates (+ auth, users, uploads, screening later)
 - `app/actions/` — jobs, applications, auth
 - `types/ServiceResult.ts`
@@ -18,7 +15,6 @@ Consolidate Day 8: backend layers, Server Actions, zod, `useActionState`, `Servi
 - `components/jobs/JobApplyForm.tsx`
 
 ## What Was Built
-
 Day 8 checklist:
 
 | Topic | Status |
@@ -41,17 +37,45 @@ Form → Server Action → Service (zod) → Data
 Page (RSC) → Service (read) → props → Client UI
 ```
 
-## Recording Outline
+## Implementation steps
+### Step 1
 
-1. Demo create job with validation errors, then success.
-2. Demo apply flow (if wired on Day 8 branch).
-3. Show `ServiceResult` type and why actions stay thin.
-4. Compare Day 6 mock imports vs Day 8 service imports in same page.
-5. Name remaining gaps: edit/delete, mock candidates, no database.
-6. Preview Day 9: Mongoose, repositories, delete `JobsData`/`ApplicationsData`.
+Demo create job with validation errors (empty title), then successful submit — job appears on admin table and public list.
 
-## Verify in Repo
+### Step 2
 
+Demo apply flow: submit application, confirm it appears on `/dashboard/applications`.
+
+### Step 3
+
+Inspect `types/ServiceResult.ts` and explain why actions stay thin — services own validation and business rules.
+
+### Step 4
+
+Compare same page Day 6 vs Day 8: mock import → `getJobs()` service import in `app/(client)/jobs/page.tsx`.
+
+### Step 5
+
+Name remaining gaps: edit/delete job UI-only, candidates still mock, no Mongoose repositories yet. List Day 9.
+
+### Verify
+
+```bash
+git log --oneline --grep="Day 8"
+```
+
+Key commits: `b4ba20f`, `7938a5d`, `3e60d0e`.
+
+- `services/jobs/jobs.validation.ts` exists.
+- `types/ServiceResult.ts` matches AGENTS.md.
+- `data/` contains only `CandidateData.ts` (+ `index.ts` if present).
+- **Current repo:** services call repositories (Day 9+); auth/NextAuth are Day 10.
+
+### End State
+
+Day 8 architecture is production-standard: Form → Server Action → Service (zod) → Data; Page (RSC) → Service → props → Client UI. Edit/delete and mock candidates remain; MongoDB lands Day 9.
+
+## Verify
 ```bash
 git log --oneline --grep="Day 8"
 ```
@@ -63,10 +87,8 @@ Key commits: `b4ba20f`, `7938a5d`, `3e60d0e` (and merge duplicates).
 - `data/` contains only `CandidateData.ts` + `index.ts`.
 
 ## Notes/Gaps
-
-- Services now call repositories — when recording Day 8 historically, show mock-in-service or note "current repo uses repository from Day 9."
+- Services now call repositories — in this repository Day 8 historically, show mock-in-service or note "current repo uses repository from Day 9."
 - Auth, admin action guards, and NextAuth route are Day 10 — do not conflate in recap.
 
 ## Next
-
 Day 9 — MongoDB, Mongoose models, repositories, and real persistence for jobs and applications.

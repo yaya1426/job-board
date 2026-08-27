@@ -18,26 +18,68 @@ Implemented (concepts); Partial (special files like `loading.tsx` not used yet o
 
 ## What Was Built
 
-On Day 3, students learned that Next.js resolves URLs by walking the `app/` tree. A `page.tsx` file at a folder level creates a publicly reachable route. Parent `layout.tsx` files wrap child pages. Route groups like `(client)` came later and do not affect the URL.
+On Day 3, Next.js resolves URLs by traversing the `app/` tree. A `page.tsx` file at a folder level creates a publicly reachable route. Parent `layout.tsx` files wrap child pages. Route groups like `(client)` came later and do not affect the URL.
 
-## Recording Outline
+## Implementation steps
 
-- Open `app/` and explain it is not "just components" — it is the route table.
-- Draw URL → folder mapping: `/jobs` → `jobs/page.tsx`, `/jobs/abc` → `jobs/[id]/page.tsx`.
-- Name the special files students will use first: `layout.tsx`, `page.tsx`.
-- Mention other App Router files (`loading.tsx`, `error.tsx`, `not-found.tsx`) as future tools, not today's work.
-- Explain Server Components as the default in App Router pages (no `"use client"` unless needed).
-- Show that `(client)` is invisible in the URL — preview Day 4 route groups briefly.
-- Contrast "one `pages/` file per route" (Pages Router) with nested folders (App Router).
-- Use `wazifa.app` as the concrete product: home, browse jobs, open one job.
-- Emphasize: if you know where the folder is, you know the URL (ignoring route groups).
-- Transition to explicit comparison with Pages Router in the next lecture.
+### Step 1: Inspect `app/` and name it the router
 
-## Verify in Repo
+In the repo root, `app/` is the route table—not a components dump.
 
+### Step 2: Map URLs to folders (current repo)
+
+| URL | File today | Day 3 historical path |
+|-----|------------|----------------------|
+| `/` | `app/(client)/page.tsx` | `app/page.tsx` |
+| `/jobs` | `app/(client)/jobs/page.tsx` | `app/jobs/page.tsx` |
+| `/jobs/:id` | `app/(client)/jobs/[id]/page.tsx` | `app/jobs/[id]/page.tsx` |
+
+Route groups like `(client)` are invisible in the URL (added Day 4).
+
+### Step 3: Identify special files used on Day 3
+
+- `layout.tsx` — shared shell (root wraps everything).
+- `page.tsx` — makes a segment publicly reachable.
+
+Not built on this day: `loading.tsx`, `error.tsx`, `not-found.tsx`.
+
+### Step 4: Review the root layout wraps all pages
+
+```21:34:app/layout.tsx
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <SessionProvider>{children}</SessionProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+Day 3 version was simpler (no `SessionProvider` — that is Day 10). The `{children}` slot is where nested layouts and pages render.
+
+### Step 5: Define the Server Component default
+
+Review any `page.tsx` under `(client)` — no `"use client"` at the top. App Router pages are Server Components unless marked otherwise.
+
+## Verify
+- You can draw URL → folder mapping for `/`, `/jobs`, `/jobs/[id]`.
+- `page.tsx` publishes a route and `layout.tsx` wraps it.
+- `(client)` is named as a later organizational move, not a URL segment.
 - `app/layout.tsx` exists and wraps `{children}`.
 - `app/(client)/jobs/page.tsx` resolves to `/jobs` on the public host.
 - `app/(client)/jobs/[id]/page.tsx` resolves to `/jobs/<id>`.
+
+## Outcome
+
+You can map URLs to folders under `app/`, name the special files used on Day 3 (`page.tsx`, `layout.tsx`), and explain how the root layout wraps nested routes.
 
 ## Notes / Gaps
 

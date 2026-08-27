@@ -1,4 +1,4 @@
-# Lecture 32 - Ship proxy.ts | نشر ملف البروكسي
+# Lecture 32 - Ship it: Deploy proxy.ts | نشر ملف البروكسي
 
 ## Goal
 
@@ -16,27 +16,87 @@ Implemented
 
 ## What Was Built
 
-Students added `proxy.ts`, iterated through redirect-loop fixes, host equality checks (`e6a880a`), and favicon exclusion. Commits `b7f83c2`, `375a025`, `9beaf96`, `db360db`, `e6a880a`, and `a225fd3` document the debugging trail. Deployed build must include the proxy file at repo root.
+Day 4 added `proxy.ts`, iterated through redirect-loop fixes, host equality checks (`e6a880a`), and favicon exclusion. Commits `b7f83c2`, `375a025`, `9beaf96`, `db360db`, `e6a880a`, and `a225fd3` document the debugging trail. Deployed build must include the proxy file at repo root.
 
-## Recording Outline
+## Implementation steps
 
-- Create `proxy.ts` with host constants and first redirect rules.
-- Test locally with `Host` header overrides or deployed subdomain (localhost lacks real subdomains).
-- Hit the infinite redirect bug: catch-all rule redirecting everything including targets — fix with precise pathname checks.
-- Normalize host: `.toLowerCase()` and exact array membership (`e6a880a`).
-- Add logging temporarily (`9beaf96`) to see host + pathname in deploy logs.
-- Exclude `favicon.ico` from matcher to stop spurious proxy hits.
-- Deploy to `dev.wazifa.app` / `dev-admin.wazifa.app`.
-- Verify Case 1–3 on staging URLs.
-- Remove debug logs before milestone commit.
-- Transition to DNS/subdomain configuration.
+### Step 1: Create `proxy.ts` at repo root (Day 4 version — no auth)
 
-## Verify in Repo
+```typescript
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
+const ADMIN_HOSTS = ["admin.wazifa.app", "dev-admin.wazifa.app"];
+const PUBLIC_HOSTS = ["wazifa.app", "dev.wazifa.app"];
+
+function isDashboardPath(pathname: string) {
+  return pathname === "/dashboard" || pathname.startsWith("/dashboard/");
+}
+
+export function proxy(request: NextRequest) {
+  const host = (request.headers.get("host") ?? "").toLowerCase();
+  const pathname = request.nextUrl.pathname;
+
+  const isAdminHost = ADMIN_HOSTS.includes(host);
+  const isPublicHost = PUBLIC_HOSTS.includes(host);
+  const isDashboardRoute = isDashboardPath(pathname);
+
+  // Case 1: public host + /dashboard → /
+  if (isPublicHost && isDashboardRoute) {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
+
+  // Case 2: admin host + / → /dashboard
+  if (isAdminHost && pathname === "/") {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  // Case 3: admin host + non-dashboard → /dashboard
+  if (isAdminHost && !isDashboardRoute) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: ["/((?!api/|_next/static|_next/image|sw\\.js|favicon\\.ico).*)"],
+};
+```
+
+### Step 2: Normalize host comparison
+
+Always `.toLowerCase()` on the host header. Use exact array membership — no partial string matches.
+
+### Step 3: Debug redirect loops
+
+Common bug: a catch-all rule redirects the redirect target. Fix with precise `pathname` checks per case. Commit `db360db` documents this fix.
+
+### Step 4: Add temporary logging (remove before milestone)
+
+```typescript
+console.log("[proxy]", { host, pathname });
+```
+
+Deploy, read App Platform runtime logs, then remove.
+
+### Step 5: Deploy and test Cases 1–3 on staging
+
+- `dev.wazifa.app/dashboard` → redirects to `/`.
+- `dev-admin.wazifa.app/` → redirects to `/dashboard`.
+- `dev-admin.wazifa.app/jobs` → redirects to `/dashboard`.
+
+## Verify
 - `git log --oneline -- proxy.ts` shows Day 4 fix commits.
+- No accidental redirect loop in `proxy.ts`.
+- Staging hostname redirect matrix passes for Cases 1–3.
 - `proxy.ts` has no accidental catch-all redirect loop.
 - Staging: `wazifa.app/dashboard` redirects to `/` on public host.
 - Staging: `admin.wazifa.app/` redirects to `/dashboard`.
+
+## Outcome
+
+Implement and deploy the first `proxy.ts` rules so public and admin hosts behave differently in staging/production.
 
 ## Notes / Gaps
 

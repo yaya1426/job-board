@@ -16,26 +16,68 @@ Implemented (brutalist theme in CSS); External (AI tooling workflow is process, 
 
 ## What Was Built
 
-Commit `c4ac5e0` ("Day 5: Brutal Design System") applied bold borders, zero subtle shadows, mono labels, and high-contrast accents. Students used AI tools to explore layout ideas, then translated winners into Tailwind classes bound to design tokens — not pasted unmaintainable HTML.
+Commit `c4ac5e0` ("Day 5: Brutal Design System") applied bold borders, zero subtle shadows, mono labels, and high-contrast accents. AI tools were used to explore layout ideas, then translated winners into Tailwind classes bound to design tokens — not pasted unmaintainable HTML.
 
-## Recording Outline
+## Implementation steps
 
-- Show brutalist references: thick borders, stark contrast, raw typography.
-- Name wazifa.app traits: `brutal-border`, uppercase labels, `font-mono` metadata.
-- Demo AI workflow: prompt for job board admin table layout → critique output.
-- Translate AI draft: replace arbitrary colors with `bg-card`, `text-foreground`.
-- Replace generic buttons with shadcn `<Button variant="...">`.
-- Show before/after: generic Tailwind vs tokenized brutalist shell.
-- Warn: AI output is a sketch, not production code — ownership matters.
-- Connect to course pedagogy: taste + systems, not pixel copying.
-- Show `NavbarHeader` sticky bar with brutal border bottom.
-- Transition to formal theme milestone commit.
+### Step 1: Name the brutalist traits
 
-## Verify in Repo
+- Thick borders (`--border-thick: 3px`)
+- Zero border-radius (`--radius: 0px`)
+- Uppercase headings, mono metadata
+- High-contrast accent green (`--accent: 120 100% 40%`)
+- Hard shadows, no soft gradients
 
-- `globals.css` includes brutalist utility classes used across nav/cards.
+### Step 2: Add brutalist utility classes
+
+```195:224:app/globals.css
+@layer components {
+  .brutal-border {
+    border: var(--border-thick) solid hsl(var(--border));
+  }
+  .brutal-shadow {
+    box-shadow: 4px 4px 0px 0px hsl(var(--foreground));
+  }
+  .brutal-hover:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px 0px hsl(var(--foreground));
+  }
+}
+```
+
+### Step 3: Apply brutalist shell to navbar
+
+```7:18:components/navbar/NavbarHeader.tsx
+    <nav className="brutal-border border-t-0 border-x-0 bg-background sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
+        <Link
+          href="/"
+          className="font-heading text-2xl font-bold tracking-tight"
+        >
+          WAZIFA<span className="text-accent">_</span>
+        </Link>
+```
+
+### Step 4: Demo AI layout workflow
+
+1. Prompt AI for a job board admin table layout.
+2. Critique output — replace arbitrary colors with `bg-card`, `text-foreground`.
+3. Replace generic buttons with `<Button variant="accent">`.
+4. Ship owned code, not pasted HTML.
+
+### Step 5: Disable soft transitions for brutal feel
+
+Use `transition-none` on interactive elements (navbar links, buttons) — instant state changes, not smooth fades.
+
+## Verify
+- `globals.css` includes `.brutal-border`, `.brutal-shadow`, `.brutal-hover`.
 - Public pages share consistent border/typography language.
 - No one-off neon hex in page files — tokens used instead.
+- `globals.css` includes brutalist utility classes used across nav/cards.
+
+## Outcome
+
+Choose the brutalist visual direction for wazifa.app and demonstrate a practical workflow: reference mood → AI-assisted layout draft → engineer into tokens and shadcn components.
 
 ## Notes / Gaps
 

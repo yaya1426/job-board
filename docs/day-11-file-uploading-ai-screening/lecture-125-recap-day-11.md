@@ -1,11 +1,9 @@
 # Lecture 125 - Recap Day (11) | ملخص اليوم الحادي عشر
 
 ## Goal
-
 Verify the complete first version and reinforce where every file, identifier, state, and result belongs.
 
 ## Final Architecture
-
 ```txt
 Candidate form
   -> server validates PDF and uploads private bytes to Spaces
@@ -36,8 +34,27 @@ There is no local PDF parser or extraction service. OpenAI processes PDF text an
 - Recap assumes synchronous await screening and honest optional scores — see Lectures 122–123 gaps.
 - Duplicate-application guard still TODO.
 
-## Step 1 - Verify Static Quality
+## Implementation steps
+See steps below (Step 1–6). Summary:
 
+1. Run static checks: `npm run lint`, `npx tsc --noEmit`, `npm run build`.
+2. Trace one successful apply: Spaces object private, MongoDB `PENDING` → screening → `COMPLETED`, admin shows result.
+3. Trace failure cases: invalid PDF, oversize file, OpenAI failure → application saved as `FAILED`, candidate still sees submitted state.
+4. Verify data boundaries: no bytes in MongoDB, no persisted OpenAI file ID, resume via `/dashboard/applications/[id]/resume` only.
+5. Search for regressions: `aiScore: 0`, `aiScore ?? 0`, public resume URLs, missing `server-only`.
+6. Record limitations honestly:
+
+**As implemented today — known gaps vs recap target:**
+
+| Gap | Actual behavior |
+|-----|-----------------|
+| Synchronous screening | `screenApplication(...)` called **without `await`** |
+| Placeholder score | `aiScore: 0` still set on new applications |
+| Resume route | `app/(admin)/dashboard/applications/[applicationId]/resume/route.ts` (not `/api/...`) |
+| Duplicate apply | TODO in `applyToJob` |
+| UI honesty | `aiScore ?? 0` may mask missing results |
+
+## Step 1 - Verify Static Quality
 ```bash
 npm run lint
 npx tsc --noEmit
@@ -45,7 +62,6 @@ npm run build
 ```
 
 ## Step 2 - Walk Through One Successful Application
-
 1. Submit a valid synthetic PDF.
 2. Confirm Spaces contains the private original.
 3. Confirm MongoDB stores key, name, size, type, and `PENDING`—not bytes or a signed URL.
@@ -58,7 +74,6 @@ npm run build
 10. Confirm secure resume access resolves through the admin-only signed route.
 
 ## Step 3 - Walk Through Failure Cases
-
 ```txt
 invalid upload              -> application is not created
 screening provider failure  -> saved application becomes FAILED
@@ -73,7 +88,6 @@ candidate on resume route   -> 403
 Do not show raw provider errors to candidates and do not tell them to resubmit an application that already exists.
 
 ## Step 4 - Recheck Data Boundaries
-
 ```txt
 DigitalOcean Spaces -> durable private resume bytes
 MongoDB              -> snapshot, object key, statuses, structured result
@@ -83,7 +97,6 @@ Browser              -> no provider or storage credentials
 ```
 
 ## Step 5 - Search for Regressions
-
 Run from the repository root:
 
 ```bash
@@ -101,7 +114,6 @@ Expected:
 - Day 11 contains no background-delivery configuration or implementation
 
 ## Step 6 - Record the Limitation Honestly
-
 The Day 11 flow is the simplest complete implementation, not the final scaling architecture:
 
 - The candidate's request waits for storage and OpenAI.
@@ -113,7 +125,6 @@ The Day 11 flow is the simplest complete implementation, not the final scaling a
 These are not hidden footnotes. They are Day 16's problem-first opening: reproduce the pain safely in local/staging, then add durable delivery, a protected worker, atomic claims, retries, stale-state recovery, and asynchronous status UX.
 
 ## Complete Day 11 Checklist
-
 ```txt
 [ ] private server-proxied PDF upload works
 [ ] snapshot metadata is stored on the application
@@ -130,9 +141,7 @@ These are not hidden footnotes. They are Day 16's problem-first opening: reprodu
 ```
 
 ## Closing Line
-
 > Day 11 turns one fake upload box into a private, fully functional, human-reviewed screening flow—and leaves a measured scaling problem for Day 16.
 
 ## Next Day
-
 Day 12 adds search, filters, sorting, and pagination. Day 16 later revisits screening architecture for scalable background processing.

@@ -17,23 +17,71 @@ Implemented
 
 The job details page accepts `params: Promise<{ id: string }>` (Next.js 15+), awaits `id`, and uses it to fetch or display the correct job. This connects the URL segment to server-side data loading in an async Server Component.
 
-## Recording Outline
+## Implementation steps
 
-- Open `app/(client)/jobs/[id]/page.tsx` and locate the `params` prop type.
-- Explain Next.js 15+ convention: `params` is a **Promise** — use `const { id } = await params`.
-- Connect `id` in the URL to the database/API lookup (`getJob(id)` today).
-- Show what happens with a missing job: render not-found UI (`JobNotFound`).
-- Contrast with client-side `useParams()` — prefer server read for data fetching pages.
-- Warn: never trust `id` from the client for authorization; server still validates ownership on mutations.
-- Demo changing the URL segment and seeing a different job (or not-found).
-- Mention `searchParams` as sibling concept for query strings (`?page=2`) — Day 12 territory.
-- Transition to client navigation with `<Link>`.
+### Step 1: Type `params` as a Promise
 
-## Verify in Repo
+```11:13:app/(client)/jobs/[id]/page.tsx
+type Props = {
+  params: Promise<{ id: string }>;
+};
+```
 
+Next.js 15+ passes `params` as a Promise — always `await` it before use.
+
+### Step 2: Await and destructure `id`
+
+```15:17:app/(client)/jobs/[id]/page.tsx
+async function JobDetailsPage({ params }: Props) {
+  const { id } = await params;
+  const result = await getJob(id);
+```
+
+Day 3: replace `getJob(id)` with displaying `id` in JSX. Service wiring comes Day 8.
+
+### Step 3: Handle missing job
+
+```26:34:app/(client)/jobs/[id]/page.tsx
+  if (!result.success) {
+    return <JobNotFound />;
+  }
+
+  const { data: job } = result;
+
+  if (!job) {
+    return <JobNotFound />;
+  }
+```
+
+Day 3: a simple "Job not found" message is enough.
+
+### Step 4: Use `id` in the page UI
+
+The back link and apply form both use the same `id` from the URL:
+
+```39:44:app/(client)/jobs/[id]/page.tsx
+        <Link
+          href="/jobs"
+          className="font-mono text-sm text-muted-foreground hover:text-accent transition-none"
+        >
+          ← ALL POSITIONS
+        </Link>
+```
+
+### Step 5: Contrast with client `useParams()`
+
+Prefer reading `params` on the server for data-fetching pages. Reserve `useParams()` for client-only UI that does not load data.
+
+## Verify
 - `page.tsx` types `params` as `Promise<{ id: string }>`.
+- `await params` runs before any lookup using `id`.
+- Invalid id path renders not-found UI.
 - `await params` is used before calling `getJob(id)`.
 - Invalid id path renders `JobNotFound`.
+
+## Outcome
+
+Dynamic segment values are read from `await params` in async Server Components and used to load job-specific content.
 
 ## Notes / Gaps
 

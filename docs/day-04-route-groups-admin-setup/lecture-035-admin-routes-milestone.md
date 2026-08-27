@@ -21,25 +21,76 @@ Partial (core Day 4 routes Implemented; some original routes removed or added la
 
 Commit `39d2362` ("Day 4: Admin Basic Routes") added placeholder admin pages. Day 4 originally also included `jobs/[jobId]/page.tsx` (job detail) and `applications/[applicationId]/review/page.tsx` — both removed in later refactors. `users/page.tsx` was added Day 6.
 
-## Recording Outline
+## Implementation steps
 
-- Scaffold `app/(admin)/dashboard/page.tsx` with overview heading.
-- Add jobs subtree: list, `new`, `[jobId]/edit` pages.
-- Add applications subtree: list and `[applicationId]` detail.
-- Use consistent URL prefix `/dashboard` matching proxy redirects.
-- Link between admin pages with `Link` (styling comes Day 5).
-- Verify on `dev-admin.wazifa.app/dashboard/...` after deploy.
-- Walk git show `39d2362` for file list at milestone time.
-- Note removed routes: standalone admin job detail and review page — consolidated later.
-- Note added later: `users/page.tsx` (Day 6), resume route handler (Day 11).
-- Celebrate: two surfaces, one codebase, host decides entry point.
+### Step 1: Scaffold dashboard overview
 
-## Verify in Repo
+Create `app/(admin)/dashboard/page.tsx`:
 
-- All listed admin `page.tsx` files exist.
+```tsx
+function DashboardPage() {
+  return (
+    <>
+      <h1 className="text-4xl font-heading font-bold">OVERVIEW</h1>
+      <p className="font-mono text-sm text-muted-foreground mt-1">
+        ADMIN DASHBOARD
+      </p>
+    </>
+  );
+}
+
+export default DashboardPage;
+```
+
+Today's file loads stats via `getJobs()` / `getApplications()` (Day 8+).
+
+### Step 2: Add jobs subtree
+
+| File | URL |
+|------|-----|
+| `app/(admin)/dashboard/jobs/page.tsx` | `/dashboard/jobs` |
+| `app/(admin)/dashboard/jobs/new/page.tsx` | `/dashboard/jobs/new` |
+| `app/(admin)/dashboard/jobs/[jobId]/edit/page.tsx` | `/dashboard/jobs/:jobId/edit` |
+
+Day 4 also had `jobs/[jobId]/page.tsx` (standalone job detail) — **removed** in a later refactor. Edit route remains.
+
+### Step 3: Add applications subtree
+
+| File | URL |
+|------|-----|
+| `app/(admin)/dashboard/applications/page.tsx` | `/dashboard/applications` |
+| `app/(admin)/dashboard/applications/[applicationId]/page.tsx` | `/dashboard/applications/:id` |
+
+Day 4 also had `applications/[applicationId]/review/page.tsx` — **removed**. Review flow consolidated into the detail page.
+
+### Step 4: Note routes added after Day 4
+
+| File | Added |
+|------|-------|
+| `app/(admin)/dashboard/users/page.tsx` | Day 6 |
+| `app/(admin)/dashboard/applications/[applicationId]/resume/route.ts` | Day 11 |
+
+### Step 5: Verify on admin subdomain
+
+On `dev-admin.wazifa.app`:
+
+1. `/` → redirects to `/dashboard` (proxy Case 2).
+2. `/dashboard/jobs` → jobs list placeholder.
+3. `/dashboard/applications` → applications list placeholder.
+
+```bash
+git show 39d2362 --stat
+```
+
+## Verify
+- All listed admin `page.tsx` files exist in current tree.
+- `app/(admin)/dashboard/jobs/[jobId]/page.tsx` does **not** exist (removed).
+- `.../applications/.../review/page.tsx` does **not** exist (removed).
 - `dev-admin.wazifa.app/dashboard/jobs` loads (auth may block after Day 10).
-- No `app/(admin)/dashboard/jobs/[jobId]/page.tsx` in current tree (removed).
-- No `.../review/page.tsx` under applications (removed).
+
+## Outcome
+
+Ship the admin dashboard route tree: overview, jobs list, new job, job edit, applications list, and application detail.
 
 ## Notes / Gaps
 

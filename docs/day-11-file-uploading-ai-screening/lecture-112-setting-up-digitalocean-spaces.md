@@ -1,7 +1,6 @@
 # Lecture 112 - Setting Up DigitalOcean Spaces | إعداد مساحة التخزين
 
 ## Goal
-
 Finish and verify the infrastructure needed for private, direct resume uploads.
 
 ## Implementation Status
@@ -15,8 +14,24 @@ Finish and verify the infrastructure needed for private, direct resume uploads.
 - Space creation, keys, and DigitalOcean dashboard steps are off-repo.
 - Verify all five `DO_SPACES_*` variables exist locally and on App Platform before recording upload demos.
 
-## Explain It Simply (For Beginners)
+## Implementation steps
+1. In DigitalOcean: confirm private Space exists, region matches code (`fra1`), no public object ACL.
+2. Create/locate scoped Spaces access keys — never `NEXT_PUBLIC_` prefix.
+3. Add to `.env.local` (names must match `lib/storage.ts`):
 
+```env
+DO_SPACES_ENDPOINT=https://fra1.digitaloceanspaces.com
+DO_SPACES_REGION=fra1
+DO_SPACES_BUCKET=wazifa-resumes-dev
+DO_SPACES_ACCESS_KEY_ID=...
+DO_SPACES_SECRET_ACCESS_KEY=...
+```
+
+4. Mirror the same names on DigitalOcean App Platform (encrypted secrets, runtime scope minimum).
+5. Confirm `@aws-sdk/client-s3` and `@aws-sdk/s3-request-presigner` are installed.
+6. **Skip CORS** for server-proxied upload — only needed for future direct browser upload.
+
+## Background
 Before we write any upload code, the "cloud filing cabinet" needs to exist and be configured correctly. This lecture is pure setup — no app code — and it's mostly about **safety** and **matching names**.
 
 DigitalOcean Spaces is just cloud storage for files (it behaves like Amazon S3, which is why we use the AWS S3 SDK to talk to it). Think of it as a **rented storage unit**:
@@ -36,7 +51,6 @@ The most common beginner mistake here is a **name mismatch**: the code reads `DO
 - **`NEXT_PUBLIC_` prefix** = tells Next.js to ship that variable to the browser. *Never* put a secret key behind it.
 
 ## Current Status
-
 - The development Space has already been provisioned.
 - CDN was enabled with an endpoint similar to:
 
@@ -49,7 +63,6 @@ https://wazifa-resumes-dev.fra1.cdn.digitaloceanspaces.com
 - Deployment environment variables still need verification.
 
 ## Important Privacy Decision
-
 Resumes contain personal data. Keep objects private.
 
 - Do not add `ACL: "public-read"`.
@@ -57,77 +70,7 @@ Resumes contain personal data. Keep objects private.
 - Download with short-lived signed GET URLs.
 - The CDN endpoint is optional for future public assets; a normal public CDN URL should not be the resume access mechanism.
 
-## Recording Steps
-
-### 1. Review the Existing Space
-
-In DigitalOcean:
-
-1. Open Spaces Object Storage.
-2. Select the development Space.
-3. Confirm region (`fra1` if that is the provisioned region).
-4. Confirm the Space name.
-5. Confirm file listing/public access is private.
-
-Use separate Spaces for development and production.
-
-### 2. Review Access Keys
-
-Open DigitalOcean API → Spaces Keys.
-
-- Create or locate a scoped key for this Space.
-- Never show the secret on screen.
-- Never prefix either credential with `NEXT_PUBLIC_`.
-
-### 3. Configure CORS (Optional — Skip for This Course)
-
-**Our server-proxied upload does not need CORS**, because the browser never talks to Spaces directly — it only talks to our own server. You can skip this step.
-
-Only if you later switch to presigned **direct browser uploads** would you configure CORS on the Space, allowing the exact origins that upload files:
-
-```txt
-http://localhost:3000
-https://dev.wazifa.app
-https://wazifa.app
-```
-
-In that case, allowed methods should include `PUT`, allow the headers needed for `Content-Type`, and never use `*` for production origins when sensitive data is involved.
-
-### 4. Verify Local Variable Names
-
-Add these names to `.env.local`:
-
-```env
-DO_SPACES_ENDPOINT=https://fra1.digitaloceanspaces.com
-DO_SPACES_REGION=fra1
-DO_SPACES_BUCKET=wazifa-resumes-dev
-DO_SPACES_ACCESS_KEY_ID=...
-DO_SPACES_SECRET_ACCESS_KEY=...
-DO_SPACES_PUBLIC_URL=https://wazifa-resumes-dev.fra1.cdn.digitaloceanspaces.com
-```
-
-`DO_SPACES_PUBLIC_URL` is informational/optional for the private-resume flow. Signed S3 URLs use the Spaces endpoint.
-
-Restart the development server after changing `.env.local`.
-
-### 5. Add Deployment Variables
-
-Add the same variable names to the development DigitalOcean App:
-
-- Mark access and secret keys as encrypted secrets.
-- Use runtime availability.
-- Repeat later with a production bucket and production credentials.
-
-### 6. Confirm Dependencies
-
-```bash
-npm install @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
-```
-
-These are already present in the current working tree; do not reinstall unless the lockfile is lost.
-
 ## Verification Checklist
-
 - Space exists in the intended region.
 - Space/object access is private.
 - Scoped access key exists.
@@ -137,12 +80,10 @@ These are already present in the current working tree; do not reinstall unless t
 - No secret value is committed or shown in the recording.
 - (CORS is not required for the server-proxied flow — only for optional direct browser upload.)
 
-## Key Teaching Lines
-
+## Key points
 > The endpoint is used by the S3 client. The CDN URL is not a substitute for private authorization.
 
 > Infrastructure configuration is complete only when local and deployed environments use the same variable contract.
 
 ## Next
-
 Lecture 113 creates the storage client, validates the uploaded file, and stores it privately in Spaces.

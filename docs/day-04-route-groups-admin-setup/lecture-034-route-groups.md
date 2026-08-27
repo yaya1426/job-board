@@ -18,28 +18,74 @@ Implemented
 
 Commit `1ccf19d` introduced route groups. Public pages moved from `app/jobs/...` into a grouped folder (initially `(app)`, renamed to `(client)` in Day 5). Admin pages live under `app/(admin)/dashboard/`. Parentheses strip the group name from the URL: `(client)/jobs/page.tsx` → `/jobs`, not `/client/jobs`.
 
-## Recording Outline
+## Implementation steps
 
-- Explain the problem: two app shells, one `app/` tree, no URL pollution.
-- Show folder naming: `(client)`, `(admin)` — parentheses are required.
-- Demonstrate URL unchanged after move: `/jobs` still works from `(client)/jobs/page.tsx`.
-- Contrast route groups vs route segments: only non-parenthesized folders appear in URLs.
-- Show parallel trees: `(client)/layout.tsx` vs `(admin)/dashboard/layout.tsx` (layouts Day 5).
-- Mention `(auth)` group as later pattern for login/signup without public navbar.
-- Discuss colocation benefits: admin-only components/pages don't mingle with public pages.
-- Reference commit `1ccf19d` for the route group introduction.
-- Preview admin route files to create next.
-- Transition to admin routes milestone.
+### Step 1: Review the problem route groups solve
 
-## Verify in Repo
+Two app shells (public + admin), one `app/` tree, no extra URL segments.
 
+### Step 2: Create `(client)` route group
+
+Move Day 3 public routes into the group (URLs unchanged):
+
+```bash
+mkdir -p app/(client)
+# move app/page.tsx → app/(client)/page.tsx
+# move app/jobs/     → app/(client)/jobs/
+```
+
+Resulting tree:
+
+```
+app/
+├── layout.tsx
+├── (client)/
+│   ├── page.tsx              → /
+│   └── jobs/
+│       ├── page.tsx          → /jobs
+│       └── [id]/page.tsx     → /jobs/:id
+```
+
+### Step 3: Create `(admin)` route group
+
+```bash
+mkdir -p app/(admin)/dashboard
+```
+
+```
+app/
+└── (admin)/
+    └── dashboard/
+        └── page.tsx          → /dashboard
+```
+
+Parentheses are required — `(client)` not `client`.
+
+### Step 4: Verify URLs are unchanged
+
+| File | URL |
+|------|-----|
+| `app/(client)/jobs/page.tsx` | `/jobs` (not `/client/jobs`) |
+| `app/(admin)/dashboard/page.tsx` | `/dashboard` (not `/admin/dashboard`) |
+
+### Step 5: Preview per-group layouts (Day 5)
+
+- `app/(client)/layout.tsx` — navbar + footer (Lecture 45).
+- `app/(admin)/dashboard/layout.tsx` — sidebar (Lecture 46).
+- `app/(auth)/` — login/signup without public navbar (later).
+
+## Verify
 - `app/(client)/jobs/page.tsx` serves `/jobs` (not `/client/jobs`).
 - `app/(admin)/dashboard/page.tsx` serves `/dashboard`.
-- No folder literally named `client` or `admin` in the URL path.
+- No folder literally named `client` or `admin` appears in the URL path.
+
+## Outcome
+
+Documents route groups — folders wrapped in parentheses like `(client)` and `(admin)` — that organize code without adding URL segments.
 
 ## Notes / Gaps
 
-- Historical rename `(app)` → `(client)` happened early Day 5 — mention when students grep git history.
+- Historical rename `(app)` → `(client)` happened early Day 5 — mention when grepping git history.
 - Route groups can nest; this project keeps admin under `(admin)/dashboard/` for clear `/dashboard` prefix.
 - `(auth)` is post-Day 4 but follows the same grouping pattern.
 

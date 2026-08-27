@@ -1,7 +1,6 @@
 # Lecture 110 - Day (11) Plan | خطة اليوم الحادي عشر
 
 ## Goal
-
 Introduce Day 11 as one connected first-version workflow: upload a private resume, save its metadata, screen it synchronously with OpenAI after the application is persisted, and show the result to admins.
 
 ## Implementation Status
@@ -21,12 +20,16 @@ Introduce Day 11 as one connected first-version workflow: upload a private resum
 - `aiScore: 0` placeholder and fire-and-forget `screenApplication()` remain; synchronous await + optional score are still pending (Lecture 122).
 
 ## As Implemented Today
+Against the current repo: `JobApplyForm` includes a working PDF `<input type="file">` (not a fake drop zone). Trace the partially wired pipeline (Spaces upload → MongoDB snapshot → background screening trigger) and document remaining Lecture 122/123 gaps.
 
-When recording Lecture 110 against the current repo, open `JobApplyForm` and show the working PDF `<input type="file">` instead of claiming there is no file input. Then walk the partially wired pipeline (Spaces upload → MongoDB snapshot → background screening trigger) and call out the remaining Lecture 122/123 gaps.
+## Implementation steps
+1. Open **as implemented today**: `JobApplyForm` has a real `<input type="file" name="resume" accept=".pdf">` (dashed drop zone is commented out).
+2. Trace the target pipeline: form → `handleApplyToJob` → `uploadResume` → `saveNewApplication` (`PENDING`) → `screenApplication` → admin signed download.
+3. Inspect `applications.service.ts` and document gaps: `aiScore: 0` placeholder and `screenApplication(...)` **without `await`**. Lecture documents synchronous await; repository currently uses fire-and-forget.
+4. Name three storage boundaries: Spaces (bytes), MongoDB (metadata + screening), OpenAI (temporary analysis).
+5. List lectures 111–125 from the Day 11 README.
 
-
-## Explain It Simply (For Beginners)
-
+## Background
 Right now our apply form has a *pretty box that pretends to accept a file* but does nothing. By the end of Day 11, a candidate can attach a real PDF resume, and an AI quietly reads it and gives admins a helpful summary and score.
 
 Think of it like handing a document to a clerk:
@@ -37,7 +40,7 @@ Think of it like handing a document to a clerk:
 - During that same request, the server asks OpenAI to analyze the resume and records `COMPLETED` or `FAILED`.
 - The **admin** later reads the saved result.
 
-The big idea students should leave with: this is *not* only "add a file input." It is a small pipeline across storage, database, application orchestration, and AI.
+**Key idea:** this is *not* only "add a file input." It is a small pipeline across storage, database, application orchestration, and AI.
 
 ### Jargon decoder
 
@@ -46,8 +49,7 @@ The big idea students should leave with: this is *not* only "add a file input." 
 - **Screening** = the AI reading the resume against the job and producing a score + summary. It *assists* admins; it does not auto-reject anyone.
 - **Private storage** = files nobody can open without a temporary, signed permission link.
 
-## Current State to Show
-
+## Starting point
 - `JobApplyForm` contains a visual “DROP FILE HERE” area, but no file input.
 - `handleApplyToJob` receives text fields only.
 - `ApplicationModel.candidateResume` is only a string placeholder.
@@ -56,43 +58,7 @@ The big idea students should leave with: this is *not* only "add a file input." 
 - `@aws-sdk/client-s3` and `@aws-sdk/s3-request-presigner` are installed.
 - Upload and OpenAI Files/Responses code do not exist yet.
 
-## Recording Steps
-
-1. Open a job details page and point to the fake resume area.
-2. Submit or inspect the current form and show that no `File` reaches the Server Action.
-3. Open the application model and point to the placeholder resume field.
-4. Open the application service and point to `aiScore: 0`.
-5. Explain the target flow:
-
-```txt
-Candidate selects resume
-  -> apply form submits the file with the application (one request)
-  -> server validates the file and uploads it to private DigitalOcean Spaces
-  -> application saves resume key + metadata
-  -> application is marked screeningStatus=PENDING
-  -> application is saved first with screeningStatus=PENDING
-  -> the same apply service marks it PROCESSING
-  -> the service reads the private PDF from Spaces
-  -> the service uploads a temporary OpenAI file with one-hour expiration
-  -> Responses API analyzes file_id + job context
-  -> the temporary OpenAI file expires automatically
-  -> application becomes COMPLETED or FAILED
-  -> the apply request returns application success
-  -> admin opens resume via a short-lived signed download URL and sees the screening result
-```
-
-6. Explain the three storage boundaries:
-
-```txt
-DigitalOcean Spaces -> actual resume file
-MongoDB              -> application, file metadata, screening result/status
-OpenAI               -> produces structured screening output
-```
-
-7. Preview Lectures 111–125 from the Day 11 `README.md`.
-
-## Key Teaching Lines
-
+## Key points
 > We currently have upload design, not upload behavior.
 
 > Day 11 is not “add a file input.” It is a pipeline across storage, database, application orchestration, and AI.
@@ -102,9 +68,7 @@ OpenAI               -> produces structured screening output
 > This first version deliberately keeps the request open while OpenAI runs. Day 16 starts from the latency, timeout, burst, and stranded-state problems this creates.
 
 ## End State
-
-Students understand the problem, the final workflow, and why the day needs multiple layers.
+Covers the problem, the target workflow, and why the day spans storage, database, orchestration, and AI layers.
 
 ## Next
-
 Lecture 111 maps the file upload architecture and chooses simple server-proxied uploads for private resumes (with presigned direct upload named as a future scaling upgrade).

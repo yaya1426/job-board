@@ -1,11 +1,9 @@
 # Lecture 082 - SQL vs NoSQL: What to Choose? | SQL مقابل NoSQL
 
 ## Goal
+Teach the trade-off between relational and document databases so readers understand why wazifa.app uses MongoDB — without turning the lecture into a database religion debate.
 
-Teach the trade-off between relational and document databases so students understand why wazifa.app uses MongoDB — without turning the lecture into a database religion debate.
-
-## Explain It Simply (For Beginners)
-
+## Background
 A database is where your app remembers things after the server restarts.
 
 Two common families:
@@ -23,7 +21,6 @@ Neither is "better." They optimize for different shapes of data and different qu
 - **Aggregation** = MongoDB's pipeline for computing derived values (like applicant counts).
 
 ## Why MongoDB Fits This Project
-
 For wazifa.app at this stage:
 
 | Factor | Why MongoDB works here |
@@ -36,7 +33,6 @@ For wazifa.app at this stage:
 SQL would also work. PostgreSQL with JSON columns is a valid production choice. The course picks MongoDB because the document model matches the current entity shapes and keeps Day 9 focused on persistence, not migration tooling.
 
 ## When SQL Is Often Better
-
 Teach these honestly:
 
 - Heavy relational reporting across many normalized tables
@@ -45,29 +41,24 @@ Teach these honestly:
 - Complex ad-hoc joins are the main read pattern
 
 ## When Document Stores Shine
-
 - Entity data is mostly read/written as a whole document
 - Nested arrays and semi-structured fields are common
 - Schema evolves quickly during early product work
 - Horizontal scaling patterns matter later (not Day 9's focus)
 
-## Recording Steps
+## Implementation steps
+1. Compare a normalized SQL `jobs` + `applications` schema with one MongoDB `Job` document (`tags[]`, `requirements[]`).
+2. Describe the application **snapshot pattern** — one document stores submitted candidate/job fields even if live data changes later.
+3. Commit to MongoDB + Mongoose for wazifa.app; no ORM migration tooling in Day 9.
+4. Note that applicant counts will be **derived** with `$lookup` (Lecture 090), not stored on the job document.
 
-1. Draw a `jobs` SQL table vs a `Job` MongoDB document side by side.
-2. Show how `tags: string[]` and `requirements: string[]` feel natural in a document.
-3. Explain that applications store **snapshots** — a pattern that works in both SQL and documents, but maps cleanly to one application document.
-4. State the course decision: MongoDB + Mongoose for wazifa.app.
-
-## Key Teaching Lines
-
+## Key points
 > Choose the database that matches your data shape and team workflow, not the logo on a blog post.
 
 > We are not avoiding SQL forever. We are choosing the simplest persistent store for this job board right now.
 
 ## End State
-
-Students can explain the difference between tables and documents and articulate why this project starts with MongoDB.
+You should be able to explain the difference between tables and documents and articulate why this project starts with MongoDB.
 
 ## Next
-
 Lecture 083 walks through MongoDB Atlas setup (external platform work).

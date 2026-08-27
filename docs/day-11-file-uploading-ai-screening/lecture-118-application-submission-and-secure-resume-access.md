@@ -1,7 +1,6 @@
 # Lecture 118 - Application Submission and Secure Resume Access | تفاصيل التقديم والوصول الآمن للسيرة الذاتية
 
 ## Goal
-
 Extend the application details page with the submitted cover letter and resume metadata, prove that the raw private object URL correctly returns `403`, and let authorized admins open resumes through a short-lived signed URL.
 
 ## Implementation Status
@@ -20,12 +19,19 @@ Extend the application details page with the submitted cover letter and resume m
 - Raw private URL 403 demonstration step may need manual setup; final UI skips the temporary raw-link teaching step.
 
 ## As Implemented Today
-
 The protected GET handler lives under the **admin dashboard route tree**, not `/api/applications/...`. When updating `ApplicationSubmissionDetails`, point the OPEN RESUME link at `/dashboard/applications/${application.id}/resume`. Authorization still checks `getCurrentUser()` + `role === "ADMIN"`, loads the trusted key from MongoDB, and redirects to a presigned Spaces URL.
 
+## Implementation steps
+See steps below (Step 1–7). Summary:
+
+1. Create `ApplicationSubmissionDetails` — cover letter + resume metadata + OPEN RESUME link.
+2. Add `createResumeDownloadUrl(key)` to `services/uploads/uploads.service.ts` (signed GET, 15 min TTL in code).
+3. Create protected route at **`app/(admin)/dashboard/applications/[applicationId]/resume/route.ts`** — **not** under `app/api/applications/...`.
+4. Route flow: `getCurrentUser()` → `role === "ADMIN"` → `getApplicationById` → trusted `candidateResumeKey` → redirect to presigned URL.
+5. Link from UI: `/dashboard/applications/${application.id}/resume`.
+6. **As implemented today**: signed URL TTL is 15 minutes (lecture teaches 5); UI may show storage key instead of filename/size.
 
 ## Starting Point
-
 Lecture 117 created:
 
 ```txt
@@ -51,7 +57,6 @@ The missing pieces are:
 4. Protect resume access with a separate admin-only route.
 
 ## Final Request Flow
-
 ```txt
 Admin clicks OPEN RESUME
   -> GET /api/applications/{applicationId}/resume
@@ -65,7 +70,6 @@ Admin clicks OPEN RESUME
 The object remains private. The application stores the durable object key; the route creates temporary permission only when an authorized admin requests it.
 
 ## Files Changed
-
 ```txt
 components/applications/details/ApplicationSubmissionDetails.tsx
 app/(admin)/dashboard/applications/[applicationId]/page.tsx
@@ -76,7 +80,6 @@ app/api/applications/[applicationId]/resume/route.ts
 ---
 
 ## Step 1 - Create ApplicationSubmissionDetails
-
 Create:
 
 ```txt
@@ -167,7 +170,6 @@ What to explain:
 ---
 
 ## Step 2 - Add Submission Details to the Page
-
 Open:
 
 ```txt
@@ -207,7 +209,6 @@ There is intentionally no working resume link yet.
 ---
 
 ## Step 3 - Reproduce the Raw Private URL `403`
-
 Before solving secure downloads, expose the failure clearly.
 
 Open:
@@ -290,7 +291,6 @@ Teaching point:
 ---
 
 ## Step 4 - Add the Signed Download Helper
-
 Open:
 
 ```txt
@@ -380,7 +380,6 @@ signed URL         -> temporary permission; generate on demand
 ---
 
 ## Step 5 - Create the Admin-Only Resume Route
-
 Create:
 
 ```txt
@@ -464,7 +463,6 @@ Important:
 ---
 
 ## Step 6 - Replace the Raw URL With the Protected Route
-
 Return to:
 
 ```txt
@@ -529,7 +527,6 @@ The browser sees the temporary signed URL after the redirect, but it never recei
 ---
 
 ## Step 7 - Verify the Complete Lecture
-
 ### Submission details
 
 1. Visit `/dashboard/applications/{applicationId}`.
@@ -580,7 +577,6 @@ Expected behavior:
 ---
 
 ## Common Mistakes
-
 - Making the Space public to remove the `403`.
 - Keeping `DO_SPACES_PUBLIC_URL` in the final resume link.
 - Storing signed URLs in MongoDB.
@@ -591,8 +587,7 @@ Expected behavior:
 - Assuming every old application has resume metadata.
 - Sending Spaces credentials to a Client Component.
 
-## Key Teaching Lines
-
+## Key points
 > The application stores the object key; the server creates temporary permission.
 
 > A private file can be displayed safely without becoming a public file.
@@ -602,5 +597,4 @@ Expected behavior:
 > Hiding a button is UX. Checking the admin role in the route is security.
 
 ## Next
-
 Lecture 119 tours the OpenAI Platform and creates the server-only API client. Lectures 120–121 then send the private PDF through OpenAI Files and Responses APIs without a local extraction service.

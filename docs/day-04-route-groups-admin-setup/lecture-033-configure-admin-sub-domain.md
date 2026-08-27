@@ -16,30 +16,62 @@ External (Cloudflare DNS + App Platform domains); Partial (code side Implemented
 
 ## What Was Built
 
-Students added CNAME (or ALIAS) records for admin subdomains in Cloudflare, attached both hostnames to the App Platform service, and confirmed HTTPS certificates provision. The app code already lists these hosts in `proxy.ts`; DNS makes them real.
+DNS configuration added CNAME (or ALIAS) records for admin subdomains in Cloudflare, attached both hostnames to the App Platform service, and confirmed HTTPS certificates provision. The app code already lists these hosts in `proxy.ts`; DNS makes them real.
 
-## Recording Outline
+## Implementation steps
 
-- Draw request flow: browser → Cloudflare → DigitalOcean → Next.js `proxy.ts` → route.
-- Add `dev-admin.wazifa.app` CNAME to App Platform default hostname (staging first).
-- Add `admin.wazifa.app` for production when ready.
-- Attach domains in DigitalOcean App Platform UI.
-- Wait for TLS certificate issuance; confirm HTTPS padlock.
-- Test `dev-admin.wazifa.app/` → should redirect to `/dashboard` per proxy rules.
-- Test `dev.wazifa.app/dashboard` → should redirect to `/` on public host.
-- Explain why subdomains beat path-only admin (`/admin`) for surface separation.
-- Note cookies and `NEXTAUTH_URL` implications for later auth days.
-- Transition to route groups in the filesystem.
+### Step 1: Confirm host constants in code
 
-## Verify in Repo
+```5:6:proxy.ts
+const ADMIN_HOSTS = ["admin.wazifa.app", "dev-admin.wazifa.app"];
+const PUBLIC_HOSTS = ["wazifa.app", "dev.wazifa.app"];
+```
 
-- `ADMIN_HOSTS` in `proxy.ts` matches DNS hostnames exactly (case-insensitive after `.toLowerCase()`).
+DNS records must resolve to the same DigitalOcean app as the public host.
+
+### Step 2: Add Cloudflare DNS records
+
+| Hostname | Type | Target |
+|----------|------|--------|
+| `dev-admin.wazifa.app` | CNAME | App Platform default hostname |
+| `admin.wazifa.app` | CNAME | App Platform default hostname |
+
+Staging first (`dev-admin`), production when ready.
+
+### Step 3: Attach domains in DigitalOcean App Platform
+
+Settings → Domains → add both admin hostnames alongside existing public domains.
+
+### Step 4: Wait for TLS provisioning
+
+Confirm HTTPS padlock on both admin URLs before testing redirects.
+
+### Step 5: Test redirect matrix on real hostnames
+
+```bash
+# Case 1 — public host blocks dashboard
+curl -I https://dev.wazifa.app/dashboard
+
+# Case 2 — admin root opens dashboard
+curl -I https://dev-admin.wazifa.app/
+
+# Case 3 — admin blocks public pages
+curl -I https://dev-admin.wazifa.app/jobs
+```
+
+## Verify
+- `ADMIN_HOSTS` / `PUBLIC_HOSTS` match DNS hostnames.
 - Both staging admin and public URLs resolve over HTTPS.
 - No duplicate or conflicting DNS records in Cloudflare.
+- `ADMIN_HOSTS` in `proxy.ts` matches DNS hostnames exactly (case-insensitive after `.toLowerCase()`).
+
+## Outcome
+
+Wire DNS so `admin.wazifa.app` and `dev-admin.wazifa.app` point to the same DigitalOcean app as the public site, enabling host-based routing.
 
 ## Notes / Gaps
 
-- DNS propagation can take minutes; plan recording accordingly.
+- DNS propagation can take minutes; allow propagation time before testing.
 - Day 10 auth requires consistent cookie domain behavior across subdomains — future lesson.
 - `admin.wazifa.app/jobs` should redirect to `/dashboard` (Case 3) even before admin pages exist.
 

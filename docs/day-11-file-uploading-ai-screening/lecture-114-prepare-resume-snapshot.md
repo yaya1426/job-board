@@ -1,7 +1,8 @@
-# Lecture 114 - Prepare the Resume Snapshot | تجهيز بيانات السيرة الذاتية
+# Lecture 114 - Supplementary: Prepare the Resume Snapshot | تجهيز بيانات السيرة الذاتية
+
+> **Supplementary** — implementation step between Udemy Lectures 113 and 115; not a separate published lecture.
 
 ## Goal
-
 One small win: prepare the application data model to remember a resume's key, name, size, and type. The actual form upload comes next, in Lecture 115.
 
 ## Implementation Status
@@ -15,8 +16,16 @@ One small win: prepare the application data model to remember a resume's key, na
 ## Gaps vs This Lecture (if any)
 - Legacy `candidateResume` string placeholder is gone; optional resume metadata fields are in place.
 
-## Explain It Simply (For Beginners)
+## Implementation steps
+1. Add four optional fields to `types/Application.ts`: `candidateResumeKey`, `candidateResumeFileName`, `candidateResumeSize`, `candidateResumeContentType`.
+2. Replace `candidateResume` placeholder in `lib/models/application.model.ts` with the four optional schema fields.
+3. No repository mapper change — `...rest` spread picks up new plain fields automatically.
+4. Do **not** wire upload or validation yet — Lecture 115 fills these fields from `uploadResume` return value.
+5. Run `npx tsc --noEmit`; confirm existing applications without resume metadata still load.
 
+See **Step 1–3** below for exact field definitions.
+
+## Background
 Before the form can save a real upload, the application needs fields ready to receive its details. We first replace the vague `candidateResume` placeholder with a clear **snapshot contract**.
 
 Why a copy on the application instead of just pointing at the user's profile? Because a user can later change or delete their profile/resume, but the application should stay an honest record of *what they actually submitted that day*. It's like a receipt: it captures the moment even if things change later. This is the same "snapshot" idea already used for `candidateName` and `jobTitle`.
@@ -33,7 +42,6 @@ To keep this lesson runnable, make the new fields optional for now. That also le
 - **Untrusted input** = anything the browser sent us. We re-validate it server-side because the browser can lie.
 
 ## Files Updated
-
 ```txt
 types/Application.ts
 lib/models/application.model.ts
@@ -42,7 +50,6 @@ lib/models/application.model.ts
 Only two files change in this lesson. The repository mapper already spreads plain fields from the MongoDB document, so it does not need special code for these strings/numbers.
 
 ## Step 1 - Update `types/Application.ts`
-
 Add the four optional fields to the public `Application` interface, after `candidateCoverLetter`:
 
 ```ts
@@ -76,7 +83,6 @@ candidateResumeContentType -> "application/pdf"
 They are optional (`?`) so applications created before Day 11 still match the type.
 
 ## Step 2 - Update `lib/models/application.model.ts`
-
 Find the old placeholder:
 
 ```ts
@@ -108,7 +114,6 @@ candidateCoverLetter: { type: String, required: true },
 These fields deliberately are not `required` yet. Old MongoDB documents do not contain them, and the form does not fill them until Lecture 115.
 
 ## Step 3 - Why No Other File Changes
-
 ### `repositories/applications.repository.ts`
 
 No change is needed. Its mapper already collects the remaining plain fields with:
@@ -124,7 +129,6 @@ The four new values are included automatically through `...rest`. They are alrea
 Do not add resume validation or fake metadata here. Lecture 115 receives the real `File`, calls `uploadResume`, and saves the returned values. This keeps the current text-only apply flow working at the end of this lesson.
 
 ## Verification
-
 1. Run:
 
 ```bash
@@ -135,12 +139,10 @@ npx tsc --noEmit
 3. Confirm an existing application without resume metadata still loads.
 4. Inspect the schema and verify the vague `candidateResume` placeholder is gone.
 
-## Key Teaching Lines
-
+## Key points
 > Prepare the data shape before wiring the form that fills it.
 
 > Store the object key, never the bytes. MongoDB describes the file; Spaces holds it.
 
 ## Next
-
 Lecture 115 adds the real file input, uploads the PDF, and fills this snapshot in one submission.

@@ -19,21 +19,54 @@ External/ops only
 - HTTPS enforced for custom domains—browser shows padlock on both hostnames.
 - HTTP→HTTPS redirect behavior confirmed (Cloudflare or origin).
 
-## Recording Outline
+## Implementation steps
 
-- Explain TLS: encrypts traffic between browser and server; required for cookies, auth, and `.app` domains.
-- Review Cloudflare SSL/TLS mode (Full or Full (strict)) vs origin certificate on DO.
-- Check certificate status in DigitalOcean domain settings—wait if “Provisioning”.
-- Open `https://wazifa.app` and `https://admin.wazifa.app` in browser; inspect padlock.
-- Use browser devtools or `curl -I` to confirm HTTPS response and redirects.
-- Discuss mixed content warnings—avoid `http://` asset URLs on HTTPS pages.
-- Note NextAuth and secure cookies depend on HTTPS in production (`NEXTAUTH_URL`).
-- Troubleshoot common issues: DNS not propagated, wrong SSL mode, expired cert pending.
+### Step 1 — Review TLS and why it matters *(external ops — conceptual)*
+- TLS encrypts traffic between browser and server.
+- Required for: `.app` TLD (Google enforces HTTPS), secure cookies, NextAuth in production.
+- Without HTTPS, browsers show warnings and auth cookies may not work securely.
 
-## Verify in Repo
+### Step 2 — Configure Cloudflare SSL/TLS mode *(external ops)*
+- In Cloudflare dashboard → SSL/TLS:
+  - Review mode: **Full** or **Full (strict)** (recommended when origin has a valid certificate).
+  - Avoid **Flexible** if origin expects HTTPS—can cause redirect loops.
+- If orange cloud (proxy) is enabled, Cloudflare terminates TLS at the edge.
 
-- Browse to `https://wazifa.app` and `https://admin.wazifa.app`—confirm valid HTTPS.
-- After Day 10, confirm `NEXTAUTH_URL` uses `https://` in production env vars.
+### Step 3 — Check DigitalOcean certificate status *(external ops)*
+- In DigitalOcean App Platform → Domains:
+  - Confirm certificate status for `wazifa.app` and `admin.wazifa.app`.
+  - Wait if status shows “Provisioning”—can take several minutes after DNS propagates.
+
+### Step 4 — Verify HTTPS in the browser *(external ops)*
+- Inspect `https://wazifa.app` and `https://admin.wazifa.app`.
+- Confirm browser padlock icon (valid certificate, no mixed-content warnings).
+- Optional terminal check:
+
+```bash
+curl -I https://wazifa.app
+curl -I https://admin.wazifa.app
+```
+
+- Look for `HTTP/2 200` or `HTTP/1.1 200` and confirm HTTP→HTTPS redirect if testing `http://`.
+
+### Step 5 — Note production auth dependency
+- After Day 10, production `NEXTAUTH_URL` must use `https://` (e.g. `https://wazifa.app`).
+- Avoid mixed content: do not use `http://` asset URLs on HTTPS pages.
+- Troubleshoot common issues: DNS not propagated, wrong SSL mode, certificate still provisioning.
+
+## Verify
+- [ ] `https://wazifa.app` loads with a valid padlock (no certificate warnings).
+- [ ] `https://admin.wazifa.app` loads with a valid padlock.
+- [ ] `curl -I https://wazifa.app` returns a successful HTTPS response.
+- [ ] Cloudflare SSL/TLS mode is set appropriately (Full or Full strict).
+- [ ] DigitalOcean domain settings show certificates issued/provisioned.
+- [ ] No mixed-content warnings in browser devtools.
+
+## Outcome
+
+- TLS/HTTPS active on both `wazifa.app` and `admin.wazifa.app`.
+- HTTP→HTTPS redirect behavior confirmed.
+- Production infrastructure layer complete for initial launch—ready for Day 3 App Router work.
 
 ## Notes / Gaps
 
@@ -43,4 +76,4 @@ External/ops only
 
 ## Next
 
-[Lecture 18 — Recap Day 2](./lecture-018-recap-day-2.md)
+[Lecture 18 — Recap Day (2)](./lecture-018-recap-day-2.md)

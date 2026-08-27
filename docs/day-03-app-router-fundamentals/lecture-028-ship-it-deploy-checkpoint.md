@@ -16,25 +16,54 @@ External (deployment workflow; routes Implemented in repo)
 
 ## What Was Built
 
-Students pushed Day 3 work through the course branch workflow and confirmed `dev.wazifa.app` (or production) serves `/`, `/jobs`, and `/jobs/<id>`. This reinforces "ship from day 1" — routing is worthless to stakeholders until it runs on a real URL.
+Day 3 work was pushed through the project branch workflow and `dev.wazifa.app` (or production) was confirmed to serve `/`, `/jobs`, and `/jobs/<id>`. Routing must run on a real URL—not only localhost.
 
-## Recording Outline
+## Implementation steps
 
-- State the checkpoint: deploy what you have, even if UI is minimal.
-- Merge/push via the course branch rules (`feature/*` → `development` → production as applicable).
-- Trigger DigitalOcean deploy (or show dashboard build in progress).
-- Open `dev.wazifa.app` and click through all three routes.
-- Test one dynamic job URL on the deployed host.
-- Compare localhost vs deployed behavior (should match for static routing).
-- Note common deploy failures: build errors, missing env vars (less relevant for pure routing day).
-- Emphasize habit: every milestone gets a real URL verification.
-- Transition to Day 3 recap.
+### Step 1: Pre-deploy checklist
 
-## Verify in Repo
+Confirm these files are committed:
 
+- `app/layout.tsx`
+- `app/page.tsx` (or `app/(client)/page.tsx` if already moved)
+- `app/jobs/page.tsx`
+- `app/jobs/[id]/page.tsx`
+
+### Step 2: Push through course branch workflow
+
+```bash
+git status
+git push origin <your-feature-branch>
+# merge to development per course rules
+```
+
+### Step 3: Watch DigitalOcean build
+
+- Review App Platform dashboard.
+- Confirm build succeeds (no TypeScript errors in route files).
+- `next.config.ts` uses `output: "standalone"` for Docker deploy.
+
+### Step 4: Test on staging URL
+
+On `dev.wazifa.app` (or your staging host):
+
+1. `/` — home loads.
+2. `/jobs` — jobs listing loads.
+3. `/jobs/test-id` — dynamic route resolves (placeholder or real job).
+
+### Step 5: Compare localhost vs deployed
+
+Routing behavior should match. Note: subdomains (`admin.wazifa.app`) are Day 4 — only public host matters here.
+
+## Verify
 - Latest commit includes Day 3 route files.
-- Deploy succeeds on App Platform (or document if student env differs).
+- Deploy succeeds on App Platform.
 - Public staging URL loads home and `/jobs` without 404.
+- Deploy succeeds on App Platform (or document if local env differs).
+
+## Outcome
+
+Day 3 routing is deployed and verified on a real host—`/`, `/jobs`, and `/jobs/<id>` match localhost behavior.
 
 ## Notes / Gaps
 
@@ -44,4 +73,4 @@ Students pushed Day 3 work through the course branch workflow and confirmed `dev
 
 ## Next
 
-[Lecture 29 - Recap Day 3](./lecture-029-recap-day-3.md)
+[Lecture 29 - Recap Day (3)](./lecture-029-recap-day-3.md)

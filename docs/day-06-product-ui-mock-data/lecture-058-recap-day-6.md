@@ -1,4 +1,4 @@
-# Lecture 58 - Recap Day 6
+# Lecture 58 - Recap Day (6)
 
 ## Goal
 
@@ -8,7 +8,7 @@ Consolidate Day 6: a full product surface on mock data, explicit domain types, c
 
 **Complete (historical milestone).** All Day 6 UI delivered. Subsequent days replaced mock data paths with services and MongoDB while keeping components.
 
-## Key Files
+## Key Files (as implemented today)
 
 - Entire `components/` tree for jobs, applications, users, dashboard, landing, job-management
 - `context/jobs/`, `context/applications/`, `context/users/`
@@ -32,32 +32,45 @@ Day 6 deliverables checklist:
 | Applications | `/dashboard/applications` | ✅ |
 | Users | `/dashboard/users` | ✅ (mock candidates) |
 
-## Recording Outline
+## Implementation steps
 
-1. Demo full client flow: home → jobs → job details.
-2. Demo admin flow: dashboard → jobs → create → edit (show no save) → delete (show console log).
-3. Open `types/` and explain early domain modeling.
-4. Show context providers as client filter state — not yet server data layer.
-5. Name the three intentional debts: no persistence, no validation, mock-only candidates.
-6. Preview Day 7 (staging) and Day 8 (Server Actions + services).
+### Step 1: Walk the client flow
 
-## Verify in Repo
+Demo client flow: `/` → `/jobs` (filter) → `/jobs/[id]` (details + apply placeholder).
 
+### Step 2: Walk the admin flow
+
+Demo admin flow: `/dashboard` → `/dashboard/jobs` → create job → edit (show values don't persist) → delete (show console log only).
+
+### Step 3: Review domain types
+
+Inspect `types/` — review `Job`, `Application`, `Candidate`, `StatusFilters` as early domain modeling.
+
+### Step 4: Review context providers
+
+Inspect `context/jobs/`, `context/applications/`, `context/users/` — explain these hold client filter state, not server data.
+
+### Step 5: List intentional Day 6 debts
+
+List three intentional debts: no persistence (edit/delete/create on Day 6), no validation, candidates still mock. Preview Day 7 (staging) and Day 8 (Server Actions).
+
+## Verify
 ```bash
 git log --oneline --grep="Day 6"
-```
-
 Seven Day 6 commits from `1dfd33f` through `6b4175f`.
-
 - `JobsData.ts` / `ApplicationsData.ts` absent (removed Day 9).
 - `CandidateData.ts` present.
 - `EditJobForm` and delete handler still non-persisting.
 
-## Notes/Gaps
+## Outcome
 
-- Current repo is many days ahead; use Day 6 README + lecture docs when recording historical narrative.
+Full product surface on mock data is complete. **Current repo** has the same UI components but pages fetch via services/MongoDB; context providers remain for filters; edit/delete still non-persisting.
+
+## Notes / Gaps
+
+- Current repo is many days ahead; use Day 6 README + lecture docs in this repository historical narrative.
 - Context providers remain for client filters even after services own data fetching.
 
 ## Next
 
-Day 7 — staging environments, branch rules, and dev domain proxy configuration.
+Day 7 — staging environments and branch rules (`docs/day-07-staging-branch-rules/`)

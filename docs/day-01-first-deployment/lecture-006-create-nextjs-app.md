@@ -1,4 +1,4 @@
-# Lecture 6 - Create Next.js App | إنشاء تطبيق Next.js
+# Lecture 6 - Create Next.js App (TS + App Router) | إنشاء تطبيق Next.js
 
 ## Goal
 
@@ -28,23 +28,133 @@ Implemented (evolved: root layout now wraps `SessionProvider` from Day 10; page 
 - ESLint configured via `eslint-config-next` matching the Next.js version.
 - Tailwind CSS v4 wired through PostCSS (`@tailwindcss/postcss`).
 
-## Recording Outline
+## Implementation steps
 
-- Frame Day 1: ship something deployable before feature work.
-- Run `create-next-app` (or equivalent) with TypeScript, App Router, Tailwind, ESLint.
-- Walk the generated tree: `app/` is the routing root; `public/` holds static assets.
-- Explain `app/layout.tsx` as the HTML shell shared by every route.
-- Show `package.json` dependencies: `next@16.1.6`, `react@19.2.3`.
-- Open `tsconfig.json` and explain `@/*` imports and strict typing.
-- Run `npm run dev` and confirm localhost loads the starter page.
-- Preview that this skeleton will be deployed today—not weeks later.
-- Note React 19 + Next 16 as the course baseline; no Pages Router.
+### Step 1 — Scaffold with create-next-app
+- Day 1 establishes a deployable skeleton before feature work.
+- Run `create-next-app` with these options:
+  - TypeScript: **Yes**
+  - ESLint: **Yes**
+  - Tailwind CSS: **Yes**
+  - `src/` directory: **No** (course uses root-level `app/`)
+  - App Router: **Yes**
+  - Turbopack: default for `next dev`
+- Command example:
 
-## Verify in Repo
+```bash
+npx create-next-app@latest job-board
+```
 
-- Open `package.json` and confirm `"next": "16.1.6"`.
-- Open `app/layout.tsx` and confirm root HTML structure and `globals.css` import.
-- Run `npm run dev` and load `http://localhost:3000`.
+### Step 2 — Review the generated tree
+- `app/` is the App Router root; `public/` holds static assets.
+- Inspect key config files: `package.json`, `tsconfig.json`, `next.config.ts`, `eslint.config.mjs`, `postcss.config.mjs`.
+- Today’s repo also has `app/globals.css` and `next-env.d.ts` from the scaffold.
+
+### Step 3 — Review the root layout
+- Inspect `app/layout.tsx` — the HTML shell shared by every route.
+- Day 1 layout was fonts + `{children}` only; today it also wraps `SessionProvider` (added Day 10):
+
+```1:35:app/layout.tsx
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
+import SessionProvider from "@/components/providers/SessionProvider";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+export const metadata: Metadata = {
+  title: "Job Board",
+  description: "Job Board AI Interview Assistant",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <SessionProvider>{children}</SessionProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+- Day 1 layout includes only the fonts + `globals.css` import + `{children}`; `SessionProvider` is added on a later day.
+
+### Step 4 — Review package.json and TypeScript config
+- Inspect `package.json` and confirm the project baseline versions:
+
+```11:19:package.json
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1050.0",
+    "@aws-sdk/s3-request-presigner": "^3.1050.0",
+    "bcryptjs": "^3.0.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.576.0",
+    "mongoose": "^9.5.0",
+    "next": "16.1.6",
+```
+
+- Day 1 had only `next`, `react`, and `react-dom`—later dependencies were added on subsequent days.
+- Inspect `tsconfig.json` — `@/*` path alias and strict mode:
+
+```1:24:tsconfig.json
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+```
+
+### Step 5 — Run locally and preview deployment
+- Run `npm run dev` and confirm `http://localhost:3000` loads the starter page.
+- Note that this skeleton will be deployed today—not weeks later.
+- Review Tailwind v4 is wired through PostCSS (`postcss.config.mjs` → `@tailwindcss/postcss`).
+
+## Verify
+- [ ] `package.json` shows `"next": "16.1.6"` and `"react": "19.2.3"`.
+- [ ] `app/layout.tsx` has root HTML structure and `globals.css` import.
+- [ ] `tsconfig.json` has `"strict": true` and `"@/*": ["./*"]`.
+- [ ] `npm run dev` serves the starter page at `http://localhost:3000`.
+- [ ] `npm run lint` passes (ESLint via `eslint-config-next`).
+
+## Outcome
+
+- Next.js 16 App Router + TypeScript project scaffolded with Tailwind v4, ESLint, and Geist fonts in the root layout.
+- You can explain what `app/layout.tsx`, `package.json`, and `tsconfig.json` do at a Day 1 level.
 
 ## Notes / Gaps
 

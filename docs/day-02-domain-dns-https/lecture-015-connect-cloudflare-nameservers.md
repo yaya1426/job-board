@@ -19,21 +19,51 @@ External/ops only
 - Registrar nameservers updated to Cloudflare-assigned NS records (e.g. `*.ns.cloudflare.com`).
 - DNS management centralized in Cloudflare for production and future staging subdomains.
 
-## Recording Outline
+## Implementation steps
 
-- Explain nameservers: registrar delegates DNS control to Cloudflare.
-- Add site to Cloudflare; import or recreate DNS records from Lecture 14.
-- Copy Cloudflare nameservers from the dashboard.
-- Update nameservers at the registrar; save and wait for propagation.
-- Verify active status in Cloudflare (zone status “Active”).
-- Explain Cloudflare benefits for this course: DNS UI, proxy/CDN, TLS, DDoS basics.
-- Caution: nameserver change can take up to 24–48 hours though often faster.
-- Once active, all DNS edits happen in Cloudflare—not the registrar.
+### Step 1 — Review nameserver delegation *(external ops)*
+- The registrar delegates DNS authority to Cloudflare via nameserver (NS) records.
+- Once delegated, all DNS edits happen in Cloudflare—not the registrar.
 
-## Verify in Repo
+### Step 2 — Add site to Cloudflare *(external ops)*
+- In Cloudflare dashboard:
+  - Add site `wazifa.app`.
+  - Import or manually recreate DNS records from Lecture 14.
+  - Select the appropriate plan (Free tier is sufficient for this project).
 
-- No code changes—confirm Cloudflare zone shows “Active” for `wazifa.app`.
-- Use `dig NS wazifa.app` or Cloudflare dashboard to confirm nameserver delegation.
+### Step 3 — Update registrar nameservers *(external ops)*
+- Copy Cloudflare-assigned nameservers (e.g. `*.ns.cloudflare.com`) from the Cloudflare dashboard.
+- In the registrar dashboard:
+  - Replace existing nameservers with Cloudflare NS records.
+  - Save and wait for propagation (often minutes, up to 24–48 hours).
+
+### Step 4 — Verify zone activation *(external ops)*
+- In Cloudflare dashboard, confirm zone status shows **Active** for `wazifa.app`.
+- Optional terminal check:
+
+```bash
+dig NS wazifa.app
+```
+
+- Confirm returned nameservers are Cloudflare-assigned.
+
+### Step 5 — Review Cloudflare benefits and next steps
+- Benefits for this course: centralized DNS UI, proxy/CDN, TLS management, basic DDoS protection.
+- Caution: proxy (orange cloud) settings affect SSL mode—revisited in Lecture 17.
+- If domain was purchased through Cloudflare Registrar, this step may be automatic.
+- Next: connect custom domains in DigitalOcean App Platform (Lecture 16).
+
+## Verify
+- [ ] Cloudflare zone for `wazifa.app` shows status **Active**.
+- [ ] `dig NS wazifa.app` returns Cloudflare nameservers.
+- [ ] DNS records from Lecture 14 are present in the Cloudflare zone.
+- [ ] Registrar nameservers point to Cloudflare (not the old registrar DNS).
+- [ ] No code changes in the repository.
+
+## Outcome
+
+- DNS management centralized in Cloudflare for `wazifa.app`.
+- Registrar nameservers updated; zone active and ready for DigitalOcean domain connection.
 
 ## Notes / Gaps
 

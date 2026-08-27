@@ -16,27 +16,76 @@ Implemented
 
 ## What Was Built
 
-Students added Tailwind v4 to the Next.js project, wired PostCSS, and confirmed utility classes work in `page.tsx` components. v4 moves theme extension into CSS via `@theme` blocks and custom properties.
+Tailwind v4 was added to the Next.js project, wired PostCSS, and confirmed utility classes work in `page.tsx` components. v4 moves theme extension into CSS via `@theme` blocks and custom properties.
 
-## Recording Outline
+## Implementation steps
 
-- Explain utility-first CSS: compose UI with classes like `flex`, `p-4`, `text-sm`.
-- Show v4 entry: `@import "tailwindcss"` at top of `globals.css`.
-- Contrast v3 `tailwind.config.js` with v4 CSS-native configuration.
-- Introduce `@theme inline` for mapping design tokens to Tailwind color utilities.
-- Show `@custom-variant dark` for class-based dark mode.
-- Apply a few utilities on a page to prove setup (`bg-background`, `text-foreground`).
-- Mention `tw-animate-css` import for animation utilities.
-- Explain colocation: styles live on components, not separate CSS files per page.
-- Note fonts: Space Grotesk + JetBrains Mono imported in `globals.css`.
-- Transition to shadcn/ui installation.
+### Step 1: Install Tailwind v4 dependencies
 
-## Verify in Repo
+```bash
+npm install tailwindcss @tailwindcss/postcss tw-animate-css
+```
 
-- `app/globals.css` starts with Tailwind import.
+Confirm in `package.json`:
+
+```json
+"tailwindcss": "^4",
+"@tailwindcss/postcss": "^4",
+"tw-animate-css": "^1.4.0"
+```
+
+### Step 2: Configure PostCSS
+
+```1:7:postcss.config.mjs
+const config = {
+  plugins: {
+    "@tailwindcss/postcss": {},
+  },
+};
+
+export default config;
+```
+
+No `tailwind.config.js` — v4 is CSS-first.
+
+### Step 3: Add Tailwind import to `globals.css`
+
+```1:5:app/globals.css
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap");
+
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+```
+
+### Step 4: Add dark mode variant
+
+```7:8:app/globals.css
+/* Tailwind v4 dark mode controlled by `.dark` class */
+@custom-variant dark (&:where(.dark, .dark *));
+```
+
+### Step 5: Prove utilities work on a page
+
+Add classes to any `page.tsx`:
+
+```tsx
+<main className="bg-background text-foreground p-8">
+  <h1 className="text-4xl font-bold">TAILWIND WORKS</h1>
+</main>
+```
+
+Run `npm run dev` — no PostCSS/Tailwind compile errors.
+
+## Verify
+- `app/globals.css` starts with `@import "tailwindcss"`.
+- `postcss.config.mjs` uses `@tailwindcss/postcss`.
 - `@theme inline` block maps `--color-background`, `--color-primary`, etc.
-- Dev server compiles without PostCSS/Tailwind errors.
-- Pages render with Tailwind classes applied.
+- Dev server compiles without PostCSS/Tailwind errors; utility classes render on pages.
+
+## Outcome
+
+Install and configure Tailwind CSS v4 using the CSS-first setup: `@import "tailwindcss"` in `globals.css` instead of a JavaScript config file.
 
 ## Notes / Gaps
 

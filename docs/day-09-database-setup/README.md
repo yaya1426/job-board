@@ -1,12 +1,12 @@
-# Day 9 - Database Setup
+# Day (9) Database Setup
 
 ## Goal
 
 Move the app from mock data to MongoDB using Mongoose, introduce the repository layer, and complete the end-to-end "apply to a job" flow with persisted applications.
 
-## Complete Lecture Sequence
+## Lecture Index
 
-- [Lecture 081 - Day 9 Plan](./lecture-081-day-9-plan.md)
+- [Lecture 081 - Day (9) Plan](./lecture-081-day-9-plan.md)
 - [Lecture 082 - SQL vs NoSQL: What to Choose?](./lecture-082-sql-vs-nosql.md)
 - [Lecture 083 - Setting Up MongoDB Atlas](./lecture-083-mongodb-atlas-setup.md)
 - [Lecture 084 - Connection in Next.js using Mongoose](./lecture-084-mongoose-connection.md)
@@ -16,9 +16,9 @@ Move the app from mock data to MongoDB using Mongoose, introduce the repository 
 - [Lecture 088 - Applications: Create New Application Logic](./lecture-088-create-application.md)
 - [Lecture 089 - Applications: Cleanup Test Data](./lecture-089-cleanup-test-data.md)
 - [Lecture 090 - Applications: Using Aggregates for Queries](./lecture-090-aggregates-for-queries.md)
-- [Lecture 091 - Feature Branch for Day 9](./lecture-091-feature-branch-day-9.md)
-- [Lecture 092 - Caching issues in Next.js](./lecture-092-caching-force-dynamic.md)
-- [Lecture 093 - Recap Day 9](./lecture-093-recap-day-9.md)
+- [Lecture 091 - Feature Branch for Day (9)](./lecture-091-feature-branch-day-9.md)
+- [Lecture 092 - Caching Issues in Next.js](./lecture-092-caching-force-dynamic.md)
+- [Lecture 093 - Recap Day (9)](./lecture-093-recap-day-9.md)
 
 ## Commit Evidence
 
@@ -140,7 +140,7 @@ Fixes introduced:
 
 These were needed to avoid static build-time DB reads and stale production pages.
 
-## Teaching Narrative
+## Reference Guide
 
 The day intentionally starts simple: connect MongoDB and use Mongoose. Then it exposes why putting Mongoose directly in the service is problematic. The repository layer is introduced as a response to real pain, not as theory.
 

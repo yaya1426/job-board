@@ -1,11 +1,9 @@
 # Lecture 096 - Installing and Configuring NextAuth.js | تثبيت NextAuth
 
 ## Goal
-
 Install NextAuth.js v4, mount the catch-all API route, wrap the app in `SessionProvider`, and create a configuration-only `lib/auth.ts` with JWT sessions and a custom sign-in page.
 
-## Explain It Simply (For Beginners)
-
+## Background
 **Authentication** answers: "Who is this person?"
 
 NextAuth.js is the library we use to:
@@ -19,7 +17,6 @@ We use **v4** (stable on Next.js 16), not v5/Auth.js beta.
 Sessions use **JWT strategy** — the session lives in a signed cookie, not a database sessions table.
 
 ## Files
-
 - `package.json` — `next-auth`, `bcryptjs`
 - `app/api/auth/[...nextauth]/route.ts`
 - `lib/auth.ts`
@@ -28,7 +25,6 @@ Sessions use **JWT strategy** — the session lives in a signed cookie, not a da
 - `.env.local` — `NEXTAUTH_SECRET`, `NEXTAUTH_URL`
 
 ## Setup Steps
-
 1. Install: `npm install next-auth bcryptjs` (+ types if needed).
 2. Generate secret: `openssl rand -base64 32` → `NEXTAUTH_SECRET`.
 3. Set `NEXTAUTH_URL=http://localhost:3000` for local dev.
@@ -40,7 +36,6 @@ Sessions use **JWT strategy** — the session lives in a signed cookie, not a da
 6. Wrap `{children}` in `<SessionProvider>` at root layout.
 
 ## Configuration-Only Rule
-
 `lib/auth.ts` must not import repositories or `bcryptjs`. The `authorize` callback will delegate to `verifyCredentials` in the auth service (Lecture 099).
 
 ```txt
@@ -49,24 +44,21 @@ lib/auth.ts (config)
   -> repositories/users.repository.ts
 ```
 
-## Recording Steps
+## Implementation steps
+1. Install: `npm install next-auth bcryptjs`.
+2. Generate `NEXTAUTH_SECRET` (`openssl rand -base64 32`) and set `NEXTAUTH_URL=http://localhost:3000` in `.env.local`.
+3. Create `lib/auth.ts` with JWT strategy, `pages.signIn = "/login"`, and a `CredentialsProvider` stub (`authorize` returns `null` until Lecture 099).
+4. Create `app/api/auth/[...nextauth]/route.ts` exporting GET/POST from `NextAuth(authOptions)`.
+5. Create `components/providers/SessionProvider.tsx` and wrap `{children}` in `app/layout.tsx`.
+6. Keep `lib/auth.ts` configuration-only — no repository or `bcryptjs` imports.
 
-1. Explain why JWT sessions fit this course (no session collection, fewer moving parts).
-2. Install packages and env vars.
-3. Create route handler and SessionProvider.
-4. Hit `/api/auth/signin` or `/login` to confirm NextAuth mounts without 500s.
-5. Leave `authorize` as a stub returning `null` until user model exists.
-
-## Key Teaching Lines
-
+## Key points
 > `lib/auth.ts` is wiring, not business logic.
 
 > No `NEXTAUTH_SECRET` means no production sessions — even with JWT.
 
 ## End State
-
 NextAuth is installed and mounted. Login behavior comes after the user model and password hashing.
 
 ## Next
-
-Lecture 097 adds `UserModel` and role constants.
+[Lecture 097 — Creating User Model and Roles](./lecture-097-user-model-roles.md) adds `UserModel` and role constants.

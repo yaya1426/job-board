@@ -1,16 +1,19 @@
-# Day 1 - First Deployment
+# Day (1) First Deployment (Ship Day)
 
 ## Goal
 
 Get the project from zero to a deployable Next.js application. This day establishes the repo, the initial Next.js App Router project, and the deployment-oriented Docker/standalone foundation.
 
+
+Lecture files in this folder are **implementation reference guides** aligned with the repository—not video recording scripts. Each lecture documents goal, key files, build steps, verification, and gaps as they appear in the codebase.
+
 ## Complete Lecture Sequence
 
-- [Lecture 6 - Create Next.js App | إنشاء تطبيق Next.js](./lecture-006-create-nextjs-app.md)
-- [Lecture 7 - Create a Simple Page | إنشاء صفحة بسيطة](./lecture-007-create-a-simple-page.md)
-- [Lecture 8 - GitHub Repo Setup | إعداد مستودع GitHub](./lecture-008-github-repo-setup.md)
-- [Lecture 9 - Deploy to DigitalOcean (First Release) | النشر على DigitalOcean](./lecture-009-deploy-to-digitalocean-first-release.md)
-- [Lecture 10 - Recap Day 1 | ملخص اليوم الأول](./lecture-010-recap-day-1.md)
+- [Lecture 6 - Create Next.js App (TS + App Router)](./lecture-006-create-nextjs-app.md)
+- [Lecture 7 - Create a Simple Page](./lecture-007-create-a-simple-page.md)
+- [Lecture 8 - Github Repo Setup](./lecture-008-github-repo-setup.md)
+- [Lecture 9 - Deploy to DigitalOcean (First Release)](./lecture-009-deploy-to-digitalocean-first-release.md)
+- [Lecture 10 - Recap Day (1)](./lecture-010-recap-day-1.md)
 
 ## Teaching Order
 
@@ -59,7 +62,7 @@ By the end of the day, the project has:
 
 ## Teaching Narrative
 
-The course starts with a production-first mindset: ship something immediately, even if it is simple. Students see the full loop from code to repository to deployment before any feature work begins.
+The course starts with a production-first mindset: ship something immediately, even if it is simple. The full loop from code to repository to deployment runs before any feature work begins.
 
 The important teaching point is that deployment is not saved for the end. The application is designed from the beginning to run outside the local machine.
 

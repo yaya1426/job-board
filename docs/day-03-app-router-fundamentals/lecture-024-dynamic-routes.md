@@ -15,25 +15,71 @@ Implemented
 
 ## What Was Built
 
-Students added `app/jobs/[id]/page.tsx` (now `app/(client)/jobs/[id]/page.tsx`). The `[id]` folder name creates a dynamic segment: `/jobs/abc123` and `/jobs/xyz789` both hit the same page file with different param values.
+`app/jobs/[id]/page.tsx` (now `app/(client)/jobs/[id]/page.tsx`). The `[id]` folder name creates a dynamic segment: `/jobs/abc123` and `/jobs/xyz789` both hit the same page file with different param values.
 
-## Recording Outline
+## Implementation steps
 
-- Explain static vs dynamic segments: `jobs` is static; `[id]` is dynamic.
-- Create or open the `[id]` folder and `page.tsx` inside it.
-- Show example URLs: `/jobs/senior-engineer-id`, `/jobs/designer-role-id`.
-- Clarify naming: the folder is `[id]`; the param key in code is `id`.
-- Mention other dynamic patterns briefly: `[...slug]` catch-all, `[[...slug]]` optional catch-all (not used yet).
-- Connect to the product: every job posting needs its own shareable URL.
-- Show that only one `page.tsx` scales to N jobs — no per-job files.
-- Preview reading `params` in the next lecture (Next.js 15+ async `params` Promise).
-- Optional: show admin dynamic routes for contrast — `app/(admin)/dashboard/jobs/[jobId]/edit/page.tsx` uses `[jobId]` (Day 4+).
+### Step 1: Create the dynamic segment folder
 
-## Verify in Repo
+```bash
+mkdir -p app/jobs/[id]
+```
 
+Bracket syntax `[id]` tells Next.js this segment is dynamic, not a literal folder name in the URL.
+
+### Step 2: Add `page.tsx` inside `[id]`
+
+Start with a Day 3 placeholder that reads the param (full pattern in Lecture 25):
+
+```tsx
+// app/jobs/[id]/page.tsx — Day 3 skeleton
+type Props = {
+  params: Promise<{ id: string }>;
+};
+
+async function JobDetailsPage({ params }: Props) {
+  const { id } = await params;
+
+  return (
+    <main className="p-8">
+      <h1>JOB DETAILS</h1>
+      <p className="font-mono text-sm">ID: {id}</p>
+    </main>
+  );
+}
+
+export default JobDetailsPage;
+```
+
+### Step 3: Test multiple URLs
+
+Inspect `/jobs/test-id-1` and `/jobs/test-id-2` — same component, different `id` in the UI.
+
+### Step 4: Contrast static vs dynamic segments
+
+| Segment | Folder | Example URL |
+|---------|--------|-------------|
+| Static | `jobs/` | `/jobs` |
+| Dynamic | `[id]/` | `/jobs/abc123` |
+
+### Step 5: Preview admin dynamic routes (Day 4+)
+
+Admin uses the same mechanic with different param names:
+
+- `app/(admin)/dashboard/jobs/[jobId]/edit/page.tsx` → `/dashboard/jobs/:jobId/edit`
+- `app/(admin)/dashboard/applications/[applicationId]/page.tsx` → `/dashboard/applications/:id`
+
+## Verify
+- Folder `app/jobs/[id]/` (or `app/(client)/jobs/[id]/`) exists with `page.tsx`.
+- Navigating to `/jobs/any-string` renders the details page with that id.
+- One file scales to N jobs.
 - Folder `app/(client)/jobs/[id]/` exists with `page.tsx`.
 - Navigating to `/jobs/<valid-id>` renders job details (with DB-backed data today).
 - Invalid id shows `JobNotFound` component (added in later days; Day 3 may have been simpler).
+
+## Outcome
+
+Bracket folders (`[id]`) create dynamic segments—one page component serves many job detail URLs.
 
 ## Notes / Gaps
 

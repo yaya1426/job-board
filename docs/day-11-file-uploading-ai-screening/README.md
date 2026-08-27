@@ -1,4 +1,4 @@
-# Day 11 - File Uploading and AI Screening
+# Day (11) File Uploading & AI Screening
 
 ## Goal
 
@@ -12,7 +12,7 @@ Build the simplest fully functional resume-screening flow: upload a PDF through 
 | 111 Architecture | **Implemented** | Server-proxied private upload matches code |
 | 112 Spaces setup | **Partial** | `lib/storage.ts` wired; bucket provisioning is manual |
 | 113 Upload service | **Implemented** | PDF validation + PutObject |
-| 114 Resume snapshot | **Implemented** | Application resume metadata fields |
+| 114 Resume snapshot | **Supplementary** | Application resume metadata fields (between 113 and 115) |
 | 115 Apply form upload | **Partial** | Real file input exists; drop zone commented out |
 | 116 Pending/post-apply | **Partial** | Status UX wired; duplicate check TODO; service null-shape differs |
 | 117 Admin details | **Implemented** | Details route + workflow/candidate components |
@@ -23,7 +23,7 @@ Build the simplest fully functional resume-screening flow: upload a PDF through 
 | 122 Trigger screening | **Partial** | Fire-and-forget `screenApplication`; `aiScore: 0` TODO |
 | 123 Admin results UI | **Partial** | States render; `screenedAt` hidden; `aiScore ?? 0` |
 | 124 Feature branch | **Planned** | Workflow doc |
-| 124.1 Docker env | **Partial** | `MONGO_URI` build-arg exists; verify Spaces/OpenAI scope |
+| 124.1 Docker env | **Supplementary** | `MONGO_URI` build-arg exists; verify Spaces/OpenAI scope |
 | 125 Recap | **Partial** | Target flow documented; gaps in 122–123 remain |
 
 **Not yet matching lecture target:** synchronous `await screenApplication`, optional `aiScore`, duplicate-application guard, resume route under `/api/...`, full admin/candidate result UI (`screenedAt`, no fake zero).
@@ -39,13 +39,12 @@ Each lecture file includes `## Implementation Status`, `## Key Files (as impleme
 - `OPENAI_API_KEY` and `OPENAI_MODEL` are introduced only when the OpenAI service is taught.
 - The application currently uses a transitional `aiScore`; later lessons make it optional and display real completed scores on a 0–10 scale.
 
-## Complete Lecture Sequence
+## Lecture Index
 
 - [Lecture 110 - Day (11) Plan](./lecture-110-day-11-plan.md)
 - [Lecture 111 - File Upload Architecture](./lecture-111-file-upload-architecture.md)
 - [Lecture 112 - Setting Up DigitalOcean Spaces](./lecture-112-setting-up-digitalocean-spaces.md)
 - [Lecture 113 - Upload Service and File Validation](./lecture-113-upload-service-and-file-validation.md)
-- [Lecture 114 - Prepare the Resume Snapshot](./lecture-114-prepare-resume-snapshot.md)
 - [Lecture 115 - Upload Resume from Apply Form](./lecture-115-upload-resume-from-apply-form.md)
 - [Lecture 116 - Pending and Post-Apply State](./lecture-116-pending-and-post-apply-state.md)
 - [Lecture 117 - Application Details and Screening State in Admin](./lecture-117-display-resume-and-screening-state-in-admin.md)
@@ -56,10 +55,16 @@ Each lecture file includes `## Implementation Status`, `## Key Files (as impleme
 - [Lecture 122 - Trigger Screening After Application Submission](./lecture-122-trigger-screening-after-application-submission.md)
 - [Lecture 123 - Display Screening Results in Admin](./lecture-123-display-screening-results-in-admin.md)
 - [Lecture 124 - Feature Branch for Day (11)](./lecture-124-feature-branch-for-day-11.md)
-- [Lecture 124.1 - Docker Build Environment Variables](./lecture-124-1-docker-build-environment-variables.md)
 - [Lecture 125 - Recap Day (11)](./lecture-125-recap-day-11.md)
 
-## Teaching Order
+## Supplementary
+
+Implementation steps between published Udemy lectures — not separate video lectures:
+
+- [Lecture 114 - Supplementary: Prepare the Resume Snapshot](./lecture-114-prepare-resume-snapshot.md) — application resume metadata between Lectures 113 and 115
+- [Lecture 124.1 - Supplementary: Docker Build Environment Variables](./lecture-124-1-docker-build-environment-variables.md) — DigitalOcean custom-Dockerfile build/runtime env vars after Lecture 124
+
+## Reference Order
 
 ```txt
 110-118: make private upload, application snapshot, status, admin details,
@@ -75,7 +80,7 @@ Each lecture file includes `## Implementation Status`, `## Key Files (as impleme
 125: perform the complete verification recap
 ```
 
-The order is intentional: students first prove each storage and OpenAI operation, then connect them with the smallest end-to-end orchestration. The candidate request waits while OpenAI runs. That is acceptable for this first version, but it is not production-scalable; Day 16 starts by demonstrating the resulting latency, timeout, concurrency, burst, and stranded-state problems.
+The order is intentional: prove each storage and OpenAI operation, then connect them with the smallest end-to-end orchestration. The candidate request waits while OpenAI runs in the lecture target. That is acceptable for this first version, but it is not production-scalable; Day 16 addresses latency, timeout, concurrency, burst, and stranded-state problems.
 
 ## End-to-End Architecture
 
@@ -98,11 +103,11 @@ flowchart TD
 
 OpenAI PDF inputs are processed as both extracted text and page images. We do not build a local parser, OCR service, or `services/resumes` extraction layer.
 
-## Lesson Outcomes
+## Lecture Outcomes
 
 ### 110–118: Private Resume Foundation
 
-Students implement server-proxied upload, PDF/size validation, application resume metadata, `PENDING` status, post-apply UX, admin details, and an admin-authorized signed download route. The bucket remains private.
+Server-proxied upload, PDF/size validation, application resume metadata, `PENDING` status, post-apply UX, admin details, and an admin-authorized signed download route. The bucket remains private.
 
 ### 119: OpenAI Platform Setup
 

@@ -1,13 +1,11 @@
 # Lecture 117 - Application Details and Screening State in Admin | تفاصيل الطلب وحالة التقييم في لوحة الإدارة
 
 ## Goal
-
 Turn the applications table's **VIEW** action into a real application details route, then split the page into focused candidate and workflow components.
 
 This lecture stops at the application snapshot and workflow state. Cover-letter/resume presentation and secure private resume access belong to Lecture 118.
 
-## Problem-First Story
-
+## Problem
 The applications table already has an eye action, but the admin needs that action to open the exact application being reviewed.
 
 The details screen should answer two groups of questions:
@@ -18,7 +16,6 @@ The details screen should answer two groups of questions:
 The route should orchestrate data loading while small components own each visual section.
 
 ## Files Changed
-
 ```txt
 components/applications/ApplicationsTable.tsx
 components/applications/details/ApplicationCandidateDetails.tsx
@@ -48,8 +45,17 @@ repositories/applications.repository.ts       -> findApplicationById()
 - Cover letter/resume presentation and secure download belong to Lecture 118 (partially wired with a simplified UI).
 - `ApplicationWorkflowDetails` already renders COMPLETED AI fields (Lecture 123 overlap) but uses `aiScore ?? 0`.
 
-## Step 1 - Fix the Applications Table VIEW Link
+## Implementation steps
+See steps below (Step 1–6). Summary:
 
+1. Fix `ApplicationsTable` VIEW link → `/dashboard/applications/[applicationId]`.
+2. Create `app/(admin)/dashboard/applications/[applicationId]/page.tsx` — load via `getApplicationById`.
+3. Create `ApplicationCandidateDetails` — snapshot identity fields.
+4. Create `ApplicationWorkflowDetails` — hiring `status` + `screeningStatus` (no resume download yet — Lecture 118).
+5. Compose details page from focused components.
+6. **As implemented today**: workflow component may show `aiScore ?? 0` before Lecture 123 honest-state rendering.
+
+## Step 1 - Fix the Applications Table VIEW Link
 Open:
 
 ```txt
@@ -79,7 +85,6 @@ Teaching point:
 ---
 
 ## Step 2 - Build the Application Details Route
-
 The page stays responsible for orchestration:
 
 ```txt
@@ -98,7 +103,6 @@ We will build the two presentation components first and compose them in the rout
 ---
 
 ## Step 3 - Create ApplicationCandidateDetails
-
 Create:
 
 ```txt
@@ -166,7 +170,6 @@ application snapshot -> records what was submitted at apply time
 ---
 
 ## Step 4 - Create ApplicationWorkflowDetails
-
 Create:
 
 ```txt
@@ -234,7 +237,6 @@ Important scope note:
 ---
 
 ## Step 5 - Compose the Details Page
-
 Open:
 
 ```txt
@@ -304,7 +306,6 @@ What to explain:
 ---
 
 ## Step 6 - Verify the Lecture
-
 ### Navigation
 
 1. Visit `/dashboard/applications`.
@@ -347,7 +348,6 @@ Confirm the page shows:
 ---
 
 ## Common Mistakes
-
 - Linking the eye action to the candidate instead of the application.
 - Adding `/admin` to a dashboard URL even though host-based routing already owns the admin surface.
 - Fetching data separately inside each details component.
@@ -356,8 +356,7 @@ Confirm the page shows:
 - Adding cover-letter or resume access work before the application details foundation is complete.
 - Claiming the fake AI score has been removed when the current code still stores and renders it.
 
-## Key Teaching Lines
-
+## Key points
 > The route loads the application; focused components explain its snapshot and workflow.
 
 > Application details are historical submission data, not a live candidate profile.
@@ -365,5 +364,4 @@ Confirm the page shows:
 > Build the review screen first; add secure access to the submitted private file in the next lecture.
 
 ## Next
-
 Lecture 118 adds the cover letter and resume metadata to this details page, demonstrates why the private object URL returns `403`, and creates an admin-only signed resume access route.

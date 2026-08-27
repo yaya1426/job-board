@@ -17,26 +17,78 @@ Implemented
 
 ## What Was Built
 
-Day 5 students learned layout composition: root layout applies everywhere; group layouts add surface-specific UI without redefining `<html>`. Navigating between `/jobs` and `/` keeps navbar/footer mounted (client layout children swap). Admin pages share sidebar across `/dashboard/*`.
+Day 5 established layout composition: root layout applies everywhere; group layouts add surface-specific UI without redefining `<html>`. Navigating between `/jobs` and `/` keeps navbar/footer mounted (client layout children swap). Admin pages share sidebar across `/dashboard/*`.
 
-## Recording Outline
+## Implementation steps
 
-- Draw layout tree: Root → (client) layout → page.
-- Draw admin tree: Root → (admin)/dashboard layout → page.
-- Show `app/(client)/layout.tsx` — wraps `{children}` with nav + footer.
-- Show `app/(admin)/dashboard/layout.tsx` — sidebar + `<main>`.
-- Explain layout persistence during client-side navigation.
-- Clarify what belongs in root vs group layout (providers vs nav).
-- Mention `export const dynamic` on layouts came later for MongoDB — preview only.
-- Contrast layout vs template (`template.tsx` remounts — not used here).
-- Anti-pattern: duplicating navbar in every `page.tsx`.
-- Split milestones: client layout next, then admin.
+### Step 1: Draw the layout tree
 
-## Verify in Repo
+```
+app/layout.tsx                         ← <html>, <body>, globals.css, providers
+├── (client)/layout.tsx                ← NavbarHeader + NavbarFooter
+│   ├── page.tsx                       ← /
+│   └── jobs/page.tsx                  ← /jobs
+└── (admin)/dashboard/layout.tsx       ← AdminSidebar + <main>
+    └── page.tsx                       ← /dashboard
+```
 
+### Step 2: Read root layout responsibilities
+
+```21:34:app/layout.tsx
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en">
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <SessionProvider>{children}</SessionProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+Root owns: `<html>`, `<body>`, fonts, global CSS, providers. **Not** navbar or sidebar.
+
+### Step 3: Read client route-group layout
+
+```7:14:app/(client)/layout.tsx
+function AppLayout({ children }: { children: React.ReactNode }) {
+    return (
+        <div className="min-h-screen bg-background">
+            <NavbarHeader />
+            {children}
+            <NavbarFooter />
+        </div>
+    );
+}
+```
+
+### Step 4: Read admin route-group layout
+
+```19:24:app/(admin)/dashboard/layout.tsx
+  return (
+    <div className="min-h-screen bg-background flex">
+      <AdminSidebar currentUser={currentUser} />
+      <main className="flex-1 p-8 overflow-auto">{children}</main>
+    </div>
+  );
+```
+
+Day 5: no auth guard. Day 10 adds `getCurrentUser()` + redirect.
+
+### Step 5: Review layout persistence
+
+Client-side navigation between `/` and `/jobs` swaps `{children}` only — navbar and footer stay mounted. Same for admin sidebar across `/dashboard/*`.
+
+Anti-pattern: duplicating navbar markup in every `page.tsx`.
+
+## Verify
 - `app/(client)/layout.tsx` imports `NavbarHeader` and `NavbarFooter`.
 - `app/(admin)/dashboard/layout.tsx` imports `AdminSidebar`.
 - Navigating `/` → `/jobs` keeps header visible without full reload.
+
+## Outcome
+
+Documents nested layouts in the App Router: root layout vs route-group layouts, what persists across navigation, and where to put shared chrome.
 
 ## Notes / Gaps
 

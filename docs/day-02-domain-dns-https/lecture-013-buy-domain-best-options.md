@@ -2,7 +2,7 @@
 
 ## Goal
 
-Guide students through purchasing `wazifa.app` (or equivalent) from a registrar and preparing it for Cloudflare DNS management.
+Purchase `wazifa.app` (or equivalent) from a registrar and prepare it for Cloudflare DNS management.
 
 ## Implementation Status
 
@@ -19,26 +19,55 @@ External/ops only
 - Ownership of `wazifa.app` enabling DNS control for production and later staging subdomains.
 - No application code changes—pure infrastructure procurement.
 
-## Recording Outline
+## Implementation steps
 
-- Compare registrar options: price, renewal cost, WHOIS privacy, transfer policy.
-- Search and purchase `wazifa.app` (or course-equivalent domain).
-- Explain `.app` TLD and Google’s HTTPS requirement for `.app` zones.
-- Register the apex domain; subdomains are configured later in DNS—not purchased separately.
-- Recommend keeping registrar login and 2FA secure—domain hijacking is real.
-- Plan to point nameservers to Cloudflare in Lecture 15 (can transfer DNS or use Cloudflare registrar).
-- Do not connect to DigitalOcean yet—DNS foundation first.
-- Note students may use a different domain; `proxy.ts` constants must match their hostnames later.
+### Step 1 — Compare registrar options *(external ops)*
+- Compare registrars: Namecheap, Porkbun, Cloudflare Registrar, etc.
+- Evaluation criteria: first-year price, renewal cost, WHOIS privacy, transfer policy, 2FA support.
 
-## Verify in Repo
+### Step 2 — Search and purchase the domain *(external ops)*
+- In the registrar dashboard:
+  - Search for `wazifa.app` (or course-equivalent domain).
+  - Complete purchase with WHOIS privacy enabled if available.
+- `.app` TLD: Google requires HTTPS for `.app` zones—sets expectation for Lecture 17.
 
-- No code to verify—confirm domain ownership in registrar dashboard.
-- Cross-check intended hostnames against `proxy.ts` `PUBLIC_HOSTS` / `ADMIN_HOSTS`.
+### Step 3 — Understand what you own
+- Register the **apex** domain (`wazifa.app`) only.
+- Subdomains (`admin.wazifa.app`) are configured later in DNS—not purchased separately.
+- Secure registrar login with a strong password and 2FA—domain hijacking is real.
+
+### Step 4 — Plan DNS delegation
+- Do **not** connect to DigitalOcean yet—DNS foundation comes first (Lectures 14–15).
+- Plan to point nameservers to Cloudflare in Lecture 15.
+- If using Cloudflare Registrar, nameserver delegation may be automatic.
+
+### Step 5 — Align hostnames with codebase
+- Inspect `proxy.ts` and confirm intended production hostnames:
+
+```5:6:proxy.ts
+const ADMIN_HOSTS = ["admin.wazifa.app", "dev-admin.wazifa.app"];
+const PUBLIC_HOSTS = ["wazifa.app", "dev.wazifa.app"];
+```
+
+- A different domain requires updating these constants on Day 4.
+- Staging subdomains (`dev.*`) are configured Day 7, not during initial purchase.
+
+## Verify
+- [ ] Domain ownership confirmed in registrar dashboard.
+- [ ] Apex domain `wazifa.app` (or equivalent) is registered.
+- [ ] Registrar account secured with 2FA.
+- [ ] Intended hostnames match `proxy.ts` `PUBLIC_HOSTS` / `ADMIN_HOSTS`.
+- [ ] No application code changes in this lecture.
+
+## Outcome
+
+- Domain `wazifa.app` registered and owned, ready for Cloudflare DNS management.
+- No application code changes—pure infrastructure procurement.
 
 ## Notes / Gaps
 
 - Registrar UI changes frequently; verify exact purchase steps in the live dashboard.
-- Course uses `wazifa.app`; students with other domains update `proxy.ts` when taught on Day 4.
+- Course uses `wazifa.app`; other domains update `proxy.ts` on Day 4.
 - Staging subdomains (`dev.*`) are configured Day 7, not during initial purchase.
 
 ## Next

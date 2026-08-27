@@ -1,7 +1,6 @@
 # Lecture 122 - Trigger Screening After Application Submission | تشغيل التقييم بعد إرسال الطلب
 
 ## Goal
-
 Connect the proven Lecture 121 operation to the real apply flow with the smallest functional architecture:
 
 ```txt
@@ -37,18 +36,45 @@ Otherwise the candidate may submit again and create a duplicate application.
 - No try/catch logging block around awaited screening in `applyToJob` — failures are handled inside `screenApplication` but the HTTP response may return before screening finishes.
 
 ## As Implemented Today
-
 ```ts
 // services/applications/applications.service.ts (actual)
 screenApplication({ application: newApplication, job });
 return { success: true, data: newApplication };
 ```
 
-The lecture teaches `await screenApplication(...)` inside a try/catch so the same request waits for COMPLETED/FAILED. Today screening still runs, but the apply response can return while status is still `PENDING`/`PROCESSING`, and the returned `newApplication` object will not include updated screening fields. Keep the lecture's synchronous design as the target; note this gap when recording.
+The lecture teaches `await screenApplication(...)` inside a try/catch so the same request waits for COMPLETED/FAILED. Today screening still runs, but the apply response can return while status is still `PENDING`/`PROCESSING`, and the returned `newApplication` object will not include updated screening fields. Lecture documents synchronous await; repository currently uses fire-and-forget.
 
+## Implementation steps
+See steps below (Step 1–6). Summary:
+
+1. Make `aiScore` optional in `types/Application.ts` and Mongoose schema (remove `required: true`).
+2. Add screening result fields: `aiSummary`, `aiStrengths`, `aiRisks`, `screeningError`, `screenedAt`.
+3. Update `toApplication` mapper — convert `screenedAt` Date → string.
+4. Add `updateApplicationScreening` in repository with focused `ApplicationScreeningUpdate` type.
+5. Create `services/screening/screening.service.ts` — `PROCESSING` → analyze → `COMPLETED` or `FAILED` with safe error message.
+6. In `applyToJob`: remove `aiScore: 0`; after `saveNewApplication`, trigger screening.
+
+**As implemented today (gaps vs lecture target):**
+
+```ts
+// services/applications/applications.service.ts (actual)
+aiScore: 0, // TODO: Removed after AI screening is implemented
+screenApplication({ application: newApplication, job }); // no await, no try/catch
+return { success: true, data: newApplication };
+```
+
+Lecture target:
+
+```ts
+try {
+  await screenApplication({ application: newApplication, job });
+} catch (error) {
+  console.error("Application screening failed after submission", { applicationId: newApplication.id, ... });
+}
+return { success: true, data: newApplication };
+```
 
 ## Step 1 - Extend the Application Contract
-
 Update `types/Application.ts`. Make `aiScore` optional, then add the structured result, safe failure message, and completion time:
 
 ```ts
@@ -85,7 +111,6 @@ export interface Application {
 An absent score means “there is no completed result.” It does not mean zero.
 
 ## Step 2 - Extend the Mongoose Schema
-
 In `lib/models/application.model.ts`, replace the required score field and add the result fields:
 
 ```ts
@@ -106,7 +131,6 @@ screenedAt: { type: Date },
 Keep hiring `status` separate. `screeningStatus` describes the external analysis workflow; `status` describes the human hiring workflow.
 
 ## Step 3 - Convert `screenedAt` in the Repository Mapper
-
 Dates and ObjectIds must not leave the repository. Update the lean type and mapper in `repositories/applications.repository.ts`:
 
 ```ts
@@ -171,7 +195,6 @@ export async function saveNewApplication(
 ```
 
 ## Step 4 - Add One Screening Update Function
-
 The repository does not need a separate function for every status. Add one focused update type and one function to `repositories/applications.repository.ts`:
 
 ```ts
@@ -206,7 +229,6 @@ This function is still focused: callers may update screening fields, but they ca
 The service decides whether the update represents `PROCESSING`, `COMPLETED`, or `FAILED`. Never pass raw provider errors as `screeningError`; choose a safe application message first.
 
 ## Step 5 - Create the Synchronous Orchestration Service
-
 Create `services/screening/screening.service.ts`:
 
 ```ts
@@ -267,7 +289,6 @@ export async function screenApplication({
 `analyzeApplicationResume` uploads through Lecture 120's helper, so every temporary OpenAI file receives the one-hour `expires_after` policy. Do not persist the temporary OpenAI file ID.
 
 ## Step 6 - Trigger Screening After Persistence
-
 In `services/applications/applications.service.ts`, import the orchestrator:
 
 ```ts
@@ -317,7 +338,6 @@ The ordering is deliberate:
 Do not return `errors.resume`, `errors.application`, or a generic submission failure after step 2. The application exists and the duplicate check should prevent a second submission.
 
 ## Request Timeline
-
 ```mermaid
 sequenceDiagram
   actor Candidate
@@ -342,7 +362,6 @@ sequenceDiagram
 The response waits for the entire diagram. This is the known limitation, not an accidental claim of scalability.
 
 ## Verification
-
 Run:
 
 ```bash
@@ -362,7 +381,6 @@ Then test:
 8. No document stores a fake `aiScore: 0`.
 
 ## Design Caveats
-
 - The candidate waits for OpenAI, so submission latency rises.
 - Platform request timeouts can interrupt the request.
 - Bursts consume application-server and provider concurrency.
@@ -370,5 +388,4 @@ Then test:
 - Day 11 accepts these limits to teach one complete flow. Day 16 adds durable delivery, atomic claims, retries, and reconciliation after reproducing the pain safely.
 
 ## Next
-
 Lecture 123 renders the four states and reveals completed results only when they really exist.

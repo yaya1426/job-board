@@ -1,48 +1,57 @@
-# Day 10 - Authentication
+# Day (10) Authentication
 
 ## Goal
 
 Add real authentication using NextAuth.js v4, create identity-only users, hash passwords, support signup/login, expose session `id` and `role`, and replace the temporary application `candidateId` with the authenticated user's id.
 
-## Complete Lecture Sequence
+## Lecture Index
 
+- [Lecture 094 - Day (10) Plan](./lecture-094-day-10-plan.md)
+- [Lecture 095 - Authentication vs Authorization](./lecture-095-authentication-vs-authorization.md)
 - [Lecture 096 - Installing and Configuring NextAuth.js](./lecture-096-nextauth-install.md)
 - [Lecture 097 - Creating User Model and Roles](./lecture-097-user-model-roles.md)
 - [Lecture 098 - Signup and Password Hashing](./lecture-098-signup-bcrypt.md)
 - [Lecture 099 - Login Flow and Sessions](./lecture-099-login-sessions.md)
-- [Lecture 100 - Signup Success Redirect Cleanup](./lecture-100-signup-redirect-cleanup.md)
+- [Lecture 100 - Signup Redirect on Success](./lecture-100-signup-redirect-cleanup.md)
 - [Lecture 101 - Getting Current Logged User](./lecture-101-current-user.md)
 - [Lecture 102 - Adding User Profile](./lecture-102-user-profile.md)
 - [Lecture 103 - Showing Auth State in the Navbar](./lecture-103-navbar-auth.md)
-- [Lecture 104 - Protecting Server Actions & Enhance UX](./lecture-104-protect-server-actions-ux.md)
+- [Lecture 104 - Protecting Server Actions](./lecture-104-protect-server-actions-ux.md)
 - [Lecture 105 - Protecting Admin Pages with Proxy](./lecture-105-proxy-admin-protection.md)
-- [Lecture 106 - Clean Layout for Auth Pages](./lecture-106-clean-auth-layout.md) — **implemented**
-- [Lecture 107 - Role-Based Access Control (RBAC)](./lecture-107-rbac.md) — **partial** (ad-hoc role checks only)
-- [Lecture 108 - Admin vs Candidate Access Rules](./lecture-108-admin-vs-candidate-rules.md) — **partial**
-- [Lecture 109 - Feature Branch for Day 10](./lecture-109-feature-branch-day-10.md)
-- [Lecture 110 - Recap Day 10](./lecture-110-recap-day-10.md) — **partial** (full summary in this README)
+- [Lecture 106 - Clean Layout for Auth Pages](./lecture-106-clean-auth-layout.md)
+- [Lecture 107 - Feature Branch for Day (10)](./lecture-107-feature-branch-day-10.md)
+- [Lecture 108 - Admin Auth State in Sidebar](./lecture-108-admin-auth-state-in-sidebar.md)
+- [Lecture 109 - Recap Day (10)](./lecture-109-recap-day-10.md)
 
-## Lectures Covered
+## Supplementary
 
-Lectures 096–106 are implemented. Lectures 107–110 are documented; 107–108 and 110 are partial.
+Not separate Udemy lectures — reference material for deeper authorization concepts:
+
+- [Supplementary: Role-Based Access Control (RBAC)](./supplementary/lecture-107-rbac-supplementary.md) — ad-hoc role checks today; no centralized permission helper
+- [Supplementary: Admin vs Candidate Access Rules](./supplementary/lecture-108-admin-vs-candidate-supplementary.md) — access matrix and future hardening notes
+
+## Implementation Status Summary
+
+Lectures 094–108 are implemented in the repo. Lecture 109 recap summarizes the milestone; supplementary RBAC notes remain partial.
 
 | Lecture | Topic | Status |
 |---------|-------|--------|
+| 094 | Day (10) plan | ✅ |
+| 095 | Auth vs authorization | ✅ |
 | 096 | NextAuth install | ✅ |
 | 097 | User model + roles | ✅ |
 | 098 | Signup + bcrypt | ✅ |
 | 099 | Login + sessions | ✅ |
-| 100 | Signup redirect cleanup | ✅ |
+| 100 | Signup redirect on success | ✅ |
 | 101 | Current user | ✅ |
 | 102 | User profile | ✅ |
 | 103 | Navbar auth | ✅ |
-| 104 | Protect Server Actions + UX | ✅ |
+| 104 | Protect Server Actions | ✅ |
 | 105 | Proxy admin protection | ✅ |
-| 106 | Clean auth layout | ✅ **implemented** |
-| 107 | RBAC | ⚠️ partial |
-| 108 | Admin vs candidate rules | ⚠️ partial |
-| 109 | Feature branch | 📋 process |
-| 110 | Recap | ⚠️ partial |
+| 106 | Clean auth layout | ✅ |
+| 107 | Feature branch | 📋 process |
+| 108 | Admin sidebar auth state | ✅ |
+| 109 | Recap | ✅ |
 
 ## Commit Evidence
 
@@ -84,7 +93,7 @@ At the time this doc was written, Day 10 exists as working-tree changes plus `AG
 
 ## Final State
 
-Day 10 authentication is in progress. Implemented through Lecture 106:
+Day 10 authentication is implemented through Lecture 108:
 
 - NextAuth.js v4 installed and configured.
 - JWT session strategy.
@@ -113,6 +122,7 @@ Day 10 authentication is in progress. Implemented through Lecture 106:
 - Admin mutations are protected at the Server Action layer, starting with `handleCreateJob`.
 - Admin dashboard access is protected in `proxy.ts` using `getToken()` and the JWT `role`.
 - `app/(admin)/dashboard/layout.tsx` repeats the admin check as defense in depth.
+- `AdminSidebar` receives `currentUser` from the server layout and renders name + sign-out.
 
 ## Main Files
 
@@ -464,9 +474,9 @@ NextAuth config
   -> UserModel
 ```
 
-## Teaching Narrative
+## Reference Guide
 
-Day 10 is a sequence:
+Day 10 sequence:
 
 1. Install and mount NextAuth.
 2. Add users and roles.
@@ -485,15 +495,17 @@ Day 10 is a sequence:
 15. Protect sensitive Server Actions, starting with admin job creation.
 16. Protect admin routes with proxy-level JWT role checks and dashboard-layout defense in depth.
 17. Move auth pages to `(auth)` with host-aware layout; block signup on admin host.
+18. Show admin identity and sign-out in `AdminSidebar` via server-passed `currentUser`.
+19. Ship through feature branch workflow and recap the milestone.
 
-The key teaching line:
+Key principle:
 
 > `authorize` says who you are. `jwt` decides what gets stored in the cookie. `session` decides what the app sees.
 
 ## Known Remaining Work
 
-- **Lecture 107 RBAC** — ad-hoc `role === "ADMIN"` checks only; no centralized permission helper.
-- **Lecture 108 access rules** — documented in lecture file; not every future admin mutation may be gated yet.
+- **Supplementary RBAC** — ad-hoc `role === "ADMIN"` checks only; see [supplementary RBAC notes](./supplementary/lecture-107-rbac-supplementary.md).
+- **Supplementary access rules** — documented matrix; not every future admin mutation may be gated yet.
 - Admin seeding is not implemented. For now, an existing user's role is changed manually in MongoDB for testing.
 - `services/candidates/candidates.service.ts` still returns mock `CandidateData`.
 - The admin candidates page has not migrated to `User` + `UserProfile` yet.

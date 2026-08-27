@@ -20,21 +20,60 @@ External/ops only
 - DNS records in Cloudflare pointing apex and `admin` subdomain to App Platform.
 - Both hostnames route to the same Next.js deployment (modular monolith—one app, two surfaces later).
 
-## Recording Outline
+## Implementation steps
 
-- Open DigitalOcean App Platform → app → Settings → Domains.
-- Add `wazifa.app` and `admin.wazifa.app` as custom domains.
-- Copy DO-provided DNS targets (CNAME or A records) into Cloudflare.
-- Explain both domains hit the same container—surface split is application routing, not separate deploys.
-- Wait for DO to detect DNS and show domain as verified/configured.
+### Step 1 — Add custom domains in DigitalOcean *(external ops)*
+- In DigitalOcean App Platform → your app → **Settings** → **Domains**:
+  - Add `wazifa.app` as a custom domain.
+  - Add `admin.wazifa.app` as a custom domain.
+- DigitalOcean may require separate domain entries per hostname.
+
+### Step 2 — Copy DNS targets into Cloudflare *(external ops)*
+- DigitalOcean provides DNS targets (CNAME or A records) for each custom domain.
+- In Cloudflare DNS dashboard:
+  - Ensure apex `wazifa.app` record points to the DO-provided target.
+  - Ensure `admin.wazifa.app` CNAME points to the DO-provided target.
+- **Copy exact values from the DigitalOcean dashboard**—targets vary per app/region.
+
+### Step 3 — Review one app, two hostnames
+- Both `wazifa.app` and `admin.wazifa.app` route to the **same** Next.js deployment (modular monolith).
+- Surface split (public vs admin) is application routing via `proxy.ts` (Day 4)—not separate deploys.
+- Until Day 4, both URLs may show identical content (the Day 1 starter page).
+
+### Step 4 — Wait for domain verification *(external ops)*
+- In DigitalOcean, wait until each domain shows as verified/configured.
 - Test HTTP access before expecting HTTPS (Lecture 17).
-- Show default App Platform URL still works as fallback during migration.
-- Preview `proxy.ts` (Day 4) reading `host` header to route public vs admin.
+- The default App Platform URL still works as a fallback during migration.
 
-## Verify in Repo
+### Step 5 — Cross-check with codebase
+- Confirm `Dockerfile` is still the deploy artifact App Platform builds:
 
-- Load `http://wazifa.app` (or HTTPS after Lecture 17) and confirm Next.js app responds.
-- Open `proxy.ts` and confirm hostnames match DigitalOcean domain configuration.
+```80:83:Dockerfile
+# server.js is created by next build from the standalone output
+# https://nextjs.org/docs/pages/api-reference/config/next-config-js/output
+ENV HOSTNAME="0.0.0.0"
+CMD ["node", "server.js"]
+```
+
+- Inspect `proxy.ts` and confirm hostnames match DigitalOcean domain configuration:
+
+```5:6:proxy.ts
+const ADMIN_HOSTS = ["admin.wazifa.app", "dev-admin.wazifa.app"];
+const PUBLIC_HOSTS = ["wazifa.app", "dev.wazifa.app"];
+```
+
+## Verify
+- [ ] `wazifa.app` and `admin.wazifa.app` are added in DigitalOcean App Platform → Domains.
+- [ ] Cloudflare DNS records match DO-provided targets.
+- [ ] DigitalOcean shows both domains as verified/configured.
+- [ ] `http://wazifa.app` responds (HTTPS comes in Lecture 17).
+- [ ] `proxy.ts` hostnames match configured custom domains.
+
+## Outcome
+
+- Custom domains `wazifa.app` and `admin.wazifa.app` attached to the Day 1 App Platform deployment.
+- DNS in Cloudflare points both hostnames to the same Next.js container.
+- Ready for HTTPS verification in Lecture 17.
 
 ## Notes / Gaps
 

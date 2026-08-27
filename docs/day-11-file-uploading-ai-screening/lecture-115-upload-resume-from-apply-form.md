@@ -1,7 +1,6 @@
 # Lecture 115 - Upload Resume from Apply Form | رفع السيرة الذاتية من نموذج التقديم
 
 ## Goal
-
 Replace the fake drop area with a real PDF input, and let the apply Server Action upload the file to private Spaces — all in one submission, keeping the existing `useActionState` pattern.
 
 ## Implementation Status
@@ -17,8 +16,17 @@ Replace the fake drop area with a real PDF input, and let the apply Server Actio
 - Form uses a plain file input, not the styled dashed drop zone (drop zone code is commented in `JobApplyForm.tsx`).
 - Server Action must receive `FormData` with the `File`; confirm `Object.fromEntries` + zod `instanceof File` path works in your Next.js version when demoing.
 
-## Explain It Simply (For Beginners)
+## Implementation steps
+See steps below (Step 1–6). Summary:
 
+1. Raise `serverActions.bodySizeLimit` in `next.config.ts`.
+2. Extend `applications.validation.ts` — `resume: z.instanceof(File, ...)`.
+3. Keep `handleApplyToJob` as Pattern A `useActionState` — pass full `FormData` including file.
+4. In `applyToJob`: call `uploadResume(validated.data.resume)` inside try/catch; map `ZodError` to `errors.resume`.
+5. Save returned key + metadata on `saveNewApplication` payload.
+6. **As implemented today**: plain `<input type="file">` in `JobApplyForm` (styled drop zone commented out).
+
+## Background
 This is where the front-end finally does something real — and pleasantly, it stays **simple**. When the candidate hits **Submit**, the file rides along with the rest of the form in a single request. On the server, our apply action:
 
 1. Confirms the candidate is logged in.
@@ -41,7 +49,6 @@ An analogy: you hand your document to a clerk at the counter. They check it, fil
 - **`bodySizeLimit`** = the Next.js cap on Server Action request size (~1 MB by default); we raise it so a 5 MB PDF is accepted.
 
 ## Files Updated
-
 ```txt
 next.config.ts
 services/applications/applications.validation.ts
@@ -53,7 +60,6 @@ components/jobs/JobApplyForm.tsx
 Change the files in this order so each layer's contract is ready before the next layer uses it.
 
 ## Step 1 - Final `next.config.ts`
-
 The PDF travels inside the Server Action request. Next.js limits Server Action bodies to 1 MB by default, so use 6 MB: 5 MB for the PDF plus multipart/form fields overhead.
 
 ```ts
@@ -74,7 +80,6 @@ export default nextConfig;
 Restart the development server after changing `next.config.ts`.
 
 ## Step 2 - Final `services/applications/applications.validation.ts`
-
 Add `resume` to the existing application form schema. This rule only checks that a non-empty `File` arrived. `uploadResume` remains responsible for the authoritative PDF type and 5 MB checks.
 
 ```ts
@@ -102,7 +107,6 @@ Why validate twice?
 - `resumeUploadRequestSchema` answers: “Is it a PDF and no larger than 5 MB?”
 
 ## Step 3 - Final `app/actions/applications/applications.action.ts`
-
 The action stays thin. `Object.fromEntries(formData)` includes the uploaded `File`, so pass the raw object to the service for validation.
 
 ```ts
@@ -132,7 +136,6 @@ export async function handleApplyToJob(
 Do not cast the raw form object to `ApplyToJobInput`. It is untrusted until the service's zod schema validates it.
 
 ## Step 4 - Final `services/applications/applications.service.ts`
-
 This service orchestrates the whole server-side flow:
 
 ```txt
@@ -270,10 +273,9 @@ Important details:
 - `aiScore: 0` remains temporarily so existing score-based UI keeps compiling. Lecture 116 introduces `PENDING`; Lecture 122 removes the fake score while wiring real results, and Lecture 123 updates the admin UI.
 
 ## Step 5 - Final `components/jobs/JobApplyForm.tsx`
-
 Replace the fake resume area with a real file input and render `resume`/`auth` errors. Keep the existing `useActionState` flow:
 
-> Recording note: use the plain native input here so learners can focus on the upload pipeline. Visual drag-and-drop enhancement is optional UI polish and is not required for Day 11's functional outcome.
+> **Note:** use the plain native input here so readers can focus on the upload pipeline. Visual drag-and-drop enhancement is optional UI polish and is not required for Day 11's functional outcome.
 
 ```tsx
 "use client";
@@ -393,7 +395,6 @@ export default JobApplyForm;
 React 19's `useActionState` directly returns `isPending`; no `useFormStatus` or custom pending state is needed.
 
 ## Step 6 - Understand the Remaining Trade-off
-
 Upload and database save happen during one Server Action, which keeps the browser flow simple. They are still two external operations:
 
 ```txt
@@ -402,10 +403,9 @@ Spaces upload succeeds
   -> an unreferenced/orphan PDF can remain
 ```
 
-Cleanup is future hardening. Do not hide this production trade-off from learners.
+Cleanup is future hardening. Do not hide this production trade-off from readers.
 
 ## Verification
-
 1. Restart the development server after changing `next.config.ts`.
 2. Submit without a file: browser `required` blocks submission.
 3. Bypass/change the browser filter and select a non-PDF: `errors.resume` appears.
@@ -423,7 +423,6 @@ npm run lint
 ```
 
 ## Final Request Flow
-
 ```txt
 JobApplyForm
   -> FormData (text fields + File)
@@ -436,7 +435,6 @@ JobApplyForm
 ```
 
 ## Common Mistakes
-
 - Forgetting `name="resume"` means the file never enters `FormData`.
 - Forgetting the 6 MB action limit causes Next.js to reject valid large PDFs.
 - Calling `uploadResume` before authentication lets guests consume storage.
@@ -451,5 +449,4 @@ JobApplyForm
 > Keeping the single-request Server Action means one place to reason about success and failure.
 
 ## Next
-
 Lecture 116 introduces `screeningStatus: PENDING` while keeping the current UI runnable.
