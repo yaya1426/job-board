@@ -1,79 +1,71 @@
-# Lecture 10 - Recap Day (1) | ملخص اليوم الأول
+# Lecture 10 - Recap Day (1)
 
 ## Goal
 
-Consolidate Day 1: trace the path from zero to a deployed Next.js app and explain why each foundational file exists.
+Walk the Day 1 path once: scaffold → simple page → GitHub → Docker → live URL. Name what each foundational file was for.
 
 ## Implementation Status
 
-Implemented (Day 1 foundation intact; many layers added on later days).
+**Day 1 foundation is still in the repo.** Layout, home page, Dockerfile, and config all grew later; the deploy loop did not change.
 
-## Key Files (as implemented today)
+## What We Really Did
 
-- `package.json`
-- `app/layout.tsx`
-- `app/(client)/page.tsx` (evolved from Day 1 `app/page.tsx`)
-- `app/globals.css`
-- `tsconfig.json`
-- `next.config.ts`
-- `Dockerfile`
-- `.gitignore`
+| Lecture | Result |
+|---------|--------|
+| 6 | `create-next-app`: Next 16.1.6, React 19.2.3, App Router, Tailwind v4, ESLint, npm |
+| 7 | `/` shows **Job Board** / **Welcome to Production App!** |
+| 8 | GitHub remote; incremental commits; `.gitignore` blocks `.env*` |
+| 9 | Official Dockerfile, then `output: "standalone"`, App Platform URL |
 
-## What Was Built
+Intentionally **not** on Day 1: database, auth, admin, route groups, custom domain, job listings.
 
-- End-to-end loop: scaffold → customize page → version in Git → deploy on DigitalOcean.
-- Next.js 16 App Router + TypeScript project running locally and in production.
-- Standalone Docker deployment pipeline on App Platform.
-- Production-first mindset established: deployment is part of development, not a finale.
+## Files and their Day 1 job
+
+| File | Day 1 role |
+|------|------------|
+| `package.json` | `next`, `react`, `react-dom` only; `dev` / `build` / `start` / `lint` |
+| `app/layout.tsx` | HTML shell, Geist fonts, metadata `Job Board`, `{children}` |
+| `app/page.tsx` | `/` — centered heading (later `app/(client)/page.tsx`) |
+| `app/globals.css` | Tailwind v4 `@import "tailwindcss"` |
+| `tsconfig.json` | `strict`, `@/*` |
+| `next.config.ts` | `output: "standalone"` after Lecture 9 |
+| `Dockerfile` | multi-stage → `node server.js` on port 3000 |
+| `.gitignore` | `node_modules`, `.next`, `.env*` |
 
 ## Implementation steps
 
-### Step 1 — Recap the Day 1 arc
-- Day sequence: create app → simple page → GitHub → Docker deploy.
-- Spiral + ship: tomorrow adds domain/DNS; no rewrite of today's work.
+### 1. Restate the arc
 
-### Step 2 — Review key files and their Day 1 roles
-- Review each file briefly and state its Day 1 purpose (do not re-implement):
-  - `package.json` — scripts and dependencies (`next@16.1.6`, `react@19.2.3`).
-  - `app/layout.tsx` — root HTML shell, fonts, global CSS.
-  - `app/page.tsx` (Day 1) / `app/(client)/page.tsx` (today) — home route at `/`.
-  - `tsconfig.json` — strict TypeScript, `@/*` alias.
-  - `next.config.ts` — `output: "standalone"`.
-  - `Dockerfile` — multi-stage build → `node server.js`.
-  - `.gitignore` — excludes secrets and build artifacts.
+Create the app, put something visible on `/`, push, containerize, deploy. Tomorrow adds DNS; today’s work is not thrown away.
 
-### Step 3 — Review evidence of incremental progress
-- Run `git log --oneline | head` and match early Day 1 commits.
-- Load the deployed App Platform URL alongside `http://localhost:3000`—same app, different environment.
+### 2. Match git to the story
 
-### Step 4 — List what is intentionally missing
-- No database, auth, admin surface, or real job data yet.
-- Route groups `(client)` / `(admin)` reorganize URLs on Day 4 without changing deploy mechanics.
-- `SessionProvider` in layout, `MONGO_URI` in Dockerfile, and rich landing UI all arrive on later days.
+```bash
+git log --oneline --reverse | head -7
+```
 
-### Step 5 — Preview Day 2 and close
-- Day 2 preview: real domain (`wazifa.app`), Cloudflare DNS, HTTPS.
-- Verify the deploy still loads before moving on.
+Expect: README → tsconfig → gitignore → boilerplate → page subtitle → Dockerfile → standalone.
+
+### 3. Compare local and production
+
+`http://localhost:3000` and the App Platform URL should show the same simple page.
+
+### 4. Name what is missing on purpose
+
+Route groups, SessionProvider, `MONGO_URI` in the Dockerfile, and the landing UI all arrive on later days.
 
 ## Verify
-- [ ] You can trace the path: scaffold → page → git → Docker → App Platform URL.
-- [ ] `npm run build` completes cleanly.
-- [ ] `git log --oneline | head` shows Day 1 commits.
-- [ ] `next.config.ts` has `output: "standalone"` and `Dockerfile` exists.
-- [ ] Deployed URL and localhost both serve the app.
+
+- [ ] You can say the path: scaffold → page → git → Docker → App Platform
+- [ ] `npm run build` succeeds
+- [ ] Early commits match the table in the Day 1 README
+- [ ] `output: "standalone"` and `Dockerfile` exist
+- [ ] Deployed URL loads
 
 ## Outcome
 
-- Day 1 foundation is consolidated: Next.js 16 App Router project running locally and in production via standalone Docker on App Platform.
-- Production-first mindset established—deployment is part of development, not a finale.
-- Ready for Day 2 infrastructure work (domain, DNS, HTTPS).
-
-## Notes / Gaps
-
-- Home page, layout, and Dockerfile all evolved significantly after Day 1.
-- No `MONGO_URI` or env vars on Day 1; database arrives Day 9.
-- Route groups `(client)` / `(admin)` reorganized URLs on Day 4 without changing deploy mechanics.
+A Next.js 16 app runs locally and in production. Deployment is part of development. Day 2 attaches `wazifa.app` without changing this container setup.
 
 ## Next
 
-Day 2 begins with [Lecture 11 — Day (2) Plan](../day-02-domain-dns-https/lecture-011-day-2-plan.md)
+Day 2 starts with [Lecture 11 — Day (2) Plan](../day-02-domain-dns-https/lecture-011-day-2-plan.md)

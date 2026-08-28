@@ -1,130 +1,107 @@
-# Lecture 9 - Deploy to DigitalOcean (First Release) | النشر على DigitalOcean
+# Lecture 9 - Deploy to DigitalOcean (First Release)
 
 ## Goal
 
-Deploy the Next.js app to DigitalOcean App Platform using Docker and standalone output so a real URL serves the application outside localhost.
+Serve the Day 1 page on a real URL using DigitalOcean App Platform, a Docker image, and Next.js standalone output.
 
 ## Implementation Status
 
-Implemented (Dockerfile later gained build-time `ARG`/`ENV` for `MONGO_URI` and other secrets on Day 9 DB work and Day 11; Day 1 Dockerfile was simpler).
+**Done on Day 1.** Same deploy path is still used. The Dockerfile and `next.config.ts` later grew extra env and upload settings.
 
-## Key Files (as implemented today)
+## What We Really Did
 
-- `Dockerfile`
-- `next.config.ts`
-- `package.json`
-- `.dockerignore` (if present)
+Two commits, in this order:
 
-## What Was Built
+1. **`69a7f8f` Add Dockerfile** — official Next.js multi-stage example (`node:22-alpine`, deps → builder → runner, `CMD ["node", "server.js"]`).
+2. **`e80545f` Add next.js standalone** — `output: "standalone"` in `next.config.ts`.
 
-- `next.config.ts` with `output: "standalone"` for minimal production bundle (commit `e80545f`).
-- Multi-stage `Dockerfile`: deps → builder → runner using `node:22-alpine` (commit `69a7f8f`).
-- Runner stage copies `.next/standalone` and static assets; runs `node server.js` on port 3000.
-- DigitalOcean App Platform app configured for Dockerfile-based build and deploy.
-- First production URL live on App Platform (before custom domain on Day 2).
+Standalone was added **after** the Dockerfile. The image copies `.next/standalone` and runs `server.js`; without `output: "standalone"`, that file is not produced. The second commit is the fix that makes the first commit work.
 
-## Implementation steps
+Day 1 `next.config.ts` after the fix:
 
-### Step 1 — Enable standalone output
-- Standalone output rationale: smaller Docker image—only traced dependencies are shipped.
-- Inspect `next.config.ts` and confirm `output: "standalone"`:
-
-```1:12:next.config.ts
+```ts
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  experimental: {
-    serverActions: {
-      bodySizeLimit: "6mb",
-    }
-  }
 };
 
 export default nextConfig;
 ```
 
-- Day 1 had only `output: "standalone"`—`serverActions.bodySizeLimit` was added Day 11 for resume uploads.
+Day 1 Dockerfile had **no** `ARG`/`ENV` for `MONGO_URI` or API keys. Builder stage was: copy `node_modules`, copy source, `npm run build`.
 
-### Step 2 — Review the multi-stage Dockerfile
-- Inspect `Dockerfile` — each stage:
-  - **deps** — install `node_modules` from lockfile.
-  - **builder** — copy source, run `next build`.
-  - **runner** — copy `.next/standalone` + static assets, run as non-root `nextjs` user.
+Runner stage (unchanged in spirit today):
 
-```56:83:Dockerfile
-# Production image, copy all the files and run next
-FROM base AS runner
-WORKDIR /app
+- non-root user `nextjs`
+- copy `public`, `.next/standalone`, `.next/static`
+- `PORT=3000`, `HOSTNAME=0.0.0.0`
+- `CMD ["node", "server.js"]`
 
-ENV NODE_ENV=production
-# Uncomment the following line in case you want to disable telemetry during runtime.
-# ENV NEXT_TELEMETRY_DISABLED=1
+App Platform:
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+- Connect the GitHub repo from Lecture 8
+- **Dockerfile** build (not a Node buildpack)
+- HTTP port **3000**
+- First live URL is the App Platform default (`https://<app>.ondigitalocean.app`), **not** `wazifa.app`
 
-COPY --from=builder /app/public ./public
+No `.dockerignore` was added.
 
-# Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+## Implementation steps
 
-USER nextjs
+### 1. Enable standalone output
 
-EXPOSE 3000
-
-ENV PORT=3000
-
-# server.js is created by next build from the standalone output
-# https://nextjs.org/docs/pages/api-reference/config/next-config-js/output
-ENV HOSTNAME="0.0.0.0"
-CMD ["node", "server.js"]
+```ts
+const nextConfig: NextConfig = {
+  output: "standalone",
+};
 ```
 
-- `HOSTNAME=\"0.0.0.0\"` and `PORT=3000` for container networking.
-- Note: current Dockerfile also declares build-time `ARG`/`ENV` for `MONGO_URI` and other secrets (Days 9 and 11)—Day 1 had none.
+This traces only the files the server needs so the runner image stays small.
 
-### Step 3 — Verify build locally
-- Run `npm run build` and confirm `.next/standalone` is generated.
-- Optionally test the standalone server locally:
+### 2. Add the official Next.js Dockerfile
+
+Use the Next.js Docker example: `node:22-alpine`, three stages, lockfile-aware install (`npm ci` because this repo has `package-lock.json`).
+
+### 3. Build locally
+
+```bash
+npm run build
+```
+
+Confirm `.next/standalone` exists. Optionally:
 
 ```bash
 node .next/standalone/server.js
 ```
 
-### Step 4 — Configure DigitalOcean App Platform
-- Create/configure an App Platform app:
-  - Connect the GitHub repository from Lecture 8.
-  - Select **Dockerfile** as the build method (not buildpack).
-  - Set HTTP port to **3000**.
-- Trigger first deploy; watch build logs for `next build` success.
+### 4. Create the App Platform app
 
-### Step 5 — Confirm production URL
-- Review the default App Platform URL (e.g. `https://<app-name>.ondigitalocean.app`) and confirm the simple page loads.
-- Shipped on Day 1—not after weeks of local-only work.
-- Custom domain and HTTPS come on Day 2.
+- GitHub source from Lecture 8
+- Dockerfile build method
+- Port 3000
+- Watch logs for a successful `next build`
+
+### 5. Open the default URL
+
+The centered **Job Board / Welcome to Production App!** page should load over HTTPS on `*.ondigitalocean.app`. Custom domain is Day 2.
+
+## Today (do not teach as Day 1)
+
+- `next.config.ts` also sets `experimental.serverActions.bodySizeLimit: "6mb"` (Day 11 resume uploads).
+- Dockerfile builder declares `ARG`/`ENV` for `MONGO_URI`, Spaces, and OpenAI (Days 9 and 11) because App Platform does not inject runtime env into `docker build` unless you pass build args.
 
 ## Verify
-- [ ] `next.config.ts` has `output: "standalone"`.
-- [ ] `Dockerfile` ends with `CMD ["node", "server.js"]` in a multi-stage build.
-- [ ] `npm run build` succeeds and `.next/standalone` exists.
-- [ ] App Platform build logs show a successful `next build`.
-- [ ] Default App Platform URL serves the Next.js app.
+
+- [ ] `output: "standalone"` in `next.config.ts`
+- [ ] Dockerfile ends with `CMD ["node", "server.js"]`
+- [ ] `npm run build` produces `.next/standalone`
+- [ ] App Platform build succeeds
+- [ ] Default App Platform URL serves the Day 1 page
 
 ## Outcome
 
-- Next.js app deploys to DigitalOcean App Platform via Docker with standalone output.
-- A real production URL serves the Day 1 page outside localhost.
-- Foundation ready for custom domain connection on Day 2.
-
-## Notes / Gaps
-
-- Current `Dockerfile` declares build-time `ARG`/`ENV` for `MONGO_URI`, Spaces, and OpenAI keys—added when DB and Day 11 features required build-time env access.
-- Day 1 deploy had no database; the app was static/simple HTML from Next.js.
-- `next.config.ts` today also sets `experimental.serverActions.bodySizeLimit` for resume uploads (Day 11).
-- App Platform default URL differs from `wazifa.app`; domain connection is Day 2.
+The app runs outside localhost. Domain, DNS, and Cloudflare come next — the container path does not change.
 
 ## Next
 

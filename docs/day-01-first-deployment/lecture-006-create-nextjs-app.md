@@ -1,64 +1,83 @@
-# Lecture 6 - Create Next.js App (TS + App Router) | إنشاء تطبيق Next.js
+# Lecture 6 - Create Next.js App (TS + App Router)
 
 ## Goal
 
-Create the initial Next.js 16 application with TypeScript and the App Router—the foundation every later feature will build on.
+Scaffold the Next.js 16 App Router project that every later day builds on.
 
 ## Implementation Status
 
-Implemented (evolved: root layout now wraps `SessionProvider` from Day 10; page later moved to `app/(client)/page.tsx` on Day 4).
+**Done on Day 1.** The scaffold is still the same app; later days added providers, route groups, and dependencies around it.
 
-## Key Files (as implemented today)
+## What We Really Did
 
-- `package.json`
-- `tsconfig.json`
-- `next.config.ts`
-- `app/layout.tsx`
-- `app/globals.css`
-- `next-env.d.ts`
-- `eslint.config.mjs`
-- `postcss.config.mjs`
+Ran `create-next-app` into this repo (`job-board`), with:
 
-## What Was Built
+- TypeScript: yes
+- ESLint: yes
+- Tailwind CSS: yes (v4 via PostCSS)
+- `src/` directory: **no** — `app/` at the project root
+- App Router: yes
+- Package manager: **npm** (`package-lock.json`)
 
-- Next.js **16.1.6** project scaffolded with the App Router and TypeScript.
-- Root layout (`app/layout.tsx`) with Google Geist fonts and global CSS import.
-- `tsconfig.json` with strict mode, `@/*` path alias, and Next.js TypeScript plugin.
-- Standard npm scripts: `dev`, `build`, `start`, `lint`.
-- ESLint configured via `eslint-config-next` matching the Next.js version.
-- Tailwind CSS v4 wired through PostCSS (`@tailwindcss/postcss`).
+Files were committed in pieces the same day, not as one “initial scaffold” commit:
 
-## Implementation steps
+1. Default create-next-app `README.md` (`2846932`)
+2. `tsconfig.json` (`1cef65d`)
+3. `.gitignore` (`c20f895`)
+4. Remaining boilerplate: `app/`, `package.json`, lockfile, ESLint, PostCSS, `next.config.ts`, `public/` (`7161301`)
 
-### Step 1 — Scaffold with create-next-app
-- Day 1 establishes a deployable skeleton before feature work.
-- Run `create-next-app` with these options:
-  - TypeScript: **Yes**
-  - ESLint: **Yes**
-  - Tailwind CSS: **Yes**
-  - `src/` directory: **No** (course uses root-level `app/`)
-  - App Router: **Yes**
-  - Turbopack: default for `next dev`
-- Command example:
+`next.config.ts` on this lecture was still empty (`/* config options here */`). Standalone output is Lecture 9.
 
-```bash
-npx create-next-app@latest job-board
+## Key Files (Day 1)
+
+- `package.json` — `next@16.1.6`, `react@19.2.3`, `react-dom@19.2.3`
+- `package-lock.json`
+- `tsconfig.json` — `strict: true`, `"@/*": ["./*"]`
+- `next.config.ts` — empty config object
+- `app/layout.tsx` — Geist fonts, `{children}`, metadata title `Job Board`
+- `app/globals.css` — `@import "tailwindcss"`
+- `eslint.config.mjs`, `postcss.config.mjs`
+- `public/` starter SVGs and `app/favicon.ico`
+
+## Day 1 `package.json`
+
+```json
+{
+  "name": "job-board",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "next": "16.1.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
 ```
 
-### Step 2 — Review the generated tree
-- `app/` is the App Router root; `public/` holds static assets.
-- Inspect key config files: `package.json`, `tsconfig.json`, `next.config.ts`, `eslint.config.mjs`, `postcss.config.mjs`.
-- Today’s repo also has `app/globals.css` and `next-env.d.ts` from the scaffold.
+Next 16’s `next dev` uses Turbopack by default — no extra flag in the script.
 
-### Step 3 — Review the root layout
-- Inspect `app/layout.tsx` — the HTML shell shared by every route.
-- Day 1 layout was fonts + `{children}` only; today it also wraps `SessionProvider` (added Day 10):
+## Day 1 `app/layout.tsx`
 
-```1:35:app/layout.tsx
+```tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import SessionProvider from "@/components/providers/SessionProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -85,82 +104,60 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <SessionProvider>{children}</SessionProvider>
+        {children}
       </body>
     </html>
   );
 }
 ```
 
-- Day 1 layout includes only the fonts + `globals.css` import + `{children}`; `SessionProvider` is added on a later day.
+Metadata was already customized in this commit (not the default “Create Next App” title).
 
-### Step 4 — Review package.json and TypeScript config
-- Inspect `package.json` and confirm the project baseline versions:
+## Implementation steps
 
-```11:19:package.json
-  "dependencies": {
-    "@aws-sdk/client-s3": "^3.1050.0",
-    "@aws-sdk/s3-request-presigner": "^3.1050.0",
-    "bcryptjs": "^3.0.3",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "lucide-react": "^0.576.0",
-    "mongoose": "^9.5.0",
-    "next": "16.1.6",
+### 1. Scaffold
+
+```bash
+npx create-next-app@latest job-board
 ```
 
-- Day 1 had only `next`, `react`, and `react-dom`—later dependencies were added on subsequent days.
-- Inspect `tsconfig.json` — `@/*` path alias and strict mode:
+Choose TypeScript, ESLint, Tailwind, **no** `src/`, App Router. Use npm.
 
-```1:24:tsconfig.json
-{
-  "compilerOptions": {
-    "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "react-jsx",
-    "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "paths": {
-      "@/*": ["./*"]
-    }
-  },
+### 2. Confirm the tree
+
+- `app/` is the App Router root (`layout.tsx`, `page.tsx`, `globals.css`).
+- `public/` is static assets.
+- Config: `package.json`, `tsconfig.json`, `next.config.ts`, `eslint.config.mjs`, `postcss.config.mjs`.
+
+### 3. Read the root layout
+
+`app/layout.tsx` is the HTML shell for every route. Day 1: fonts + `globals.css` + `{children}` only.
+
+### 4. Run locally
+
+```bash
+npm run dev
 ```
 
-### Step 5 — Run locally and preview deployment
-- Run `npm run dev` and confirm `http://localhost:3000` loads the starter page.
-- Note that this skeleton will be deployed today—not weeks later.
-- Review Tailwind v4 is wired through PostCSS (`postcss.config.mjs` → `@tailwindcss/postcss`).
+Open `http://localhost:3000`. This skeleton is what gets deployed the same day.
+
+## Today (do not teach as Day 1)
+
+- `app/layout.tsx` wraps `<SessionProvider>` (Day 10).
+- Home route lives at `app/(client)/page.tsx` (Day 4).
+- `package.json` later gained Mongoose, NextAuth, OpenAI, AWS SDK, Zod, shadcn, and others.
 
 ## Verify
-- [ ] `package.json` shows `"next": "16.1.6"` and `"react": "19.2.3"`.
-- [ ] `app/layout.tsx` has root HTML structure and `globals.css` import.
-- [ ] `tsconfig.json` has `"strict": true` and `"@/*": ["./*"]`.
-- [ ] `npm run dev` serves the starter page at `http://localhost:3000`.
-- [ ] `npm run lint` passes (ESLint via `eslint-config-next`).
+
+- [ ] `"next": "16.1.6"` and `"react": "19.2.3"`
+- [ ] No `src/` folder; routes live under `app/`
+- [ ] `tsconfig.json` has `"strict": true` and `"@/*": ["./*"]`
+- [ ] `npm run dev` serves `http://localhost:3000`
+- [ ] Day 1 dependencies are only `next`, `react`, `react-dom` (plus Tailwind/ESLint/TS as devDeps)
 
 ## Outcome
 
-- Next.js 16 App Router + TypeScript project scaffolded with Tailwind v4, ESLint, and Geist fonts in the root layout.
-- You can explain what `app/layout.tsx`, `package.json`, and `tsconfig.json` do at a Day 1 level.
-
-## Notes / Gaps
-
-- Day 1 ended with a starter page at `app/page.tsx`; the home page now lives at `app/(client)/page.tsx` after Day 4 route groups.
-- `app/layout.tsx` today also wraps `<SessionProvider>` (Day 10); Day 1 layout was fonts + children only.
-- Many later dependencies (Mongoose, NextAuth, OpenAI, AWS SDK) were added on subsequent days—not part of Lecture 6.
+A Next.js 16 App Router + TypeScript app exists on disk, runs locally, and is ready to customize and deploy.
 
 ## Next
 

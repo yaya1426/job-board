@@ -1,128 +1,90 @@
-# Lecture 7 - Create a Simple Page | إنشاء صفحة بسيطة
+# Lecture 7 - Create a Simple Page
 
 ## Goal
 
-Replace the generic starter with a minimal branded page—a real product surface before deployment.
+Replace the create-next-app starter UI with a one-screen branded page so `/` shows a real product surface before the first deploy.
 
 ## Implementation Status
 
-Partial (original simple `app/page.tsx` evolved into the full landing at `app/(client)/page.tsx` with `HeroSection` and `FeaturedJobs` from Day 6).
+**Done on Day 1**, then replaced. Today’s home page is the Day 6 landing inside `app/(client)/`.
 
-## Key Files (as implemented today)
+## What We Really Did
 
-- `app/(client)/page.tsx` (evolved from Day 1 `app/page.tsx`)
-- `app/layout.tsx`
-- `app/globals.css`
-- `components/landing/HeroSection.tsx` (Day 6)
-- `components/landing/FeaturedJobs.tsx` (Day 6)
+`app/page.tsx` maps to `/`. We threw out the default Next.js marketing starter (logo grid, `next/image` template) and used a full-viewport centered heading.
 
-## What Was Built
+**First committed page** (`7161301`):
 
-- Day 1: edited `app/page.tsx` with a simple title/message (commit `6c1b9eb` — “Change title in page.tsx”).
-- A visible, custom page proving the App Router maps `page.tsx` to the `/` route.
-- Global styles through `app/globals.css` (Tailwind base imported at layout level).
-- Foundation for later landing components; today the home page fetches jobs server-side.
+```tsx
+import Image from "next/image";
+
+export default function Home() {
+  return (
+    <div className="flex flex-col items-center justify-center h-screen">
+      <h1 className="text-4xl font-bold">Job Board</h1>
+      <p className="text-lg">AI Interview Assistant</p>
+    </div>
+  );
+}
+```
+
+`import Image from "next/image"` is leftover from the starter and unused — evidence the page started as the create-next-app template.
+
+**Lecture 7 commit** (`6c1b9eb`, message `Cahnge tilte in page.tsx`):
+
+```diff
+-      <p className="text-lg">AI Interview Assistant</p>
++      <p className="text-lg">Welcome to Production App!</p>
+```
+
+That is the page that went to production on Day 1:
+
+- Heading: **Job Board**
+- Subtitle: **Welcome to Production App!**
+- Tailwind utilities only (`flex`, `h-screen`, `text-4xl`)
+- No `"use client"` — Server Component by default
+- No `wazifa.app` copy, no navbar, no job cards
+
+Layout metadata stayed `title: "Job Board"` / `description: "Job Board AI Interview Assistant"`.
 
 ## Implementation steps
 
-### Step 1 — Understand file-based routing
-- in the App Router, `app/page.tsx` maps to the `/` route.
-- Day 1 edited `app/page.tsx`; today the home page lives at `app/(client)/page.tsx` after Day 4 route groups.
-- Day 1 creates or edits `app/page.tsx` at the project root of `app/`.
+### 1. File-based routing
 
-### Step 2 — Write a minimal branded page (Day 1 version)
-- Replace the starter content with a simple course-branded heading—no database, no components folder yet.
-- Day 1 example for `app/page.tsx`:
+`app/page.tsx` → `/`. Nested folders become URL segments later (Day 3).
 
-```tsx
-export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-8">
-      <h1 className="text-4xl font-bold">wazifa.app</h1>
-      <p className="mt-4 text-lg text-gray-600">
-        Find your next opportunity
-      </p>
-    </main>
-  );
-}
-```
+### 2. Replace the starter
 
-- Review hot-reload: save the file and confirm the browser updates with `npm run dev`.
+Keep the layout. Change only the page. Centered heading + one line of supporting text is enough.
 
-### Step 3 — Review Server Components default
-- No `"use client"` directive needed for static content—this is a Server Component by default.
-- Inspect `app/layout.tsx` wrapping all pages with fonts and global CSS:
+### 3. Confirm hot reload
 
-```21:34:app/layout.tsx
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <SessionProvider>{children}</SessionProvider>
-      </body>
-    </html>
-  );
-}
-```
+With `npm run dev` running, save the file and watch the browser update.
 
-- Day 1 layout had only `{children}` inside `<body>`—no `SessionProvider` yet.
+### 4. Leave it a Server Component
 
-### Step 4 — Review what the page evolved into (repo today)
-- Inspect `app/(client)/page.tsx` to preview where this lecture leads—do not implement this on Day 1:
+No `"use client"`. Static markup does not need the client bundle.
 
-```1:19:app/(client)/page.tsx
-import { HeroSection } from "@/components/landing/HeroSection";
-import { FeaturedJobs } from "@/components/landing/FeaturedJobs";
-import { getJobs } from "@/services/jobs/jobs.service";
+## Today (do not teach as Day 1)
 
-async function Home() {
-  const result = await getJobs();
-  if (!result.success) {
-    return <div>Error loading jobs</div>;
-  }
-  const { data: jobs = [] } = result;
-  return (
-    <>
-      <HeroSection />
-      <FeaturedJobs jobs={jobs} />
-    </>
-  );
-}
-
-export default Home;
-```
-
-- Day 1 goal: one visible custom page, immediately verifiable in the browser.
-
-### Step 5 — Preview first deployment
-- This page will be the first thing users see on the deployed App Platform URL (Lecture 9).
-- No navbar, database, or auth yet—one small visible change only.
+Home is `app/(client)/page.tsx`: it imports `HeroSection` / `FeaturedJobs` and calls `getJobs()`. That is Days 4 and 6, then Day 9 persistence.
 
 ## Verify
-- [ ] Day 1: `app/page.tsx` renders custom branded content at `/`.
-- [ ] `npm run dev` hot-reloads edits without restart.
-- [ ] No `"use client"` on the simple home page.
-- [ ] `app/layout.tsx` wraps the page with fonts and `globals.css`.
-- [ ] Git history shows the title change (commit `6c1b9eb` — “Change title in page.tsx”).
+
+- [ ] `/` shows **Job Board** and **Welcome to Production App!** (Day 1)
+- [ ] No `"use client"` on the home page
+- [ ] Git shows `6c1b9eb` changing the subtitle
+- [ ] Layout still wraps the page with Geist fonts and `globals.css`
 
 ## Outcome
 
-- A minimal branded home page is visible at `/`—proving App Router file-based routing works.
-- Global styles flow through `app/globals.css` imported in the root layout.
-- Foundation laid for deployment in the next lectures.
+A custom `/` route proves App Router file-based routing. That HTML is what DigitalOcean serves after Lecture 9.
 
 ## Notes / Gaps
 
-- The simple Day 1 page was replaced by route-group architecture on Day 4 (`(client)` group) and rich landing UI on Day 6.
-- Current home page calls `getJobs()` from the jobs service—far beyond Day 1 scope.
-- Metadata in `app/layout.tsx` still reads `"Job Board"`; SEO work is Day 13.
+- Product name on screen is **Job Board**, not `wazifa.app`.
+- Unused `Image` import was not cleaned up on Day 1.
+- Commit message typo is historical.
 
 ## Next
 
-[Lecture 8 — GitHub Repo Setup](./lecture-008-github-repo-setup.md)
+[Lecture 8 — Github Repo Setup](./lecture-008-github-repo-setup.md)

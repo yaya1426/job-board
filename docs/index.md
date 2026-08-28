@@ -2,7 +2,9 @@
 
 This folder holds the longer day-by-day course history for the Wazifa job board project.
 
-`AGENTS.md` stays the compact operational guide for agents. These docs preserve the teaching narrative, commit evidence, important implementation decisions, and handoff notes for each day.
+**Start here for AI agents:** [AI-CONTEXT.md](../AI-CONTEXT.md) — standalone copy-paste context (product, architecture, day-by-day, rules).
+
+`AGENTS.md` stays the compact operational guide for agents working inside the repo. These docs preserve the teaching narrative, commit evidence, important implementation decisions, and handoff notes for each day.
 
 Each day folder contains:
 

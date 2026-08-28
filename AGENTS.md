@@ -2,6 +2,8 @@
 
 Persistent context for AI agents working on this project. This file is the source of truth for what is actually implemented. Update it whenever architecture, conventions, or major features change.
 
+For a **standalone copy-paste context file** (usable outside this repo with any AI agent), see **[AI-CONTEXT.md](AI-CONTEXT.md)** at the repo root.
+
 ---
 
 ## 1. Project Overview
